@@ -216,7 +216,7 @@ struct object_func navit_func;
 struct navit *global_navit;
 
 /**
- * Add a new mepset to the navit instance
+ * Add a new mapset to the navit instance
  * 
  * @param this_ The navit instance
  * @param ms The mapset to add
