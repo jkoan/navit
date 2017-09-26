@@ -139,12 +139,13 @@ handle(struct graphics *gr, struct graphics_gc *gc, struct point *p, int r,
 }
 
 /**
- * * Format distance, choosing the unit (m or km) and precision depending on distance
- * *
- * * @param distance distance in meters
- * * @param sep separator character to be inserted between distance value and unit
- * * @returns a pointer to a string containing the formatted distance
- * */
+ * Format distance, choosing the unit (m or km) and precision depending on distance
+ * 
+ * @param distance distance in meters
+ * @param sep separator character to be inserted between distance value and unit
+ * @param imperial if set uses feet and miles instead of metric output
+ * @returns a pointer to a string containing the formatted distance
+ */
 static char *
 format_distance(double distance, char *sep, int imperial)
 {
@@ -172,12 +173,12 @@ format_distance(double distance, char *sep, int imperial)
 }
 
 /**
- * * Format time (duration)
- * *
- * * @param tm pointer to a tm structure specifying the time
- * * @param days days
- * * @returns a pointer to a string containing the formatted time
- * */
+ * Format time (duration)
+ * 
+ * @param tm pointer to a tm structure specifying the time
+ * @param days days
+ * @returns a pointer to a string containing the formatted time
+ */
 static char * 
 format_time(struct tm *tm, int days)
 {
@@ -188,12 +189,13 @@ format_time(struct tm *tm, int days)
 }
 
 /**
- * * Format speed in km/h
- * *
- * * @param speed speed in km/h
- * * @param sep separator character to be inserted between speed value and unit
- * * @returns a pointer to a string containing the formatted speed
- * */
+ * Format speed in km/h
+ *
+ * @param speed speed in km/h
+ * @param sep separator character to be inserted between speed value and unit
+ * @param imperial if set uses feet and miles instead of metric output
+ * @returns a pointer to a string containing the formatted speed
+ */
 static char * 
 format_speed(double speed, char *sep, char *format, int imperial)
 {

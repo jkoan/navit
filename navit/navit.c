@@ -17,6 +17,15 @@
  * Boston, MA  02110-1301, USA.
  */
 
+/*!
+ * \mainpage Navit Dev Documentation
+ * Welcome to the Navit Dev Documentation
+ *
+ * Have fun!
+ *
+ */
+ 
+
 #define _USE_MATH_DEFINES 1
 #include "config.h"
 #ifdef HAVE_UNISTD_H
@@ -79,7 +88,7 @@
 /* define string for bookmark handling */
 #define TEXTFILE_COMMENT_NAVI_STOPPED "# navigation stopped\n"
 
-/**
+/** 
  * @defgroup navit The navit core instance
  * @brief navit is the object containing most global data structures.
  *
@@ -95,14 +104,14 @@
 
 //! The vehicle used for navigation.
 struct navit_vehicle {
-	int follow;
 	/*! Limit of the follow counter. See navit_add_vehicle */
-	int follow_curr;
+	int follow; 
 	/*! Deprecated : follow counter itself. When it reaches 'update' counts, map is recentered*/
-	struct coord coord;
+	int follow_curr;
+	struct coord coord; /**< current coordinate of the vehicle */
 	int dir;
 	int speed;
-	struct coord last; /*< Position of the last update of this vehicle */
+	struct coord last; /**< Position of the last update of this vehicle */
 	struct vehicle *vehicle;
 	struct attr callback;
 	int animate_cursor;
@@ -156,28 +165,28 @@ struct navit {
 					     following flags:
 					     1: draw operations are blocked
 					     2: draw operations are pending, requiring a redraw once draw operations are unblocked */
-	int w,h;
+	int w; /**< The width of the navit instance */
+	int h; /**< The height of the navit instance */
 	int drag_bitmap;
 	int use_mousewheel;
 	struct messagelist *messages;
 	struct callback *resize_callback,*button_callback,*motion_callback,*predraw_callback;
-	struct vehicleprofile *vehicleprofile;
+	struct vehicleprofile *vehicleprofile; /**< The currently used vehicleprofile */
 	GList *vehicleprofiles;
-	int pitch;
+	int pitch; /**< The pich used to display the map */
 	int follow_cursor;
 	int prevTs;
 	int graphics_flags;
 	int zoom_min, zoom_max;
 	int radius;
 	struct bookmarks *bookmarks;
-	int flags;
-		 /* 1=No graphics ok */
-		 /* 2=No gui ok */
+	int flags; /**<	1=No graphics ok <br/>
+					2=No gui ok */
 	int border;
 	int imperial;
 	int waypoints_flag;
 	struct coord_geo center;
-	int auto_switch; /*auto switching between day/night layout enabled ?*/
+	int auto_switch; /**< auto switching between day/night layout enabled ?*/
 };
 
 struct gui *main_loop_gui;
@@ -206,14 +215,22 @@ struct object_func navit_func;
 
 struct navit *global_navit;
 
-void
-navit_add_mapset(struct navit *this_, struct mapset *ms)
+/**
+ * Add a new mepset to the navit instance
+ * 
+ * @param this_ The navit instance
+ * @param ms The mapset to add
+ */
+void navit_add_mapset(struct navit *this_, struct mapset *ms)
 {
 	this_->mapsets = g_list_append(this_->mapsets, ms);
 }
 
-struct mapset *
-navit_get_mapset(struct navit *this_)
+/**
+ * Get all mapsets from the navit instance
+ * @param this_ The navit instance
+ */
+struct mapset * navit_get_mapset(struct navit *this_)
 {
 	if(this_->mapsets){
 		return this_->mapsets->data;
@@ -223,6 +240,10 @@ navit_get_mapset(struct navit *this_)
 	return NULL;
 }
 
+/**
+ * Returns the tracking struckt
+ * @return struct tracking
+ */
 struct tracking *
 navit_get_tracking(struct navit *this_)
 {
@@ -231,7 +252,7 @@ navit_get_tracking(struct navit *this_)
 
 /**
  * @brief	Get the user data directory.
- * @param[in]	 create	- create the directory if it does not exist
+ * @param create create the directory if it does not exist
  *
  * @return	char * to the data directory string.
  *
@@ -254,8 +275,7 @@ navit_get_user_data_directory(int create) {
 }
 
 
-void
-navit_draw_async(struct navit *this_, int async)
+void navit_draw_async(struct navit *this_, int async)
 {
 
 	if (this_->blocked) {
@@ -266,8 +286,7 @@ navit_draw_async(struct navit *this_, int async)
 	graphics_draw(this_->gra, this_->displaylist, this_->mapsets->data, this_->trans, this_->layout_current, async, NULL, this_->graphics_flags|1);
 }
 
-void
-navit_draw(struct navit *this_)
+void navit_draw(struct navit *this_)
 {
 	if (this_->ready == 3)
 		navit_draw_async(this_, 0);
@@ -281,15 +300,13 @@ navit_get_ready(struct navit *this_)
 
 
 
-void
-navit_draw_displaylist(struct navit *this_)
+void navit_draw_displaylist(struct navit *this_)
 {
 	if (this_->ready == 3)
 		graphics_displaylist_draw(this_->gra, this_->displaylist, this_->trans, this_->layout_current, this_->graphics_flags|1);
 }
 
-static void
-navit_map_progress(struct navit *this_)
+static void navit_map_progress(struct navit *this_)
 {
 	struct map *map;
 	struct mapset *ms;
@@ -316,8 +333,7 @@ navit_map_progress(struct navit *this_)
 	mapset_close(msh);
 }
 
-static void
-navit_redraw_route(struct navit *this_, struct route *route, struct attr *attr)
+static void navit_redraw_route(struct navit *this_, struct route *route, struct attr *attr)
 {
 	int updated;
 	if (attr->type != attr_route_status)
@@ -336,8 +352,7 @@ navit_redraw_route(struct navit *this_, struct route *route, struct attr *attr)
 	navit_draw(this_);
 }
 
-void
-navit_handle_resize(struct navit *this_, int w, int h)
+void navit_handle_resize(struct navit *this_, int w, int h)
 {
 	struct map_selection sel;
 	int callback=(this_->ready == 1);
@@ -356,29 +371,25 @@ navit_handle_resize(struct navit *this_, int w, int h)
 		navit_draw_async(this_, 1);
 }
 
-static void
-navit_resize(void *data, int w, int h)
+static void navit_resize(void *data, int w, int h)
 {
 	struct navit *this=data;
 	if (!this->ignore_graphics_events)
 		navit_handle_resize(this, w, h);
 }
 
-int
-navit_get_width(struct navit *this_)
+int navit_get_width(struct navit *this_)
 {
 	return this_->w;
 }
 
 
-int
-navit_get_height(struct navit *this_)
+int navit_get_height(struct navit *this_)
 {
 	return this_->h;
 }
 
-static void
-navit_popup(void *data)
+static void navit_popup(void *data)
 {
 	struct navit *this_=data;
 	popup(this_, 1, &this_->pressed);
@@ -645,7 +656,7 @@ navit_scale(struct navit *this_, long scale, struct point *p, int draw)
  * This function automatically adjusts the current
  * zoom level according to the current speed.
  *
- * @param this_ The navit struct
+ * @param this_ The navit instance
  * @param center The "immovable" point - i.e. the vehicles position if we're centering on the vehicle
  * @param speed The vehicles speed in meters per second
  * @param dir The direction into which the vehicle moves
@@ -1242,7 +1253,15 @@ navit_cmd_route_remove_last_waypoint(struct navit *this, char *function, struct 
 	navit_remove_nth_waypoint(this, navit_get_destination_count(this)-1);
 }
 
-
+/**
+ * 
+ * 
+ * 
+ * @param *coord_input String to be parsed
+ * @param output_projection Desired projection of the result
+ * @param *result For returning result
+ * @returns The lenght of the parsed string
+ */
 static void
 navit_cmd_set_center(struct navit *this, char *function, struct attr **in, struct attr ***out, int *valid)
 {
@@ -3243,12 +3262,10 @@ navit_vehicle_update_status(struct navit *this_, struct navit_vehicle *nv, enum 
  * Set the position of the vehicle
  *
  * @param navit The navit instance
- * @param c The coordinate to set as position
+ * @param pcoord The coordinate to set as position
  * @returns nothing
  */
-
-void
-navit_set_position(struct navit *this_, struct pcoord *c)
+void navit_set_position(struct navit *this_, struct pcoord *c)
 {
 	if (this_->route) {
 		route_set_position(this_->route, c);
@@ -3258,8 +3275,12 @@ navit_set_position(struct navit *this_, struct pcoord *c)
 		navit_draw(this_);
 }
 
-static int
-navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *vp)
+/**
+ * Set the Vehicleprofile
+ * @param navit The navit instance
+ * @param vehicleprofile The vehicleprofile to set
+ */
+static int navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *vp)
 {
 	if (this_->vehicleprofile == vp)
 		return 0;
@@ -3269,8 +3290,14 @@ navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *vp)
 	return 1;
 }
 
-int
-navit_set_vehicleprofile_name(struct navit *this_, char *name)
+/**
+ * Set the Vehicleprofile by its Name
+ * 
+ * @param navit The navit instance
+ * @param name The name of the Vehicleprofile
+ * @return 1 if sucsess
+ */
+int navit_set_vehicleprofile_name(struct navit *this_, char *name)
 {
 	struct attr attr;
 	GList *l;
@@ -3287,8 +3314,13 @@ navit_set_vehicleprofile_name(struct navit *this_, char *name)
 	return 0;
 }
 
-static void
-navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv)
+/**
+ * Set the Vehicle to use inside Navit
+ * 
+ * @param navit The navit instance 
+ * @param navit_vehicle The new vehicle to use
+ */
+static void navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv)
 {
 	struct attr attr;
 	this_->vehicle=nv;
@@ -3316,14 +3348,13 @@ navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv)
 }
 
 /**
- * @brief Registers a new vehicle.
+ * Registers a new vehicle.
  *
- * @param this_ The navit instance
- * @param v The vehicle to register
+ * @param navit The navit instance
+ * @param vehicle The vehicle to register
  * @return True for success
  */
-static int
-navit_add_vehicle(struct navit *this_, struct vehicle *v)
+static int navit_add_vehicle(struct navit *this_, struct vehicle *v)
 {
 	struct navit_vehicle *nv=g_new0(struct navit_vehicle, 1);
 	struct attr follow, active, animate;
@@ -3355,13 +3386,18 @@ navit_add_vehicle(struct navit *this_, struct vehicle *v)
 
 
 
-
+/**
+ * Returns the GUI Object
+ */
 struct gui *
 navit_get_gui(struct navit *this_)
 {
 	return this_->gui;
 }
 
+/**
+ * Returns the transformation
+ */
 struct transformation *
 navit_get_trans(struct navit *this_)
 {
@@ -3644,8 +3680,11 @@ int navit_get_blocked(struct navit *this_)
 	return this_->blocked;
 }
 
-void
-navit_destroy(struct navit *this_)
+/**
+ * Destroys the Navit object
+ * @param navit The Navit Object to destroy
+ */
+void navit_destroy(struct navit *this_)
 {
 	dbg(lvl_debug,"enter %p\n",this_);
 	graphics_draw_cancel(this_->gra, this_->displaylist);
