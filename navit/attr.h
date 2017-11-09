@@ -212,6 +212,7 @@ struct attr {
         long long *num64;
         struct attr *attrs;
         struct poly_hole *poly_hole;
+        struct audio *audio;
     } u;
 };
 

@@ -141,6 +141,8 @@ struct navit {
     int recentdest_count;
     int osd_configuration;
     GList *vehicles;
+    GList *audio_plugins;
+    struct navit_audio_plugin *audio;
     GList *windows_items;
     struct navit_vehicle *vehicle;
     struct callback_list *attr_cbl;
@@ -3062,224 +3064,34 @@ static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init) {
     return 1;
 }
 
-int navit_set_attr(struct navit *this_, struct attr *attr) {
-    return navit_set_attr_do(this_, attr, 0);
+static int
+navit_add_log(struct navit *this_, struct log *log)
+{
+	struct attr type_attr;
+	if (!log_get_attr(log, attr_type, &type_attr, NULL))
+		return 0;
+	if (!strcmp(type_attr.u.str, "textfile_debug")) {
+		char *header = "type=track_tracked\n";
+		if (this_->textfile_debug_log)
+			return 0;
+		log_set_header(log, header, strlen(header));
+		this_->textfile_debug_log=log;
+		return 1;
+	}
+	return 0;
 }
 
-int navit_get_attr(struct navit *this_, enum attr_type type, struct attr *attr, struct attr_iter *iter) {
-    struct message *msg;
-    struct coord *c;
-    int len,offset;
-    int ret=1;
-
-    switch (type) {
-    case attr_message:
-        msg = navit_get_messages(this_);
-
-        if (!msg) {
-            return 0;
-        }
-
-        len = 0;
-        while (msg) {
-            len += strlen(msg->text) + 1;
-            msg = msg->next;
-        }
-        attr->u.str = g_malloc(len + 1);
-
-        msg = navit_get_messages(this_);
-        offset = 0;
-        while (msg) {
-            g_stpcpy((attr->u.str + offset), msg->text);
-            offset += strlen(msg->text);
-            attr->u.str[offset] = '\n';
-            offset++;
-
-            msg = msg->next;
-        }
-
-        attr->u.str[len] = '\0';
-        break;
-    case attr_imperial:
-        attr->u.num=this_->imperial;
-        break;
-    case attr_bookmark_map:
-        attr->u.map=bookmarks_get_map(this_->bookmarks);
-        break;
-    case attr_bookmarks:
-        attr->u.bookmarks=this_->bookmarks;
-        break;
-    case attr_callback_list:
-        attr->u.callback_list=this_->attr_cbl;
-        break;
-    case attr_center:
-        c=transform_get_center(this_->trans);
-        transform_to_geo(transform_get_projection(this_->trans), c, &this_->center);
-        attr->u.coord_geo=&this_->center;
-        break;
-    case attr_destination:
-        if (! this_->destination_valid)
-            return 0;
-        attr->u.pcoord=&this_->destination;
-        break;
-    case attr_displaylist:
-        attr->u.displaylist=this_->displaylist;
-        return (attr->u.displaylist != NULL);
-    case attr_follow:
-        if (!this_->vehicle)
-            return 0;
-        attr->u.num=this_->vehicle->follow_curr;
-        break;
-    case attr_former_destination_map:
-        attr->u.map=this_->former_destination;
-        break;
-    case attr_graphics:
-        attr->u.graphics=this_->gra;
-        ret=(attr->u.graphics != NULL);
-        break;
-    case attr_gui:
-        attr->u.gui=this_->gui;
-        ret=(attr->u.gui != NULL);
-        break;
-    case attr_layer:
-        ret=attr_generic_get_attr(this_->attrs, NULL, type, attr, iter?(struct attr_iter *)&iter->iter:NULL);
-        break;
-    case attr_layout:
-        if (iter) {
-            if (iter->u.list) {
-                iter->u.list=g_list_next(iter->u.list);
-            } else {
-                iter->u.list=this_->layouts;
-            }
-            if (!iter->u.list)
-                return 0;
-            attr->u.layout=(struct layout *)iter->u.list->data;
-        } else {
-            attr->u.layout=this_->layout_current;
-        }
-        break;
-    case attr_map:
-        if (iter && this_->mapsets) {
-            if (!iter->u.mapset_handle) {
-                iter->u.mapset_handle=mapset_open((struct mapset *)this_->mapsets->data);
-            }
-            attr->u.map=mapset_next(iter->u.mapset_handle, 0);
-            if(!attr->u.map) {
-                mapset_close(iter->u.mapset_handle);
-                return 0;
-            }
-        } else {
-            return 0;
-        }
-        break;
-    case attr_mapset:
-        attr->u.mapset=this_->mapsets->data;
-        ret=(attr->u.mapset != NULL);
-        break;
-    case attr_navigation:
-        attr->u.navigation=this_->navigation;
-        break;
-    case attr_orientation:
-        attr->u.num=this_->orientation;
-        break;
-    case attr_osd:
-        ret=attr_generic_get_attr(this_->attrs, NULL, type, attr, iter?(struct attr_iter *)&iter->iter:NULL);
-        break;
-    case attr_osd_configuration:
-        attr->u.num=this_->osd_configuration;
-        break;
-    case attr_pitch:
-        attr->u.num=round(transform_get_pitch(this_->trans)*sqrt(this_->w*this_->h)/sqrt(
-                              240*320)); // Pitch corrected for window resolution
-        break;
-    case attr_projection:
-        if(this_->trans) {
-            attr->u.num=transform_get_projection(this_->trans);
-        } else {
-            return 0;
-        }
-        break;
-    case attr_route:
-        attr->u.route=this_->route;
-        break;
-    case attr_speech:
-        if(this_->speech) {
-            attr->u.speech=this_->speech;
-        } else {
-            return  0;
-        }
-        break;
-    case attr_timeout:
-        attr->u.num=this_->center_timeout;
-        break;
-    case attr_tracking:
-        attr->u.num=this_->tracking_flag;
-        break;
-    case attr_trackingo:
-        attr->u.tracking=this_->tracking;
-        break;
-    case attr_transformation:
-        attr->u.transformation=this_->trans;
-        break;
-    case attr_vehicle:
-        if(iter) {
-            if(iter->u.list) {
-                iter->u.list=g_list_next(iter->u.list);
-            } else {
-                iter->u.list=this_->vehicles;
-            }
-            if(!iter->u.list)
-                return 0;
-            attr->u.vehicle=((struct navit_vehicle*)iter->u.list->data)->vehicle;
-        } else {
-            if(this_->vehicle) {
-                attr->u.vehicle=this_->vehicle->vehicle;
-            } else {
-                return 0;
-            }
-        }
-        break;
-    case attr_vehicleprofile:
-        if (iter) {
-            if(iter->u.list) {
-                iter->u.list=g_list_next(iter->u.list);
-            } else {
-                iter->u.list=this_->vehicleprofiles;
-            }
-            if(!iter->u.list)
-                return 0;
-            attr->u.vehicleprofile=iter->u.list->data;
-        } else {
-            attr->u.vehicleprofile=this_->vehicleprofile;
-        }
-        break;
-    case attr_zoom:
-        attr->u.num=transform_get_scale(this_->trans);
-        break;
-    case attr_autozoom_active:
-        attr->u.num=this_->autozoom_active;
-        break;
-    case attr_follow_cursor:
-        attr->u.num=this_->follow_cursor;
-        break;
-    case attr_waypoints_flag:
-        attr->u.num=this_->waypoints_flag;
-        break;
-    case attr_tunnel_nightlayout:
-        attr->u.num=this_->tunnel_nightlayout;
-        break;
-    case attr_layout_daynightauto:
-        attr->u.num=this_->auto_switch;
-        break;
-    case attr_sunrise_degrees:
-        attr->u.num=this_->sunrise_degrees;
-        break;
-    default:
-        dbg(lvl_debug, "calling generic getter method for attribute type %s", attr_to_name(type))
-        return navit_object_get_attr((struct navit_object *) this_, type, attr, iter);
-    }
-    attr->type=type;
-    return ret;
+static int
+navit_add_layout(struct navit *this_, struct layout *layout)
+{
+	struct attr active;
+	this_->layouts = g_list_append(this_->layouts, layout);
+	layout_get_attr(layout, attr_active, &active, NULL);
+	if(active.u.num || !this_->layout_current) { 
+		this_->layout_current=layout;
+		return 1;
+	}
+	return 0;
 }
 
 /**

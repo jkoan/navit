@@ -692,8 +692,8 @@ static sp_session_callbacks session_callbacks = {
 
 static sp_session_config spconfig = {
 	.api_version = SPOTIFY_API_VERSION,
-	.cache_location = "/var/spotify",
-	.settings_location = "/var/spotify",
+	.cache_location = "/var/tmp/spotify",
+	.settings_location = "/var/tmp/spotify",
 	.application_key = spotify_apikey,
 	.application_key_size = 0,	// set in main()
 	.user_agent = "navit",
@@ -1103,6 +1103,9 @@ player_spotify_new(struct audio_methods *meth, struct callback_list *cbl,
 	}
 
 
+	spotify->callback =
+	    callback_new_1(callback_cast(spotify_spotify_idle), spotify);
+	event_add_idle(125, spotify->callback);
 	dbg(lvl_info, "Callback created successfully\n");
 	this = g_new(struct audio_priv, 1);
 

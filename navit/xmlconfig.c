@@ -281,12 +281,12 @@ object_func_lookup(enum attr_type type) {
         return &speech_func;
     case attr_traffic:
         return &traffic_func;
+    case attr_audio:
+        return &audio_func;
     case attr_vehicle:
         return &vehicle_func;
     case attr_vehicleprofile:
         return &vehicleprofile_func;
-    case attr_audio:
-        return &audio_func;
     default:
         for (i = 0 ; i < sizeof(object_funcs)/sizeof(struct object_func); i++) {
             if (object_funcs[i].type == type)
@@ -336,7 +336,8 @@ static char *element_fixmes[]= {
 };
 
 static void initStatic(void) {
-    elements=g_new0(struct element_func, 46); //45 is a number of elements + ending NULL element
+==== BASE ====
+    elements=g_new0(struct element_func, 45); //44 is a number of elements + ending NULL element
 
     elements[0].name="config";
     elements[0].parent=NULL;
@@ -546,6 +547,7 @@ static void initStatic(void) {
     elements[41].parent="profile_option";
     elements[41].func=NULL;
     elements[41].type=attr_roadprofile;
+==== BASE ====
 
     elements[42].name="script";
     elements[42].parent="navit";
