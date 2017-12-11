@@ -53,10 +53,19 @@ jobs:
           name: Setup common requirements
           command: |
             bash ci/setup_common_requirements.sh
+      - restore_cache:
+          keys:
+            - android-cache-{{ .Branch }}
+            - android-cache
       - run:
           name: Prepare the Android build environment
           command: |
             bash ci/setup_android.sh
+      - save_cache:
+          key: android-cache-{{ .Branch }}
+          paths:
+            - /opt/android-sdk-linux
+            - /opt/android-ndk-linux
       - run:
           name: Build for Android ARM
           command: |
@@ -71,10 +80,19 @@ jobs:
           name: Setup common requirements
           command: |
             bash ci/setup_common_requirements.sh
+      - restore_cache:
+          keys:
+            - android-cache-{{ .Branch }}
+            - android-cache
       - run:
           name: Prepare the Android build environment
           command: |
             bash ci/setup_android.sh
+      - save_cache:
+          key: android-cache-{{ .Branch }}
+          paths:
+            - /opt/android-sdk-linux
+            - /opt/android-ndk-linux
       - run:
           name: Build for Android X86
           command: |

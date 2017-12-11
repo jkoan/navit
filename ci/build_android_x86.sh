@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-apt-get update && apt-get install -y wget
-
 export ARCH="x86"
 export START_PATH=~/
 export SOURCE_PATH=$START_PATH"/"${CIRCLE_PROJECT_REPONAME}"/"
@@ -17,10 +15,6 @@ export BUILD_PATH=android-${ARCH}
 export ANDROID_SDK_HOME=/opt/android-sdk-linux
 export ANDROID_HOME=/opt/android-sdk-linux
 export PATH=${PATH}:${ANDROID_SDK_HOME}/tools:${ANDROID_SDK_HOME}/platform-tools:/opt/tools
-
-
-wget -nv -c http://dl.google.com/android/repository/android-ndk-r11c-linux-x86_64.zip
-[ -d ~/android-ndk-r11c ] || unzip -q -d ~ android-ndk-r11c-linux-x86_64.zip
 
 [ -d $BUILD_PATH ] || mkdir -p $BUILD_PATH
 pushd $BUILD_PATH
