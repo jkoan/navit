@@ -1,16 +1,13 @@
 version: 2
 defaults: &defaults
   docker:
-    - image: ubuntu:14.04
+    - image: ubuntu:18.04
 
 jobs:
   build_linux:
     <<: *defaults
     steps:
       - checkout
-      - run:
-          name: Id
-          command: sudo cat /etc/*release
       - run:
           name: Setup requirements
           command: |
@@ -50,9 +47,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Id
-          command: sudo cat /etc/*release
-      - run:
           name: Install cmake gettext libsaxonb-java librsvg2-bin
           command: |
             sudo apt-get install cmake gettext libsaxonb-java librsvg2-bin
@@ -91,12 +85,8 @@ jobs:
             mv *dpi.xml android/res/raw
             cd ../
       - run:
-         name: Chmod permissions
-         command: sudo chmod +x ./gradlew
-      - run:
           name: Download Dependencies
           command: ./gradlew -v
-#          command: ./gradlew androidDependencies
       - run:
          name: Install ndk
          command: sdkmanager ndk-bundle
