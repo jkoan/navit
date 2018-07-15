@@ -65,44 +65,12 @@ jobs:
           name: Install cmake gettext libsaxonb-java librsvg2-bin
           command: |
             sudo apt-get install cmake gettext libsaxonb-java librsvg2-bin
-            cmake ./ -Dsvg2png_scaling:STRING=-1,24,32,48,64,96,128 -Dsvg2png_scaling_nav:STRING=-1,24,32,48,64,96,128 -Dsvg2png_scaling_flag:STRING=-1,24,32,64,96
-      - run:
-          name: Process icons
-          command: |
-            cd navit/icons
-            make
-            mkdir ../android/res/drawable-nodpi
-            rename 'y/A-Z/a-z/' *
-            cp *.png ../android/res/drawable-nodpi
-            cd ../../
-      - run:
-          name: Process translations
-          command: |
-            cd po
-            make
-            mkdir ../navit/android/res/raw
-            rename 'y/A-Z/a-z/' *
-            cp *.mo ../navit/android/res/raw
-            cd ../
-      - run:
-          name: Process xml's
-          command: |
-            cd navit
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navitldpi.xml OSD_SIZE=1 ICON_SMALL=24 ICON_MEDIUM=32 ICON_BIG=48
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navitmdpi.xml OSD_SIZE=1.33 ICON_SMALL=32 ICON_MEDIUM=48 ICON_BIG=64
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navithdpi.xml OSD_SIZE=2 ICON_SMALL=48 ICON_MEDIUM=64 ICON_BIG=96
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navitxhdpi.xml OSD_SIZE=2.67 ICON_SMALL=64 ICON_MEDIUM=96 ICON_BIG=128
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navitxxhdpi.xml OSD_SIZE=4 ICON_SMALL=96 ICON_MEDIUM=128 ICON_BIG=192
-            saxonb-xslt -s:navit_shipped.xml -xsl:xslt/android.xslt -o:navitxxxhdpi.xml OSD_SIZE=5.33 ICON_SMALL=128 ICON_MEDIUM=192 ICON_BIG=256
-            mv *dpi.xml android/res/raw
-            cd ../
       - run:
          name: Chmod permissions
          command: sudo chmod +x ./gradlew
       - run:
           name: Download Dependencies
           command: ./gradlew -v
-#          command: ./gradlew androidDependencies
       - run:
          name: Install ndk
          command: sdkmanager ndk-bundle
