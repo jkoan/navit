@@ -39,7 +39,7 @@ android {
             java.srcDirs = ["src"]
             resources.srcDirs = ["src"]
             renderscript.srcDirs = ["src"]
-            res.srcDirs = ["res"]
+            res.srcDirs = ["res","res/raw"]
             }
     }
     externalNativeBuild {

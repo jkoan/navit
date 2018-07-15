@@ -59,9 +59,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Id
-          command: sudo cat /etc/*release
-      - run:
           name: Install cmake gettext libsaxonb-java librsvg2-bin
           command: |
             sudo apt-get install cmake gettext libsaxonb-java librsvg2-bin
@@ -78,7 +75,7 @@ jobs:
           name: Build
           command: ./gradlew assembleDebug
       - run:
-          name: Run Lint Test
+          name: Run Lint and Test
           command: |
             ln -s navit/navit.dtd navit.dtd
             mkdir /home/circleci/code/test-results
