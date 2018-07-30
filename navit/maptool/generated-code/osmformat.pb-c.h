@@ -45,7 +45,7 @@ struct  _OSMPBF__HeaderBlock
   ProtobufCMessage base;
   OSMPBF__HeaderBBox *bbox;
   /*
-   * Additional tags to aid in parsing this dataset 
+   * Additional tags to aid in parsing this dataset
    */
   size_t n_required_features;
   char **required_features;
@@ -57,7 +57,7 @@ struct  _OSMPBF__HeaderBlock
    */
   char *source;
   /*
-   * replication timestamp, expressed in seconds since the epoch, 
+   * replication timestamp, expressed in seconds since the epoch,
    * otherwise the same value as in the "timestamp=..." field
    * in the state.txt file used by Osmosis
    */
@@ -158,7 +158,7 @@ struct  _OSMPBF__StringTable
 
 
 /*
- * Optional metadata that may be included into each primitive. 
+ * Optional metadata that may be included into each primitive.
  */
 struct  _OSMPBF__Info
 {
@@ -195,7 +195,7 @@ struct  _OSMPBF__Info
 
 
 /*
- ** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes. 
+ ** Optional metadata that may be included into each primitive. Special dense format used in DenseNodes.
  */
 struct  _OSMPBF__DenseInfo
 {
@@ -248,7 +248,7 @@ struct  _OSMPBF__ChangeSet
 {
   ProtobufCMessage base;
   /*
-   *   
+   *
    *   // Parallel arrays.
    *   repeated uint32 keys = 2 [packed = true]; // String IDs.
    *   repeated uint32 vals = 3 [packed = true]; // String IDs.
