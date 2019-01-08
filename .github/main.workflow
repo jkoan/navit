@@ -1,8 +1,6 @@
 workflow "New workflow" {
   on = "push"
-  resolves = [
-    "Test within WinCE",
-  ]
+  resolves = "Test within WinCE"
 }
 
 action "Test within WinCE" {
