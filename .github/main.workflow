@@ -1,6 +1,8 @@
 workflow "New workflow" {
   on = "push"
-  resolves = ["GitHub Action for Docker"]
+  resolves = [
+    "Test within WinCE",
+  ]
 }
 
 action "Test within WinCE" {
