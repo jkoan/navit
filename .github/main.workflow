@@ -1,9 +1,22 @@
 workflow "New workflow" {
   on = "push"
-  resolves = "Test within WinCE"
+  resolves = ["Docker Tag"]
 }
 
 action "Test within WinCE" {
   uses = "navit-gps/Dockerfiles/wince@master"
-  args = "echo blsa"
+  args = "ls"
+}
+
+action "GitHub Action for Docker" {
+  uses = "navit-gps/Dockerfiles/wince@master"
+  args = "touch 123"
+  needs = ["Test within WinCE"]
+}
+
+action "Docker Tag" {
+  uses = "navit-gps/Dockerfiles/wince@master"
+  args = "ls"
+  
+  needs = ["GitHub Action for Docker"]
 }
