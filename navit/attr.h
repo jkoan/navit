@@ -35,8 +35,8 @@ enum attr_type {
 #define ATTR2(x,y) attr_##y=x,
 #define ATTR(x) attr_##x,
 
-/* Special macro for unused attribute types. Creates a placeholder entry
- * in the enum so the following values do not change. */
+    /* Special macro for unused attribute types. Creates a placeholder entry
+     * in the enum so the following values do not change. */
 #define ATTR_UNUSED ATTR_UNUSED_L(__LINE__)
 #define ATTR_UNUSED_L(x) ATTR_UNUSED_WITH_LINE_NUMBER(x)
 #define ATTR_UNUSED_WITH_LINE_NUMBER(x) ATTR_UNUSED_##x,
@@ -52,8 +52,8 @@ enum attr_type {
 };
 
 enum attr_format {
-	attr_format_default=0,
-	attr_format_with_units=1,
+    attr_format_default=0,
+    attr_format_with_units=1,
 };
 
 #define AF_ONEWAY		(1<<0)
@@ -120,19 +120,19 @@ enum attr_format {
 
 /** Indicates whether a position is valid **/
 enum attr_position_valid {
-	attr_position_valid_invalid,              /**< The position is invalid and should be discarded. **/
-	attr_position_valid_static,               /**< The position is valid but the vehicle is not moving, or moving very slowly.
+    attr_position_valid_invalid,              /**< The position is invalid and should be discarded. **/
+    attr_position_valid_static,               /**< The position is valid but the vehicle is not moving, or moving very slowly.
 	                                               Calculations that involve the difference between two consecutive positions,
 	                                               such as bearing, may therefore be inaccurate. **/
-	attr_position_valid_extrapolated_time,    /**< FIXME: this description is just my (mvglasow) guess; this value is not used anywhere as of r5957.
+    attr_position_valid_extrapolated_time,    /**< FIXME: this description is just my (mvglasow) guess; this value is not used anywhere as of r5957.
 	                                               The position is the vehicle's last known position, and the consumer of the
 	                                               information should be aware that the vehicle may have moved since. **/
-	attr_position_valid_extrapolated_spatial, /**< FIXME: this description is just my (mvglasow) guess; this value is not used anywhere as of r5957.
+    attr_position_valid_extrapolated_spatial, /**< FIXME: this description is just my (mvglasow) guess; this value is not used anywhere as of r5957.
 	                                               The position is a prediction of the vehicle's current position, based on
 	                                               its last known position, the time elapsed since it was obtained and possibly
 	                                               other factors. This would be used for positions obtained through inertial
 	                                               navigation. **/
-	attr_position_valid_valid,                /**< The position is valid and can be used for all purposes. **/
+    attr_position_valid_valid,                /**< The position is valid and can be used for all purposes. **/
 };
 
 #define ATTR_IS_INT(x) ((x) >= attr_type_int_begin && (x) <= attr_type_int_end)
@@ -151,7 +151,7 @@ enum attr_position_valid {
 #define ATTR_OBJECT(x,y) ((struct attr){attr_##x,{.navit=y}})
 
 struct range {
-	short min, max;
+    short min, max;
 };
 
 struct attr {
@@ -211,6 +211,7 @@ struct attr {
 		enum attr_type *attr_types;
 		long long *num64;
 		struct attr *attrs;
+		struct poly_hole *poly_hole;
 	} u;
 };
 
@@ -224,7 +225,8 @@ struct attr *attr_new_from_text(const char *name, const char *value);
 char *attr_to_text_ext(struct attr *attr, char *sep, enum attr_format fmt, enum attr_format def_fmt, struct map *map);
 char *attr_to_text(struct attr *attr, struct map *map, int pretty);
 struct attr *attr_search(struct attr **attrs, struct attr *last, enum attr_type attr);
-int attr_generic_get_attr(struct attr **attrs, struct attr **def_attrs, enum attr_type type, struct attr *attr, struct attr_iter *iter);
+int attr_generic_get_attr(struct attr **attrs, struct attr **def_attrs, enum attr_type type, struct attr *attr,
+                          struct attr_iter *iter);
 struct attr **attr_generic_set_attr(struct attr **attrs, struct attr *attr);
 struct attr **attr_generic_add_attr(struct attr **attrs, struct attr *attr);
 struct attr **attr_generic_add_attr_list(struct attr **attrs, struct attr **add);
