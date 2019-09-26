@@ -103,4 +103,6 @@
 
 #cmakedefine HAVE_POSTGRESQL 1
 
+#cmakedefine ENABLE_ROLL 1
+
 #cmakedefine USE_AUDIO_FRAMEWORK 1
