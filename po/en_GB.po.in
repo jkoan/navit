@@ -2,12 +2,12 @@
 # Copyright (C) 2006-2015 The Navit Team
 # This file is distributed under the same license as the navit package.
 # Translators:
-# Jkoan Kerich <jkoan@gmx.de>, 2019
+# jkoan <jkoan@gmx.de>, 2019
 # 
 msgid ""
 msgstr ""
-"Last-Translator: Jkoan Kerich <jkoan@gmx.de>, 2019\n"
-"Language-Team: English (United Kingdom) (https://www.transifex.com/navit/teams/104161/en_GB/)\n"
+"Last-Translator: jkoan <jkoan@gmx.de>, 2019\n"
+"Language-Team: English (United Kingdom) (https://www.transifex.com/navit-gps/teams/104161/en_GB/)\n"
 "Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
@@ -64,11 +64,11 @@ msgstr "sixth exit"
 
 #, c-format
 msgid "%d m"
-msgstr ""
+msgstr "%d m"
 
 #, c-format
 msgid "in %d m"
-msgstr ""
+msgstr "in %d m"
 
 #, c-format
 msgid "%d feet"
