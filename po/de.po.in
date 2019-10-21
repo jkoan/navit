@@ -6,7 +6,7 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: navit 0.5.0\n"
+"Project-Id-Version: navit 0.5.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-05-03 02:23+0200\n"
 "PO-Revision-Date: 2019-10-21 09:55+0000\n"
@@ -17,7 +17,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Report-Errors: https://translations.launchpad.net/navit/trunk/+pots/navit\n"
 
 msgid "Running from source directory\n"
 msgstr "Aus dem Quellverzeichnis starten\n"
