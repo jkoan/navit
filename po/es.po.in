@@ -1,40 +1,15 @@
-# Spanish translations for navit
-# Copyright (C) 2006-2018 The Navit Team
+# English translations for navit
+# Copyright (C) 2006-2015 The Navit Team
 # This file is distributed under the same license as the navit package.
-# Many thanks to the contributors of this translation:
-# Benjamín Valero Espinosa https://launchpad.net/~benjavalero
-# David A Páez https://launchpad.net/~orlsend
-# DiegoJ https://launchpad.net/~diegojromerolopez
-# Emilio Gomez Fernandez https://launchpad.net/~egofer
-# Feder Sáiz https://launchpad.net/~federsaiz-deactivatedaccount
-# Inaki Saez https://launchpad.net/~inaki-saez
-# Iñigo Huguet https://launchpad.net/~inigohuguet
-# Jonay https://launchpad.net/~jonay-santana
-# KaZeR https://launchpad.net/~kazer
-# Kenneth Belitzky https://launchpad.net/~r-kenny
-# Luis Alejandro Rangel Sánchez https://launchpad.net/~xlarsx
-# Michael von Glasow https://launchpad.net/~michael-vonglasow
-# Paco Molinero https://launchpad.net/~franciscomol
-# Ricardo Jurado https://launchpad.net/~ricky131313
-# agerio https://launchpad.net/~agerio
-# iceman75 https://launchpad.net/~javier-orejarena
-# juliwoodbcn https://launchpad.net/~julianlozano
-# marZiano https://launchpad.net/~m3marte
-# pataquets https://launchpad.net/~pataquets
-# singesang https://launchpad.net/~singesang
-
+# Translators:
+# Jkoan Kerich <jkoan@gmx.de>, 2019
+# 
 msgid ""
 msgstr ""
-"Project-Id-Version: navit 0.5.1\n"
-"Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2018-05-01 17:39+0000\n"
-"Last-Translator: iceman75 <Unknown>\n"
-"Language-Team: Chris Eubank <cteubank@gmail.com>\n"
-"MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Last-Translator: Jkoan Kerich <jkoan@gmx.de>, 2019\n"
+"Language-Team: Spanish (https://www.transifex.com/navit/teams/104161/es/)\n"
 "Language: es\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Running from source directory\n"
 msgstr "Ejecutando desde el directorio fuente\n"
@@ -88,6 +63,14 @@ msgid "sixth exit"
 msgstr "sexta salida"
 
 #, c-format
+msgid "%d m"
+msgstr ""
+
+#, c-format
+msgid "in %d m"
+msgstr ""
+
+#, c-format
 msgid "%d feet"
 msgstr "%d pies"
 
@@ -96,12 +79,28 @@ msgid "in %d feet"
 msgstr "en %d pies"
 
 #, c-format
+msgid "%d meters"
+msgstr "%d metros"
+
+#, c-format
+msgid "in %d meters"
+msgstr "en %d metros"
+
+#, c-format
 msgid "%d.%d miles"
 msgstr "%d,%d millas"
 
 #, c-format
 msgid "in %d.%d miles"
 msgstr "en %d,%d millas"
+
+#, c-format
+msgid "%d.%d kilometers"
+msgstr "%d,%d kilómetros"
+
+#, c-format
+msgid "in %d.%d kilometers"
+msgstr "en %d,%d kilómetros"
 
 #, c-format
 msgid "one mile"
@@ -116,22 +115,6 @@ msgstr[0] "en una milla"
 msgstr[1] "en %d millas"
 
 #, c-format
-msgid "%d meters"
-msgstr "%d metros"
-
-#, c-format
-msgid "in %d meters"
-msgstr "en %d metros"
-
-#, c-format
-msgid "%d.%d kilometers"
-msgstr "%d,%d kilómetros"
-
-#, c-format
-msgid "in %d.%d kilometers"
-msgstr "en %d,%d kilómetros"
-
-#, c-format
 msgid "one kilometer"
 msgid_plural "%d kilometers"
 msgstr[0] "un kilómetro"
@@ -143,7 +126,8 @@ msgid_plural "in %d kilometers"
 msgstr[0] "en un kilómetro"
 msgstr[1] "en %d kilómetros"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Systematic Street Name 3: Separator (Space if required), 4: Street Name
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Systematic Street
+#. Name 3: Separator (Space if required), 4: Street Name
 #, c-format
 msgid "%1$sonto the %2$s%3$s%4$s"
 msgstr "%1$sen la %2$s%3$s%4$s"
@@ -153,17 +137,20 @@ msgstr "%1$sen la %2$s%3$s%4$s"
 msgid "%1$sonto %2$s"
 msgstr "%1$sen la carretera %2$s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name. Masculine form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name.
+#. Masculine form. The stuff after | doesn't have to be included
 #, c-format
 msgid "%1$sonto %2$s|masculine form"
 msgstr "%1$sen el %2$s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name. Feminine form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name.
+#. Feminine form. The stuff after | doesn't have to be included
 #, c-format
 msgid "%1$sonto %2$s|feminine form"
 msgstr "%1$sen la %2$s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name. Neuter form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name.
+#. Neuter form. The stuff after | doesn't have to be included
 #, c-format
 msgid "%1$sonto %2$s|neuter form"
 msgstr "%1$sen la carretera %2$s"
@@ -172,22 +159,29 @@ msgstr "%1$sen la carretera %2$s"
 msgid "onto the motorway ramp"
 msgstr "en el carril de entrada"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3: Separator (Space if required), 4: Systematic Street Name
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3:
+#. Separator (Space if required), 4: Systematic Street Name
 #, c-format
 msgid "%sinto %s%s%s"
 msgstr "%sen %s%s%s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3: Separator (Space if required), 4: Systematic Street Name. Masculine form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3:
+#. Separator (Space if required), 4: Systematic Street Name. Masculine form.
+#. The stuff after | doesn't have to be included
 #, c-format
 msgid "%sinto %s%s%s|masculine form"
 msgstr "%sen el %s%s%s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3: Separator (Space if required), 4: Systematic Street Name. Feminine form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3:
+#. Separator (Space if required), 4: Systematic Street Name. Feminine form.
+#. The stuff after | doesn't have to be included
 #, c-format
 msgid "%sinto %s%s%s|feminine form"
 msgstr "%sen la %s%s%s"
 
-#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3: Separator (Space if required), 4: Systematic Street Name. Neuter form. The stuff after | doesn't have to be included
+#. TRANSLATORS: Arguments: 1: Prefix (Space if required) 2: Street Name 3:
+#. Separator (Space if required), 4: Systematic Street Name. Neuter form. The
+#. stuff after | doesn't have to be included
 #, c-format
 msgid "%sinto %s%s%s|neuter form"
 msgstr "%sen %s%s%s"
@@ -217,10 +211,14 @@ msgstr "Entre en la próxima rotonda"
 msgid "Enter the roundabout %s"
 msgstr "Entre en la rotonda %s"
 
-msgid "then enter the roundabout"
-msgstr "luego entre en la rotonda"
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination
+#. to follow
+#, c-format
+msgid "then leave the roundabout at the %1$s %2$s"
+msgstr "después salga de la rotonda por la %1$s %2$s"
 
-#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination to follow
+#. TRANSLATORS: first arg. is the manieth exit, second arg. is the destination
+#. to follow
 #, c-format
 msgid "Leave the roundabout at the %1$s %2$s"
 msgstr "Salga de la rotonda por la %1$s %2$s"
@@ -234,22 +232,26 @@ msgstr "ahora"
 msgid "then"
 msgstr "luego"
 
-#. TRANSLATORS: the arg. is the phrase 'onto ...'. Right merge, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the arg. is the phrase 'onto ...'. Right merge, the stuff
+#. after | doesn't have to be included.
 #, c-format
 msgid "then merge%1$s|right"
 msgstr "luego entre%1$s"
 
-#. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto ...'. Right merge, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto
+#. ...'. Right merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "Merge %1$s%2$s|right"
 msgstr "Entre%2$s %1$s"
 
-#. TRANSLATORS: the arg. is the phrase 'onto ...'. Left merge, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the arg. is the phrase 'onto ...'. Left merge, the stuff after
+#. | doesn't have to be included.
 #, c-format
 msgid "then merge%1$s|left"
 msgstr "luego entre%1$s"
 
-#. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto ...'. Left merge, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the first arg. is distance, the second is the phrase 'onto
+#. ...'. Left merge, the stuff after | doesn't have to be included.
 #, c-format
 msgid "Merge %1$s%2$s|left"
 msgstr "Entre%2$s %1$s"
@@ -260,12 +262,14 @@ msgstr "a la izquierda"
 msgid "on your right"
 msgstr "a la derecha"
 
-#. TRANSLATORS: the first arg. is exit ref and/or name, the second is the direction of exit and the third is distance
+#. TRANSLATORS: the first arg. is exit ref and/or name, the second is the
+#. direction of exit and the third is distance
 #, c-format
 msgid "Take exit %1$s %2$s %3$s"
 msgstr "Tome la salida %1$s %2$s %3$s"
 
-#. TRANSLATORS: the first arg. is the direction of exit, the second is distance, the third is destination
+#. TRANSLATORS: the first arg. is the direction of exit, the second is
+#. distance, the third is destination
 #, c-format
 msgid "Take the exit %1$s %2$s%3$s"
 msgstr "Tome la salida %1$s %2$s%3$s"
@@ -282,7 +286,8 @@ msgstr "a la salida"
 msgid "then continue straight%1$s"
 msgstr "luego continúe todo recto%1$s"
 
-#. TRANSLATORS: the first arg. is distance, the second is where to do the maneuver, the third is destination
+#. TRANSLATORS: the first arg. is distance, the second is where to do the
+#. maneuver, the third is destination
 #, c-format
 msgid "Continue straight %1$s%2$s%3$s"
 msgstr "Continúe todo recto %1$s%2$s%3$s"
@@ -292,7 +297,8 @@ msgstr "Continúe todo recto %1$s%2$s%3$s"
 msgid "then keep right%1$s"
 msgstr "luego manténgase por la derecha%1$s"
 
-#. TRANSLATORS: the first arg. is distance, the second is where to do the maneuver, the third is destination
+#. TRANSLATORS: the first arg. is distance, the second is where to do the
+#. maneuver, the third is destination
 #, c-format
 msgid "Keep right %1$s%2$s%3$s"
 msgstr "Manténgase por la derecha %1$s%2$s%3$s"
@@ -302,7 +308,8 @@ msgstr "Manténgase por la derecha %1$s%2$s%3$s"
 msgid "then keep left%1$s"
 msgstr "luego manténgase por la izquierda%1$s"
 
-#. TRANSLATORS: the first arg. is distance, the second is where to do the maneuver, the third is destination
+#. TRANSLATORS: the first arg. is distance, the second is where to do the
+#. maneuver, the third is destination
 #, c-format
 msgid "Keep left %1$s%2$s%3$s"
 msgstr "Manténgase por la izquierda %1$s%2$s%3$s"
@@ -324,10 +331,6 @@ msgid "strongly "
 msgstr "bruscamente "
 
 #, c-format
-msgid "then take the %1$s road to the %2$s"
-msgstr "luego tomar la carretera de %1$s a la %2$s"
-
-#, c-format
 msgid "Take the %1$s road to the %2$s"
 msgstr "Tome la %1$s carretera %2$s"
 
@@ -335,7 +338,9 @@ msgstr "Tome la %1$s carretera %2$s"
 msgid "after %i roads"
 msgstr "después de %i carreteras"
 
-#. TRANSLATORS: the first arg. is strength, the second is direction, the third is distance, the fourth is destination
+#. cave: no else - may come from 'if (skip_roads)' above !
+#. TRANSLATORS: the first arg. is strength, the second is direction, the third
+#. is distance, the fourth is destination
 #, c-format
 msgid "Turn %1$s%2$s %3$s%4$s"
 msgstr "Gire %1$s%2$s %3$s%4$s"
@@ -344,7 +349,8 @@ msgstr "Gire %1$s%2$s %3$s%4$s"
 msgid "then make a U-turn|left"
 msgstr "luego dé la vuelta"
 
-#. TRANSLATORS: the arg. is distance. Left U-turn, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the arg. is distance. Left U-turn, the stuff after | doesn't
+#. have to be included.
 #, c-format
 msgid "Make a U-turn %1$s|left"
 msgstr "Dé la vuelta %1$s"
@@ -353,7 +359,8 @@ msgstr "Dé la vuelta %1$s"
 msgid "then make a U-turn|right"
 msgstr "luego dé la vuelta"
 
-#. TRANSLATORS: the arg. is distance. Right U-turn, the stuff after | doesn't have to be included.
+#. TRANSLATORS: the arg. is distance. Right U-turn, the stuff after | doesn't
+#. have to be included.
 #, c-format
 msgid "Make a U-turn %1$s|right"
 msgstr "Dé la vuelta %1$s"
@@ -365,11 +372,10 @@ msgstr "Dé la vuelta %1$s"
 #. * in cases where relevant destination info is available.
 #. * Even if there is no driving command to be announced, in some cases
 #. * there is an overhead roadsign in preparation of an upcoming road-split,
-#. * and then we can give useful info to the driver.
+#. * and then we can give usefull info to the driver.
 #. *
 #. *  UNTESTED !
 #. *
-#.
 msgid "follow"
 msgstr "continúe"
 
@@ -398,14 +404,8 @@ msgstr "Orden"
 msgid "Length"
 msgstr "Longitud"
 
-msgid "mi"
-msgstr "mi"
-
 msgid "km"
 msgstr "km"
-
-msgid "feet"
-msgstr "pies"
 
 msgid "m"
 msgstr "m"
@@ -1453,43 +1453,41 @@ msgid ""
 "navit usage:\n"
 "navit [options] [configfile]\n"
 "\t-c <file>: use <file> as config file, instead of using the default file.\n"
-"\t-d <n>: set the global debug output level to <n> (0=error, 1=warning, "
-"2=info, 3=debug).\n"
-"\tSettings from config file will still take effect where they set a higher "
-"level.\n"
+"\t-d <n>: set the global debug output level to <n> (0=error, 1=warning, 2=info, 3=debug).\n"
+"\tSettings from config file will still take effect where they set a higher level.\n"
 "\t-h: print this usage info and exit.\n"
 "\t-v: print the version and exit.\n"
 msgstr ""
 "uso de navit:\n"
 "navit [opciones][archivo config]\n"
-"\t-c <archivo>: usa <archivo> como archivo de configuración en lugar del "
-"archivo por defecto.\n"
-"\t-d <n>: fija el nivel global de salida de debug a <n> (0=error, 1=warning, "
-"2=info, 3=debug).\n"
-"\tLas configuraciones del archivo de configuración aún tendrán efecto donde "
-"fijen un nivel mayor.\n"
+"\t-c <archivo>: usa <archivo> como archivo de configuración en lugar del archivo por defecto.\n"
+"\t-d <n>: fija el nivel global de salida de debug a <n> (0=error, 1=warning, 2=info, 3=debug).\n"
+"\tLas configuraciones del archivo de configuración aún tendrán efecto donde fijen un nivel mayor.\n"
 "\t-h: muestra este mensaje de ayuda y termina.\n"
 "\t-v: muestra la versión y termina.\n"
 
 #. We have not found an existing config file from all possibilities
-msgid "No config file navit.xml, navit.xml.local found"
-msgstr ""
+msgid "No config file navit.xml, navit.xml.local found\n"
+msgstr "No hay fichero de configuración navit.xml, encontrado navit.xml.local\n"
 
 #, c-format
-msgid "Error parsing config file '%s': %s"
-msgstr ""
+msgid "Error parsing config file '%s': %s\n"
+msgstr "Error cargando el fichero de configuración '%s': %s\n"
 
 #, c-format
-msgid "Using config file '%s'"
-msgstr ""
+msgid "Using config file '%s'\n"
+msgstr "Usando el fichero de configuración '%s'\n"
 
 #, c-format
-msgid "Error: No configuration found in config file '%s'"
+msgid "Error: No configuration found in config file '%s'\n"
 msgstr ""
+"Error: No se encontró la configuración en el archivo de configuración '%s'\n"
 
 msgid ""
-"Internal initialization failed, exiting. Check previous error messages."
+"Internal initialization failed, exiting. Check previous error messages.\n"
 msgstr ""
+"Inicialización interna fallida, saliendo. Compruebe mensajes previos de "
+"error\n"
 
 msgid "unknown street"
 msgstr "calle desconocida"
@@ -1553,7 +1551,10 @@ msgstr "Marcador"
 msgid "Destination"
 msgstr "Destino"
 
-#. TRANSLATORS: These texts are for menu items in GTK GUI. The _ indicates the mnemonic key (=underlined character) for this menu item. Please place the _ before a suitable character in the translation (or omit it if no mnemonic key is desired).
+#. TRANSLATORS: These texts are for menu items in GTK GUI. The _ indicates the
+#. mnemonic key (=underlined character) for this menu item. Please place the _
+#. before a suitable character in the translation (or omit it if no mnemonic
+#. key is desired).
 msgid "_Display"
 msgstr "_Visualizar"
 
@@ -1628,9 +1629,6 @@ msgstr "_Mostrar posición del cursor"
 
 msgid "_Lock on Road"
 msgstr "_Bloqueo en la ruta"
-
-msgid "_Follow Vehicle"
-msgstr ""
 
 msgid "_Keep orientation to the North"
 msgstr "Mantener _orientación al Norte"
@@ -1709,16 +1707,16 @@ msgid "POI %s. %s"
 msgstr "POI %s. %s"
 
 #, c-format
-msgid "Set destination to %ld, %ld "
-msgstr ""
+msgid "Set destination to %ld, %ld \n"
+msgstr "Cambiar destino a %ld, %ld \n"
 
 #, c-format
-msgid "Set map to %ld, %ld "
-msgstr ""
+msgid "Set map to %ld, %ld \n"
+msgstr "Cambiar mapa a % ld, %ld \n"
 
 #, c-format
-msgid "Set next visit to %ld, %ld "
-msgstr ""
+msgid "Set next visit to %ld, %ld \n"
+msgstr "Conjunto siguiente visita a %ld, %ld \n"
 
 msgid "POI search"
 msgstr "Búsqueda de puntos de interés"
@@ -1732,15 +1730,15 @@ msgstr "Seleccione una distancia para buscar (km)"
 msgid "Select a POI"
 msgstr "Seleccionar un POI"
 
-msgid " "
-msgstr " "
-
 msgid "Category"
 msgstr "Categoría"
 
 msgid "Direction"
 msgstr "Dirección"
 
+# TRANSLATORS: This is the distance to a Point of Interest (POI) in the POI
+# window. It will be feet (imperial) or, meters (metric), depending on the
+# user's preference.
 msgid "Distance(m)"
 msgstr "Distancia(m)"
 
@@ -1788,8 +1786,8 @@ msgid "OT"
 msgstr "OT"
 
 #, c-format
-msgid "Route %4.1f%s    %02d:%02d ETA"
-msgstr ""
+msgid "Route %4.0fkm    %02d:%02d ETA"
+msgstr "Ruta %4.0fkm    %02d:%02d TEL"
 
 msgid "Route 0000km  0+00:00 ETA"
 msgstr "Ruta 0000km  0+00:00 TEL"
@@ -1960,12 +1958,12 @@ msgstr "Puntos de paso"
 msgid "Enter Coordinates"
 msgstr "Introduzca coordenadas"
 
-#.
-#. w=gui_internal_box_new(this, gravity_left_top|orientation_vertical|flags_expand|flags_fill)
-#. gui_internal_widget_append(wb, w)
-#.
-#. we=gui_internal_box_new(this, gravity_left_center|orientation_horizontal|flags_fill)
-#. gui_internal_widget_append(w, we)
+#. w=gui_internal_box_new(this,
+#. gravity_left_top|orientation_vertical|flags_expand|flags_fill);
+#. gui_internal_widget_append(wb, w);
+#. we=gui_internal_box_new(this,
+#. gravity_left_center|orientation_horizontal|flags_fill);
+#. gui_internal_widget_append(w, we);
 msgid "Latitude Longitude"
 msgstr "Latitud Longitud"
 
@@ -1999,22 +1997,11 @@ msgstr "Diseño"
 msgid "Height Profile"
 msgstr "Perfil de altura"
 
-msgid "please install a map *.heightlines.bin to provide elevationdata"
-msgstr ""
-"por favor, instale un mapa *.heightlines.bin para suministrar información de "
-"altimetría."
-
-msgid "The route must cross at least 2 heightlines"
-msgstr "La ruta cruza al menos 2 curvas de nivel"
-
 msgid "Route Description"
 msgstr "Descripción de ruta"
 
 msgid "Show Locale"
 msgstr "Mostrar locale"
-
-msgid "Network info"
-msgstr "Info. de red"
 
 msgid "Former Destinations"
 msgstr "Destinos anteriores"
@@ -2054,8 +2041,449 @@ msgstr "¡Atención! Radar"
 msgid "Please decrease your speed"
 msgstr "Por favor, disminuya su velocidad"
 
+msgid "partial match"
+msgstr "Coincidencia parcial"
+
+#. Android resource: @strings/address_search_button
+msgid "Search"
+msgstr "Búsqueda"
+
+#. Android resource: @strings/address_search_towns
+msgid "Towns"
+msgstr "Ciudades"
+
+#. Android resource: @strings/position_popup_drive_here
+msgid "Route to here"
+msgstr "Ruta hasta aquí"
+
+msgid "Map data (c) OpenStreetMap contributors, ODBL"
+msgstr "Datos de Mapa (c) contribuyentes de OpenStreetMap,  ODBL"
+
+msgid ""
+"Current map location %s is not available\n"
+"Please restart Navit after you attach an SD card or select a different map location."
+msgstr ""
+"Ubicación actual del mapa %s no se encuentra disponible\n"
+"Por favor reiniciar Navit después de conectar una tarjeta SD o seleccione una ubicación del mapa diferente."
+
+msgid "Downloaded maps"
+msgstr "Mapas descargados"
+
+msgid ""
+"Sorry, we currently do not support maps above 3.8G on Android, please select"
+" a smaller one."
+msgstr ""
+"Lo sentimos, actualmente no permitimos mapas por encima de 3,8 G en Android,"
+" por favor, seleccione una versión más pequeña."
+
+msgid "Cancel"
+msgstr "Cancelar"
+
 msgid "filenamePath"
 msgstr ""
+
+msgid ""
+"New location set to %s\n"
+"Restart Navit to apply the changes."
+msgstr ""
+"Nueva ubicación cambiada a %s\n"
+"Reinicie Navit para aplicar los cambios."
+
+msgid "Whole Planet"
+msgstr "Todo el Planeta"
+
+msgid "Africa"
+msgstr "África"
+
+msgid "Canary Islands"
+msgstr "Islas Canarias"
+
+msgid "Asia"
+msgstr "Asia"
+
+msgid "Korea"
+msgstr "Corea"
+
+msgid "Taiwan"
+msgstr "Taiwán"
+
+msgid "UAE+Other"
+msgstr "Emiratos Árabes Unidos + Otros"
+
+msgid "Oceania"
+msgstr "Oceanía"
+
+msgid "Tasmania"
+msgstr "Tasmania"
+
+msgid "Victoria"
+msgstr "Victoria"
+
+msgid "New South Wales"
+msgstr "Nueva Gales del Sur"
+
+msgid "Europe"
+msgstr "Europa"
+
+msgid "Western Europe"
+msgstr "Europa Occidental"
+
+msgid "Azores"
+msgstr "Azores"
+
+msgid "BeNeLux"
+msgstr "Benelux"
+
+msgid "Alsace"
+msgstr "Alsacia"
+
+msgid "Aquitaine"
+msgstr "Aquitania"
+
+msgid "Auvergne"
+msgstr "Auvernia"
+
+msgid "Basse-Normandie"
+msgstr "Baja Normandía"
+
+msgid "Bourgogne"
+msgstr "Borgoña"
+
+msgid "Bretagne"
+msgstr "Bretaña"
+
+msgid "Centre"
+msgstr "Centro"
+
+msgid "Champagne-Ardenne"
+msgstr "Champaña - Ardenas"
+
+msgid "Corse"
+msgstr "Córcega"
+
+msgid "Franche-Comte"
+msgstr "Franco Condado"
+
+msgid "Haute-Normandie"
+msgstr "Alta Normandía"
+
+msgid "Ile-de-France"
+msgstr "Isla de Francia"
+
+msgid "Languedoc-Roussillon"
+msgstr "Languedoc - Rosellón"
+
+msgid "Limousin"
+msgstr "Limusina"
+
+msgid "Lorraine"
+msgstr "Lorena"
+
+msgid "Midi-Pyrenees"
+msgstr "Midi - Pirineos"
+
+msgid "Nord-pas-de-Calais"
+msgstr "Paso Norte de Calais"
+
+msgid "Pays-de-la-Loire"
+msgstr "Países del Loira"
+
+msgid "Picardie"
+msgstr "Paradía"
+
+msgid "Poitou-Charentes"
+msgstr "Poitou-Charentes"
+
+msgid "Provence-Alpes-Cote-d-Azur"
+msgstr "Alpes - Costa Azul"
+
+msgid "Rhone-Alpes"
+msgstr "Rhone - Alpes"
+
+msgid "Baden-Wuerttemberg"
+msgstr "Baden-Wuerttemberg"
+
+msgid "Bayern"
+msgstr "Baviera"
+
+msgid "Mittelfranken"
+msgstr "Franconia Media"
+
+msgid "Niederbayern"
+msgstr "Baja Baviera"
+
+msgid "Oberbayern"
+msgstr "Alta Baviera"
+
+msgid "Oberfranken"
+msgstr "Alta Franconia"
+
+msgid "Oberpfalz"
+msgstr "Alto Palatinado"
+
+msgid "Schwaben"
+msgstr "Schawben"
+
+msgid "Unterfranken"
+msgstr "Baja Franconia"
+
+msgid "Berlin"
+msgstr "Berlín"
+
+msgid "Brandenburg"
+msgstr "Brandenburgo"
+
+msgid "Bremen"
+msgstr "Bremen"
+
+msgid "Hamburg"
+msgstr "Hamburgo"
+
+msgid "Hessen"
+msgstr "Hessen"
+
+msgid "Mecklenburg-Vorpommern"
+msgstr "Mecklemburgo-Pomerania"
+
+msgid "Niedersachsen"
+msgstr "Niedersachsen"
+
+msgid "Nordrhein-westfalen"
+msgstr "Renania del Norte-Westfalia"
+
+msgid "Rheinland-Pfalz"
+msgstr "Renania del Norte-Westfalia"
+
+msgid "Saarland"
+msgstr "Sarre"
+
+msgid "Sachsen-Anhalt"
+msgstr "Sajonia-Anhalt"
+
+msgid "Sachsen"
+msgstr "Sachsen"
+
+msgid "Schleswig-Holstein"
+msgstr "Schleswig-Holstein"
+
+msgid "Thueringen"
+msgstr "Turingia"
+
+msgid "Mallorca"
+msgstr "Mallorca"
+
+msgid "Galicia"
+msgstr "Galicia"
+
+msgid "Scandinavia"
+msgstr "Escandinavia"
+
+msgid "England"
+msgstr "Inglaterra"
+
+msgid "Buckinghamshire"
+msgstr "Buckinghamshire"
+
+msgid "Cambridgeshire"
+msgstr "Cambridgeshire"
+
+msgid "Cumbria"
+msgstr "Cumbria"
+
+msgid "East yorkshire with hull"
+msgstr "Yorkshire Este con Hull"
+
+msgid "Essex"
+msgstr "Essex"
+
+msgid "Herefordshire"
+msgstr "Herefordshire"
+
+msgid "Kent"
+msgstr "Kent"
+
+msgid "Lancashire"
+msgstr "Lancashire"
+
+msgid "Leicestershire"
+msgstr "Leicestershire"
+
+msgid "Norfolk"
+msgstr "Norfolk"
+
+msgid "Nottinghamshire"
+msgstr "Nottinghamshire"
+
+msgid "Oxfordshire"
+msgstr "Oxfordshire"
+
+msgid "Shropshire"
+msgstr "Shropshire"
+
+msgid "Somerset"
+msgstr "Somerset"
+
+msgid "South yorkshire"
+msgstr "Yorkshire Sur"
+
+msgid "Suffolk"
+msgstr "Suffolk"
+
+msgid "Surrey"
+msgstr "Surrey"
+
+msgid "Wiltshire"
+msgstr "Wiltshire"
+
+msgid "Scotland"
+msgstr "Escocia"
+
+msgid "Wales"
+msgstr "Gales"
+
+msgid "Crete"
+msgstr "Creta"
+
+msgid "North America"
+msgstr "Norteamérica"
+
+msgid "Alaska"
+msgstr "Alaska"
+
+msgid "Hawaii"
+msgstr "Hawái"
+
+msgid "USA"
+msgstr "Estados Unidos de Norteamérica"
+
+msgid " (except Alaska and Hawaii)"
+msgstr " (excepto Alaska y Hawái)"
+
+msgid "Midwest"
+msgstr "Medio-Oeste"
+
+msgid "Michigan"
+msgstr "Michigan"
+
+msgid "Ohio"
+msgstr "Ohio"
+
+msgid "Northeast"
+msgstr "Noreste"
+
+msgid "Massachusetts"
+msgstr "Massachusetts"
+
+msgid "Vermont"
+msgstr "Vermont"
+
+msgid "Pacific"
+msgstr "Pacífico"
+
+msgid "South"
+msgstr "Sur"
+
+msgid "Arkansas"
+msgstr "Arkansas"
+
+msgid "District of Columbia"
+msgstr "Distrito de Columbia"
+
+msgid "Florida"
+msgstr "Florida"
+
+msgid "Louisiana"
+msgstr "Luisiana"
+
+msgid "Maryland"
+msgstr "Maryland"
+
+msgid "Mississippi"
+msgstr "Mississippi"
+
+msgid "Oklahoma"
+msgstr "Oklahoma"
+
+msgid "Texas"
+msgstr "Tejas"
+
+msgid "Virginia"
+msgstr "Virginia"
+
+msgid "West Virginia"
+msgstr "Virginia Occidental"
+
+msgid "West"
+msgstr "Oeste"
+
+msgid "Arizona"
+msgstr "Arizona"
+
+msgid "California"
+msgstr "California"
+
+msgid "Colorado"
+msgstr "Colorado"
+
+msgid "Idaho"
+msgstr "Idaho"
+
+msgid "Montana"
+msgstr "Montana"
+
+msgid "New Mexico"
+msgstr "Nuevo Méjico"
+
+msgid "Nevada"
+msgstr "Nevada"
+
+msgid "Oregon"
+msgstr "Oregón"
+
+msgid "Utah"
+msgstr "Utah"
+
+msgid "Washington State"
+msgstr "Estado de Washington"
+
+msgid "South+Middle America"
+msgstr "Suramérica + Centroamérica"
+
+msgid "Guyane Francaise"
+msgstr "Guayana Francesa"
+
+msgid "downloading"
+msgstr "descargando"
+
+#. Android resource: @strings/map_download_ready
+msgid "ready"
+msgstr "listo"
+
+msgid "Media selected for map storage is not available"
+msgstr ""
+"Los medios de comunicación seleccionados para el almacenamiento del mapa no "
+"está disponible"
+
+#. Android resource: @strings/map_download_not_enough_free_space
+msgid "Not enough free space"
+msgstr "No hay suficiente espacio libre"
+
+msgid "Error downloading map!"
+msgstr "Error al descargar el mapa"
+
+msgid "Error writing map!"
+msgstr "Error al guardar el mapa"
+
+msgid "Map download aborted!"
+msgstr "Descarga del mapa interrumpida"
+
+#. Android resource: @strings/map_download_eta
+msgid "ETA"
+msgstr "Tiempo estimado"
+
+#. Android resource: @strings/map_download_title
+msgid "Map download"
+msgstr "Mapa descargado"
 
 msgid "Vehicle Position"
 msgstr "Posición del vehículo"
@@ -2113,18 +2541,6 @@ msgstr "Pantalla completa"
 
 msgid "Window Mode"
 msgstr "Modo ventana"
-
-msgid "Auto zoom"
-msgstr "Zoom automático"
-
-msgid "Manual zoom"
-msgstr "Zoom manual"
-
-msgid "Layers"
-msgstr "Capas"
-
-msgid "Zoom to route"
-msgstr "Zoom a ruta"
 
 msgid "Description"
 msgstr "Descripción"
@@ -2185,8 +2601,7 @@ msgstr "Bienvenido a Navit"
 msgid ""
 "Thank you for installing Navit!\n"
 "\n"
-"To start, select \"Download maps\" from the menu to download a map. Note: "
-"The map filesize may be large (>50MB) - a wifi connection is recommended.\n"
+"To start, select \"Download maps\" from the menu to download a map. Note: The map filesize may be large (>50MB) - a wifi connection is recommended.\n"
 "\n"
 "Mapdata: (c) OpenStreetMap contributors\n"
 "\n"
@@ -2194,9 +2609,7 @@ msgid ""
 msgstr ""
 "Gracias por instalar Navit!\n"
 "\n"
-"Para iniciar, seleccione \"Descarga de mapas\" del menú para descargar un "
-"mapa. Nota: El tamaño del mapa puede ser grande (>50 MB) - se recomienda una "
-"conexión Wi-Fi.\n"
+"Para iniciar, seleccione \"Descarga de mapas\" del menú para descargar un mapa. Nota: El tamaño del mapa puede ser grande (>50 MB) - se recomienda una conexión Wi-Fi.\n"
 "\n"
 "Mapdata: (c) OpenStreetMap contributors\n"
 "\n"
@@ -2238,29 +2651,13 @@ msgstr "Respaldar / Restaurar"
 msgid "Set map location"
 msgstr "Establecer ubicación en mapa"
 
-#. Android resource: @strings/position_popup_drive_here
-msgid "Route to here"
-msgstr "Ruta hasta aquí"
-
 #. Android resource: @strings/map_delete
 msgid "Delete this map?"
 msgstr "¿Borrar este mapa?"
 
-#. Android resource: @strings/map_download_title
-msgid "Map download"
-msgstr "Mapa descargado"
-
 #. Android resource: @strings/map_download_downloading
 msgid "Downloading:"
 msgstr "Descargando:"
-
-#. Android resource: @strings/map_download_eta
-msgid "ETA"
-msgstr "Tiempo estimado"
-
-#. Android resource: @strings/map_download_ready
-msgid "ready"
-msgstr "listo"
 
 #. Android resource: @strings/map_download_download_error
 msgid "Error downloading map."
@@ -2269,10 +2666,6 @@ msgstr "Error descargando mapa"
 #. Android resource: @strings/map_download_download_aborted
 msgid "Map download aborted"
 msgstr "Descarga de mapa interrumpida"
-
-#. Android resource: @strings/map_download_not_enough_free_space
-msgid "Not enough free space"
-msgstr "No hay suficiente espacio libre"
 
 #. Android resource: @strings/map_no_fix
 msgid "No location. Reopen after location fix."
@@ -2293,10 +2686,6 @@ msgstr "Introduzca destino"
 #. Android resource: @strings/address_partial_match
 msgid "Match partial address"
 msgstr "Coincidencia parcial en la dirección"
-
-#. Android resource: @strings/address_search_button
-msgid "Search"
-msgstr "Búsqueda"
 
 #. Android resource: @strings/address_search_searching
 msgid "Searching..."
@@ -2325,10 +2714,6 @@ msgstr "No se introdujo texto"
 #. Android resource: @strings/address_search_set_destination
 msgid "Setting destination to:"
 msgstr "Configurando destino a:"
-
-#. Android resource: @strings/address_search_towns
-msgid "Towns"
-msgstr "Ciudades"
 
 #. Android resource: @strings/choose_an_action
 msgid "Choose an action"
@@ -2407,476 +2792,3 @@ msgstr ""
 "Navit puede usar cualquier sintetizador de voz instalado en el dispositivo. "
 "El sintetizador seleccionado actualmente informa de que no puede hablar en "
 "su idioma. ¿Desea ver el diálogo de descarga de voces del sistema?"
-
-#. Android resource: @strings/permissions_not_granted
-msgid ""
-"Navit needs permission to access GPS and read the map.\n"
-"If you change your mind please restart Navit and grant the permissions"
-msgstr ""
-"Navit necesita permiso para acceder al GPS y abrir el mapa.\n"
-"Si cambia de opinión, por favor reinicie Navit y conceda los permisos."
-
-#. Android resource: @strings/permissions_info_box_title
-msgid "One or more ungranted permissions"
-msgstr "Uno o más permisos rechazados"
-
-#, c-format
-#~ msgid "Route %4.0fkm    %02d:%02d ETA"
-#~ msgstr "Ruta %4.0fkm    %02d:%02d TEL"
-
-#~ msgid "No config file navit.xml, navit.xml.local found\n"
-#~ msgstr ""
-#~ "No hay fichero de configuración navit.xml, encontrado navit.xml.local\n"
-
-#, c-format
-#~ msgid "Error parsing config file '%s': %s\n"
-#~ msgstr "Error cargando el fichero de configuración '%s': %s\n"
-
-#, c-format
-#~ msgid "Using config file '%s'\n"
-#~ msgstr "Usando el fichero de configuración '%s'\n"
-
-#~ msgid ""
-#~ "Internal initialization failed, exiting. Check previous error messages.\n"
-#~ msgstr ""
-#~ "Inicialización interna fallida, saliendo. Compruebe mensajes previos de "
-#~ "error\n"
-
-#~ msgid "Cancel"
-#~ msgstr "Cancelar"
-
-#~ msgid "Downloaded maps"
-#~ msgstr "Mapas descargados"
-
-#~ msgid "partial match"
-#~ msgstr "Coincidencia parcial"
-
-#~ msgid "Taiwan"
-#~ msgstr "Taiwán"
-
-#~ msgid "Asia"
-#~ msgstr "Asia"
-
-#~ msgid "Canary Islands"
-#~ msgstr "Islas Canarias"
-
-#~ msgid "Whole Planet"
-#~ msgstr "Todo el Planeta"
-
-#~ msgid "Korea"
-#~ msgstr "Corea"
-
-#~ msgid "Tasmania"
-#~ msgstr "Tasmania"
-
-#~ msgid "Victoria"
-#~ msgstr "Victoria"
-
-#~ msgid "Oceania"
-#~ msgstr "Oceanía"
-
-#~ msgid "UAE+Other"
-#~ msgstr "Emiratos Árabes Unidos + Otros"
-
-#~ msgid "BeNeLux"
-#~ msgstr "Benelux"
-
-#~ msgid "Alsace"
-#~ msgstr "Alsacia"
-
-#~ msgid "Western Europe"
-#~ msgstr "Europa Occidental"
-
-#~ msgid "Azores"
-#~ msgstr "Azores"
-
-#~ msgid "New South Wales"
-#~ msgstr "Nueva Gales del Sur"
-
-#~ msgid "Europe"
-#~ msgstr "Europa"
-
-#~ msgid "Bourgogne"
-#~ msgstr "Borgoña"
-
-#~ msgid "Auvergne"
-#~ msgstr "Auvernia"
-
-#~ msgid "Aquitaine"
-#~ msgstr "Aquitania"
-
-#~ msgid "Basse-Normandie"
-#~ msgstr "Baja Normandía"
-
-#~ msgid "Lorraine"
-#~ msgstr "Lorena"
-
-#~ msgid "Languedoc-Roussillon"
-#~ msgstr "Languedoc - Rosellón"
-
-#~ msgid "Bretagne"
-#~ msgstr "Bretaña"
-
-#~ msgid "Haute-Normandie"
-#~ msgstr "Alta Normandía"
-
-#~ msgid "Centre"
-#~ msgstr "Centro"
-
-#~ msgid "Corse"
-#~ msgstr "Córcega"
-
-#~ msgid "Champagne-Ardenne"
-#~ msgstr "Champaña - Ardenas"
-
-#~ msgid "Baden-Wuerttemberg"
-#~ msgstr "Baden-Wuerttemberg"
-
-#~ msgid "Rhone-Alpes"
-#~ msgstr "Rhone - Alpes"
-
-#~ msgid "Provence-Alpes-Cote-d-Azur"
-#~ msgstr "Alpes - Costa Azul"
-
-#~ msgid "Midi-Pyrenees"
-#~ msgstr "Midi - Pirineos"
-
-#~ msgid "Nord-pas-de-Calais"
-#~ msgstr "Paso Norte de Calais"
-
-#~ msgid "Picardie"
-#~ msgstr "Paradía"
-
-#~ msgid "Schwaben"
-#~ msgstr "Schawben"
-
-#~ msgid "Hamburg"
-#~ msgstr "Hamburgo"
-
-#~ msgid "Bremen"
-#~ msgstr "Bremen"
-
-#~ msgid "Berlin"
-#~ msgstr "Berlín"
-
-#~ msgid "Brandenburg"
-#~ msgstr "Brandenburgo"
-
-#~ msgid "Saarland"
-#~ msgstr "Sarre"
-
-#~ msgid "Niedersachsen"
-#~ msgstr "Niedersachsen"
-
-#~ msgid "Hessen"
-#~ msgstr "Hessen"
-
-#~ msgid "Sachsen"
-#~ msgstr "Sachsen"
-
-#~ msgid "Thueringen"
-#~ msgstr "Turingia"
-
-#~ msgid "Schleswig-Holstein"
-#~ msgstr "Schleswig-Holstein"
-
-#~ msgid "Cumbria"
-#~ msgstr "Cumbria"
-
-#~ msgid "Herefordshire"
-#~ msgstr "Herefordshire"
-
-#~ msgid "Essex"
-#~ msgstr "Essex"
-
-#~ msgid "Buckinghamshire"
-#~ msgstr "Buckinghamshire"
-
-#~ msgid "Galicia"
-#~ msgstr "Galicia"
-
-#~ msgid "Mallorca"
-#~ msgstr "Mallorca"
-
-#~ msgid "England"
-#~ msgstr "Inglaterra"
-
-#~ msgid "Scandinavia"
-#~ msgstr "Escandinavia"
-
-#~ msgid "Cambridgeshire"
-#~ msgstr "Cambridgeshire"
-
-#~ msgid "Oxfordshire"
-#~ msgstr "Oxfordshire"
-
-#~ msgid "Nottinghamshire"
-#~ msgstr "Nottinghamshire"
-
-#~ msgid "Lancashire"
-#~ msgstr "Lancashire"
-
-#~ msgid "Kent"
-#~ msgstr "Kent"
-
-#~ msgid "Norfolk"
-#~ msgstr "Norfolk"
-
-#~ msgid "Leicestershire"
-#~ msgstr "Leicestershire"
-
-#~ msgid "Suffolk"
-#~ msgstr "Suffolk"
-
-#~ msgid "Somerset"
-#~ msgstr "Somerset"
-
-#~ msgid " (except Alaska and Hawaii)"
-#~ msgstr " (excepto Alaska y Hawái)"
-
-#~ msgid "USA"
-#~ msgstr "Estados Unidos de Norteamérica"
-
-#~ msgid "Hawaii"
-#~ msgstr "Hawái"
-
-#~ msgid "Alaska"
-#~ msgstr "Alaska"
-
-#~ msgid "Crete"
-#~ msgstr "Creta"
-
-#~ msgid "North America"
-#~ msgstr "Norteamérica"
-
-#~ msgid "Scotland"
-#~ msgstr "Escocia"
-
-#~ msgid "Wales"
-#~ msgstr "Gales"
-
-#~ msgid "Surrey"
-#~ msgstr "Surrey"
-
-#~ msgid "Wiltshire"
-#~ msgstr "Wiltshire"
-
-#~ msgid "Pacific"
-#~ msgstr "Pacífico"
-
-#~ msgid "South"
-#~ msgstr "Sur"
-
-#~ msgid "Arkansas"
-#~ msgstr "Arkansas"
-
-#~ msgid "District of Columbia"
-#~ msgstr "Distrito de Columbia"
-
-#~ msgid "Ohio"
-#~ msgstr "Ohio"
-
-#~ msgid "Michigan"
-#~ msgstr "Michigan"
-
-#~ msgid "Vermont"
-#~ msgstr "Vermont"
-
-#~ msgid "Massachusetts"
-#~ msgstr "Massachusetts"
-
-#~ msgid "Florida"
-#~ msgstr "Florida"
-
-#~ msgid "Louisiana"
-#~ msgstr "Luisiana"
-
-#~ msgid "Maryland"
-#~ msgstr "Maryland"
-
-#~ msgid "Oklahoma"
-#~ msgstr "Oklahoma"
-
-#~ msgid "Mississippi"
-#~ msgstr "Mississippi"
-
-#~ msgid "Texas"
-#~ msgstr "Tejas"
-
-#~ msgid "West Virginia"
-#~ msgstr "Virginia Occidental"
-
-#~ msgid "Virginia"
-#~ msgstr "Virginia"
-
-#~ msgid "Arizona"
-#~ msgstr "Arizona"
-
-#~ msgid "West"
-#~ msgstr "Oeste"
-
-#~ msgid "Washington State"
-#~ msgstr "Estado de Washington"
-
-#~ msgid "South+Middle America"
-#~ msgstr "Suramérica + Centroamérica"
-
-#~ msgid "Oregon"
-#~ msgstr "Oregón"
-
-#~ msgid "Utah"
-#~ msgstr "Utah"
-
-#~ msgid "Nevada"
-#~ msgstr "Nevada"
-
-#~ msgid "New Mexico"
-#~ msgstr "Nuevo Méjico"
-
-#~ msgid "Colorado"
-#~ msgstr "Colorado"
-
-#~ msgid "California"
-#~ msgstr "California"
-
-#~ msgid "Montana"
-#~ msgstr "Montana"
-
-#~ msgid "Idaho"
-#~ msgstr "Idaho"
-
-#~ msgid "Error downloading map!"
-#~ msgstr "Error al descargar el mapa"
-
-#~ msgid "Guyane Francaise"
-#~ msgstr "Guayana Francesa"
-
-#~ msgid "downloading"
-#~ msgstr "descargando"
-
-#~ msgid "Map download aborted!"
-#~ msgstr "Descarga del mapa interrumpida"
-
-#~ msgid "Error writing map!"
-#~ msgstr "Error al guardar el mapa"
-
-#~ msgid "Mittelfranken"
-#~ msgstr "Franconia Media"
-
-#~ msgid "Africa"
-#~ msgstr "África"
-
-#~ msgid "Map data (c) OpenStreetMap contributors, ODBL"
-#~ msgstr "Datos de Mapa (c) contribuyentes de OpenStreetMap,  ODBL"
-
-#~ msgid "Ile-de-France"
-#~ msgstr "Isla de Francia"
-
-#~ msgid "Limousin"
-#~ msgstr "Limusina"
-
-#~ msgid "Pays-de-la-Loire"
-#~ msgstr "Países del Loira"
-
-#~ msgid "Poitou-Charentes"
-#~ msgstr "Poitou-Charentes"
-
-#~ msgid "Franche-Comte"
-#~ msgstr "Franco Condado"
-
-#~ msgid "Northeast"
-#~ msgstr "Noreste"
-
-#~ msgid "Midwest"
-#~ msgstr "Medio-Oeste"
-
-#~ msgid "Oberpfalz"
-#~ msgstr "Alto Palatinado"
-
-#~ msgid "Oberfranken"
-#~ msgstr "Alta Franconia"
-
-#~ msgid "Unterfranken"
-#~ msgstr "Baja Franconia"
-
-#~ msgid "Rheinland-Pfalz"
-#~ msgstr "Renania del Norte-Westfalia"
-
-#~ msgid "Mecklenburg-Vorpommern"
-#~ msgstr "Mecklemburgo-Pomerania"
-
-#~ msgid "Sachsen-Anhalt"
-#~ msgstr "Sajonia-Anhalt"
-
-#~ msgid "Nordrhein-westfalen"
-#~ msgstr "Renania del Norte-Westfalia"
-
-#~ msgid "South yorkshire"
-#~ msgstr "Yorkshire Sur"
-
-#~ msgid "Shropshire"
-#~ msgstr "Shropshire"
-
-#~ msgid "East yorkshire with hull"
-#~ msgstr "Yorkshire Este con Hull"
-
-#, c-format
-#~ msgid "then leave the roundabout at the %1$s %2$s"
-#~ msgstr "después salga de la rotonda por la %1$s %2$s"
-
-#~ msgid "Bayern"
-#~ msgstr "Baviera"
-
-#~ msgid "Niederbayern"
-#~ msgstr "Baja Baviera"
-
-#~ msgid "Oberbayern"
-#~ msgstr "Alta Baviera"
-
-#~ msgid "Distance from screen center (km)"
-#~ msgstr "Distancia del centro de la pantalla (km)"
-
-#, c-format
-#~ msgid "Set destination to %ld, %ld \n"
-#~ msgstr "Cambiar destino a %ld, %ld \n"
-
-#, c-format
-#~ msgid "Set map to %ld, %ld \n"
-#~ msgstr "Cambiar mapa a % ld, %ld \n"
-
-#, c-format
-#~ msgid "Set next visit to %ld, %ld \n"
-#~ msgstr "Conjunto siguiente visita a %ld, %ld \n"
-
-#~ msgid ""
-#~ "Current map location %s is not available\n"
-#~ "Please restart Navit after you attach an SD card or select a different map "
-#~ "location."
-#~ msgstr ""
-#~ "Ubicación actual del mapa %s no se encuentra disponible\n"
-#~ "Por favor reiniciar Navit después de conectar una tarjeta SD o seleccione "
-#~ "una ubicación del mapa diferente."
-
-#~ msgid ""
-#~ "Sorry, we currently do not support maps above 3.8G on Android, please select "
-#~ "a smaller one."
-#~ msgstr ""
-#~ "Lo sentimos, actualmente no permitimos mapas por encima de 3,8 G en Android, "
-#~ "por favor, seleccione una versión más pequeña."
-
-#~ msgid ""
-#~ "New location set to %s\n"
-#~ "Restart Navit to apply the changes."
-#~ msgstr ""
-#~ "Nueva ubicación cambiada a %s\n"
-#~ "Reinicie Navit para aplicar los cambios."
-
-#~ msgid "Media selected for map storage is not available"
-#~ msgstr ""
-#~ "Los medios de comunicación seleccionados para el almacenamiento del mapa no "
-#~ "está disponible"
-
-#, c-format
-#~ msgid "Error: No configuration found in config file '%s'\n"
-#~ msgstr ""
-#~ "Error: No se encontró la configuración en el archivo de configuración '%s'\n"
