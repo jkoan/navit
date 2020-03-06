@@ -73,6 +73,8 @@
 #define KEY_RIGHT GDK_Right
 #endif
 
+GdkPixbuf *geticon(const char *name);
+
 static gboolean keypress(GtkWidget *widget, GdkEventKey *event, struct gui_priv *this) {
     int w,h;
     struct transformation *t;
@@ -323,6 +325,7 @@ static void gui_gtk_action_activate(GtkAction *action, struct action_cb_data *da
     if(data->attr.type == attr_destination) {
         char * label;
         g_object_get(G_OBJECT(action), "label", &label,NULL);
+        navit_populate_search_results_map(data->gui->nav, NULL, NULL); 	/* Remove any highlighted point on the map */
         navit_set_destination(data->gui->nav, data->attr.u.pcoord, label, 1);
         g_free(label);
     }
@@ -338,7 +341,8 @@ static void gui_gtk_del_menu(struct gui_priv *this, struct gui_menu_info *meninf
     gtk_ui_manager_remove_ui(this->ui_manager, meninfo->merge_id);
 }
 
-static struct gui_menu_info gui_gtk_add_menu(struct gui_priv *this, char *name, char *label, char *path, int submenu, struct action_cb_data *data) {
+static struct gui_menu_info gui_gtk_add_menu(struct gui_priv *this, char *name, char *label, char *path, int submenu,
+        struct action_cb_data *data) {
     struct gui_menu_info meninfo;
     GtkAction *action;
     guint merge_id;
@@ -364,7 +368,8 @@ static void gui_gtk_action_toggled(GtkToggleAction *action, struct action_cb_dat
     navit_draw(data->gui->nav);
 }
 
-static void gui_gtk_add_toggle_menu(struct gui_priv *this, char *name, char *label, char *path, struct action_cb_data *data, gboolean active) {
+static void gui_gtk_add_toggle_menu(struct gui_priv *this, char *name, char *label, char *path,
+                                    struct action_cb_data *data, gboolean active) {
     GtkToggleAction *toggle_action;
     guint merge_id;
 
@@ -382,7 +387,8 @@ static void gui_gtk_action_changed(GtkRadioAction *action, GtkRadioAction *curre
     }
 }
 
-static struct gui_menu_info gui_gtk_add_radio_menu(struct gui_priv *this, char *name, char *label, char *path, struct action_cb_data *data, GSList **g) {
+static struct gui_menu_info gui_gtk_add_radio_menu(struct gui_priv *this, char *name, char *label, char *path,
+        struct action_cb_data *data, GSList **g) {
     struct gui_menu_info meninfo;
     GtkRadioAction *radio_action;
     guint merge_id;
@@ -407,7 +413,7 @@ static void gui_gtk_layouts_init(struct gui_priv *this) {
     int count=0;
     char *name;
 
-    iter=navit_attr_iter_new();
+    iter=navit_attr_iter_new(NULL);
     while(navit_get_attr(this->nav, attr_layout, &attr, iter)) {
         name=g_strdup_printf("Layout %d", count++);
         data=g_new(struct action_cb_data, 1);
@@ -460,7 +466,7 @@ static void gui_gtk_vehicles_update(struct gui_priv *this) {
     g_list_free(this->vehicle_menuitems);
     this->vehicle_menuitems = NULL;
 
-    iter=navit_attr_iter_new();
+    iter=navit_attr_iter_new(NULL);
     while(navit_get_attr(this->nav, attr_vehicle, &attr, iter)) {
         vehicle_get_attr(attr.u.vehicle, attr_name, &vattr, NULL);
         name=g_strdup_printf("Vehicle %d", count++);
@@ -489,7 +495,7 @@ static void gui_gtk_maps_init(struct gui_priv *this) {
     int count=0;
     char *name, *label;
 
-    iter=navit_attr_iter_new();
+    iter=navit_attr_iter_new(NULL);
     while(navit_get_attr(this->nav, attr_map, &attr, iter)) {
         name=g_strdup_printf("Map %d", count++);
         if (! map_get_attr(attr.u.map, attr_type, &type, NULL))
@@ -713,6 +719,7 @@ static struct gui_priv *gui_gtk_new(struct navit *nav, struct gui_methods *meth,
     this->vbox = gtk_vbox_new(FALSE, 0);
     gtk_window_set_default_size(GTK_WINDOW(this->win), w, h);
     gtk_window_set_title(GTK_WINDOW(this->win), "Navit");
+    gtk_window_set_default_icon(geticon("navit_plain_bk.png"));
     gtk_window_set_wmclass (GTK_WINDOW (this->win), "navit", "Navit");
     gtk_widget_realize(this->win);
     gui_gtk_ui_init(this);

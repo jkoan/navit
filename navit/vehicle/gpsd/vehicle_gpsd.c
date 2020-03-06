@@ -174,7 +174,11 @@ vehicle_gpsd_callback(struct gps_data_t *data, const char *buf, size_t len,
         data->set &= ~MODE_SET;
     }
     if (data->set & TIME_SET) {
+#if GPSD_API_MAJOR_VERSION >= 9
+        priv->fix_time = data->fix.time.tv_sec;
+#else
         priv->fix_time = data->fix.time;
+#endif
         data->set &= ~TIME_SET;
     }
 #ifdef HAVE_LIBGPS19
@@ -325,7 +329,11 @@ static void vehicle_gpsd_io(struct vehicle_priv *priv) {
         int read_result;
         /* Read until EOF, in case we are lagging behind.
          * No point in processing old GPS reports. */
+#if GPSD_API_MAJOR_VERSION >= 7
+        while((read_result=gps_read(priv->gps, NULL, 0))>0);
+#else
         while((read_result=gps_read(priv->gps))>0);
+#endif
         if(read_result==-1) {
             dbg(lvl_error,"gps_poll failed");
             vehicle_gpsd_close(priv);
