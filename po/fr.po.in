@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: navit 0.5.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-05-03 02:23+0200\n"
-"PO-Revision-Date: 2020-03-06 12:48+0000\n"
+"PO-Revision-Date: 2020-03-07 09:41+0000\n"
 "Last-Translator: jkoan <jkoan@gmx.de>, 2020\n"
 "Language-Team: French (https://www.transifex.com/navit-gps/teams/104161/fr/)\n"
 "MIME-Version: 1.0\n"
@@ -1706,7 +1706,7 @@ msgid "Shopping"
 msgstr "Achats"
 
 msgid "Select a search radius from screen center"
-msgstr "Distance du centre de l'écran"
+msgstr "Sélectionnez une distance à chercher (km)"
 
 #, c-format
 msgid "POI %s. %s"
