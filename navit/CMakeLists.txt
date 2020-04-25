@@ -219,6 +219,7 @@ endif()
 
 add_subdirectory (maptool)
 add_subdirectory (icons)
+add_subdirectory (textures)
 add_subdirectory (maps)
 if(ANDROID)
 	add_subdirectory (android)
