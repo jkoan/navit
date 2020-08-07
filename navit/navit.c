@@ -1914,8 +1914,6 @@ void navit_set_destination(struct navit *this_, struct pcoord *c, const char *de
     }
     g_free(destination_file);
 
-    callback_list_call_attr_0(this_->attr_cbl, attr_destination);
-
     if (this_->route) {
         struct attr attr;
         int dstcount;
@@ -1938,10 +1936,12 @@ void navit_set_destination(struct navit *this_, struct pcoord *c, const char *de
             g_free(pc);
             g_free(destination_file);
         }
-
-        if (this_->ready == 3 && !(this_->flags & 4))
-            navit_draw(this_);
     }
+
+    callback_list_call_attr_0(this_->attr_cbl, attr_destination);
+
+    if (this_->route && this_->ready == 3 && !(this_->flags & 4))
+        navit_draw(this_);
 }
 
 /**
@@ -1984,13 +1984,12 @@ void navit_set_destinations(struct navit *this_, struct pcoord *c, int count, co
         g_free(destination_file);
     } else
         this_->destination_valid=0;
-    callback_list_call_attr_0(this_->attr_cbl, attr_destination);
-    if (this_->route) {
+    if (this_->route)
         route_set_destinations(this_->route, c, count, async);
 
-        if (this_->ready == 3)
-            navit_draw(this_);
-    }
+    callback_list_call_attr_0(this_->attr_cbl, attr_destination);
+    if (this_->route && this_->ready == 3)
+        navit_draw(this_);
 }
 
 int navit_get_destinations(struct navit *this_, struct pcoord *pc, int count) {
