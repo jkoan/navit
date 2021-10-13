@@ -183,6 +183,7 @@ struct navit {
     int tunnel_nightlayout; /* switch to nightlayout if we are in a tunnel? */
     char* layout_before_tunnel;
     int sunrise_degrees;
+    int nightlayout;
 };
 
 struct gui *main_loop_gui;
@@ -471,8 +472,12 @@ void navit_handle_resize(struct navit *this_, int w, int h) {
     graphics_set_rect(this_->gra, &sel.u.p_rect);
     if (callback)
         callback_list_call_attr_1(this_->attr_cbl, attr_graphics_ready, this_);
-    if (this_->ready == 3)
+    if (this_->ready == 3) {
+        /* About to resize. Cancel drawing whatever it is */
+        graphics_draw_cancel(this_->gra, this_->displaylist);
+        /* draw again even if we did not cancel anything */
         navit_draw_async(this_, 1);
+    }
 }
 
 static void navit_resize(void *data, int w, int h) {
@@ -1275,6 +1280,17 @@ static int navit_cmd_set_destination(struct navit *this, char *function, struct 
     return 0;
 }
 
+static int navit_cmd_set_destinations(struct navit *this, char *function, int count, struct attr **in, struct attr ***out) {
+    struct pcoord pc;
+    char *description=NULL;
+    in=navit_get_coord(this, in, &pc);
+    if (!in)
+        return 0;
+    if (in[0] && ATTR_IS_STRING(in[0]->type))
+        description=in[0]->u.str;
+    navit_set_destinations(this, &pc, count, description, 1);
+    return 0;
+}
 
 static int navit_cmd_route_remove_next_waypoint(struct navit *this, char *function, struct attr **in,
         struct attr ***out) {
@@ -1444,6 +1460,7 @@ static struct command_table commands[] = {
     {"set_attr_var",command_cast(navit_cmd_set_attr_var)},
     {"get_attr_var",command_cast(navit_cmd_get_attr_var)},
     {"switch_layout_day_night",command_cast(navit_cmd_switch_layout_day_night)},
+    {"set_destinations",command_cast(navit_cmd_set_destinations)},
 };
 
 void navit_command_add_table(struct navit*this_, struct command_table *commands, int count) {
@@ -1490,6 +1507,7 @@ navit_new(struct attr *parent, struct attr **attrs) {
     this_->tunnel_nightlayout = FALSE;
     this_->layout_before_tunnel = "";
     this_->sunrise_degrees = -5;
+    this_->nightlayout=0;
 
     transform_from_geo(pro, &g, &co);
     center.x=co.x;
@@ -3255,8 +3273,10 @@ static void navit_vehicle_update_position(struct navit *this_, struct navit_vehi
         get_attr=(int (*)(void *, enum attr_type, struct attr *, struct attr_iter *))vehicle_get_attr;
     }
     if (get_attr(attr_object, attr_position_valid, &attr_valid, NULL))
-        if (!attr_valid.u.num != attr_position_valid_invalid)
+        if (!attr_valid.u.num != attr_position_valid_invalid) {
+            callback_list_call_attr_2(this_->attr_cbl, attr_position_coord_geo, this_, nv->vehicle); //Update OSD...
             return;
+        }
     if (! get_attr(attr_object, attr_position_direction, &attr_dir, NULL) ||
             ! get_attr(attr_object, attr_position_speed, &attr_speed, NULL) ||
             ! get_attr(attr_object, attr_position_coord_geo, &attr_pos, NULL)) {
@@ -3549,7 +3569,9 @@ void navit_layout_switch(struct navit *n) {
 
                 // We are in a tunnel and if we have a nightlayout -> switch to nightlayout
                 if (l->nightname) {
+                    navit_say(n, _("Tunnel detected"));
                     navit_set_layout_by_name(n, l->nightname);
+                    n->nightlayout=1;
                     dbg(lvl_debug, "tunnel -> nightlayout");
                 }
                 return;
@@ -3559,6 +3581,7 @@ void navit_layout_switch(struct navit *n) {
                     if (!strcmp(l->dayname, n->layout_before_tunnel)) {
                         // restore previous layout
                         navit_set_layout_by_name(n, l->dayname);
+                        n->nightlayout=0;
                         dbg(lvl_debug, "tunnel end -> daylayout");
                     }
 
@@ -3609,9 +3632,11 @@ void navit_layout_switch(struct navit *n) {
         }
         if (after_sunrise && !after_sunset && l->dayname) {
             navit_set_layout_by_name(n,l->dayname);
+            n->nightlayout=0;
             dbg(lvl_debug,"layout set to day");
         } else if (after_sunset && l->nightname) {
             navit_set_layout_by_name(n,l->nightname);
+            n->nightlayout=1;
             dbg(lvl_debug,"layout set to night");
         }
         n->prevTs=currTs;
@@ -3791,6 +3816,10 @@ void navit_store_center(struct navit * this_) {
         bookmarks_write_center_to_file(this_->bookmarks, center_file);
         g_free(center_file);
     }
+}
+
+int navit_is_nightlayout(struct navit * this_) {
+    return this_->nightlayout;
 }
 
 void navit_destroy(struct navit *this_) {
