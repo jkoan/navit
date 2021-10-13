@@ -3497,13 +3497,15 @@ static void osd_gps_status_draw(struct osd_priv_common *opc, struct navit *navit
     struct graphics_image *gr_image;
     char *image;
     struct attr attr, vehicle_attr;
-    int strength=-1;
+    long strength=-1;
 
     if (navit && navit_get_attr(navit, attr_vehicle, &vehicle_attr, NULL)) {
         if (vehicle_get_attr(vehicle_attr.u.vehicle, attr_position_fix_type, &attr, NULL)) {
             switch(attr.u.num) {
-            case 1:
-            case 2:
+            case attr_position_valid_static:
+            case attr_position_valid_extrapolated_time:
+            case attr_position_valid_extrapolated_spatial:
+            case attr_position_valid_valid:
                 strength=2;
                 if (vehicle_get_attr(vehicle_attr.u.vehicle, attr_position_sats_used, &attr, NULL)) {
                     dbg(lvl_debug,"num=%ld", attr.u.num);
@@ -3512,10 +3514,12 @@ static void osd_gps_status_draw(struct osd_priv_common *opc, struct navit *navit
                     if (strength > 5)
                         strength=5;
                     if (strength > 3) {
+                        double hdop;
+                        attr.u.numd = &hdop;
                         if (vehicle_get_attr(vehicle_attr.u.vehicle, attr_position_hdop, &attr, NULL)) {
-                            if (*attr.u.numd > 2.0 && strength > 4)
+                            if (hdop > 2.0 && strength > 4)
                                 strength=4;
-                            if (*attr.u.numd > 4.0 && strength > 3)
+                            if (hdop > 4.0 && strength > 3)
                                 strength=3;
                         }
                     }
@@ -3599,7 +3603,7 @@ static struct osd_priv *osd_gps_status_new(struct navit *nav, struct osd_methods
         this->icon_src = graphics_icon_path("gui_strength_%d_32_32.png");
 
     navit_add_callback(nav, callback_new_attr_1(callback_cast(osd_gps_status_init), attr_graphics_ready, opc));
-    return (struct osd_priv *) opc;
+    return (struct osd_priv *) opc;		
 }
 
 
