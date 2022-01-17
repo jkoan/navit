@@ -52,5 +52,6 @@
                 <action android:name="ua.com.vassiliev.androidfilebrowser.SELECT_DIRECTORY_ACTION"></action>
             </intent-filter>
         </activity>
+        <activity android:name=".AppIntroFragment"></activity>
     </application>
 </manifest>

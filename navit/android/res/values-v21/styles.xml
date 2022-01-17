@@ -1,5 +1,6 @@
 <resources>
-    <style name="NavitTheme" parent="android:Theme.DeviceDefault.NoActionBar">
-        <!-- API 21 theme customizations can go here. -->
+    <style name="NavitTheme" parent="@style/Theme.AppCompat.Light">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
     </style>
 </resources>

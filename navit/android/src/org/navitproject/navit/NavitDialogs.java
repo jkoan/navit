@@ -2,7 +2,6 @@ package org.navitproject.navit;
 
 import static org.navitproject.navit.NavitAppConfig.getTstring;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -14,6 +13,9 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+
 import java.io.File;
 
 
@@ -120,7 +122,7 @@ public class NavitDialogs extends Handler {
     }
 
     Dialog createDialog(int id) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        androidx.appcompat.app.AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
 
         switch (id) {
             case DIALOG_MAPDOWNLOAD:

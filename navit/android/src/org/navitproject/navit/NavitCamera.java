@@ -22,6 +22,8 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import androidx.core.content.ContextCompat;
+
 import java.io.IOException;
 
 
@@ -32,7 +34,7 @@ class NavitCamera extends SurfaceView implements SurfaceHolder.Callback {
 
     NavitCamera(Context context) {
         super(context);
-        if (android.support.v4.content.ContextCompat.checkSelfPermission(context,
+        if (ContextCompat.checkSelfPermission(context,
                 android.Manifest.permission.CAMERA)
                 != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             Log.e(TAG,"No permission to access camera");

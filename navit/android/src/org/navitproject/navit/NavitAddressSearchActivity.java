@@ -22,7 +22,6 @@ package org.navitproject.navit;
 import static org.navitproject.navit.NavitAppConfig.getTstring;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -48,6 +47,9 @@ import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +58,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class NavitAddressSearchActivity extends Activity {
+public class NavitAddressSearchActivity extends AppCompatActivity {
     static final class NavitAddress {
         NavitAddress(int type, float latitude, float longitude, String address) {
             mResultType = type;
@@ -251,7 +253,7 @@ public class NavitAddressSearchActivity extends Activity {
 
         Arrays.sort(all_countries, countryComparator);
 
-        AlertDialog.Builder mapModeChooser = new AlertDialog.Builder(this);
+        androidx.appcompat.app.AlertDialog.Builder mapModeChooser = new AlertDialog.Builder(this);
         // ToDo also show icons and country code
         String[] countryName = new String[all_countries.length];
 
@@ -307,7 +309,7 @@ public class NavitAddressSearchActivity extends Activity {
             // TRANS
             Toast.makeText(getApplicationContext(),
                     getString(R.string.address_search_not_found) + "\n" + mAddressString, Toast.LENGTH_LONG).show();
-            setResult(Activity.RESULT_CANCELED);
+            setResult(AppCompatActivity.RESULT_CANCELED);
             finish();
         }
         ListView addressesFound = new ListView(this);

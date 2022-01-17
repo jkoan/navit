@@ -23,7 +23,6 @@ import static org.navitproject.navit.NavitAppConfig.getTstring;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -46,9 +45,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Message;
 import android.os.PowerManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -59,6 +55,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -71,7 +73,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Navit extends Activity {
+public class Navit extends AppCompatActivity {
 
 
     public static boolean              sShowSoftKeyboardShowing;
@@ -217,7 +219,10 @@ public class Navit extends Activity {
         boolean firstStart = settings.getBoolean("firstStart", true);
 
         if (firstStart) {
-            AlertDialog.Builder infobox = new AlertDialog.Builder(this);
+            startActivity(new Intent(this, AppIntroFragment.class));
+
+
+            androidx.appcompat.app.AlertDialog.Builder infobox = new AlertDialog.Builder(this);
             infobox.setTitle(getTstring(R.string.initial_info_box_title)); // TRANS
             infobox.setCancelable(false);
 
@@ -226,6 +231,10 @@ public class Navit extends Activity {
             infobox.setPositiveButton(getTstring(R.string.initial_info_box_OK), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface arg0, int arg1) {
                     Log.d(TAG, "Ok, user saw the infobox");
+                    SharedPreferences settings = getSharedPreferences(NavitAppConfig.NAVIT_PREFS, MODE_PRIVATE);
+                    SharedPreferences.Editor preferenceEditor = settings.edit();
+                    preferenceEditor.putBoolean("firstStart", false);
+                    preferenceEditor.apply();
                 }
             });
 
@@ -240,9 +249,11 @@ public class Navit extends Activity {
                         }
                     });
             infobox.show();
-            SharedPreferences.Editor preferenceEditor = settings.edit();
-            preferenceEditor.putBoolean("firstStart", false);
-            preferenceEditor.apply();
+            try {
+                infobox.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -271,6 +282,7 @@ public class Navit extends Activity {
 
         createNotificationChannel();
         buildNotification();
+        showInfos();
         verifyPermissions();
         // get the local language
         Locale locale = Locale.getDefault();
@@ -357,7 +369,7 @@ public class Navit extends Activity {
         }
         Log.d(TAG, "android.os.Build.VERSION.SDK_INT=" + Integer.valueOf(Build.VERSION.SDK));
         navitMain(navitLanguage, navitDataDir + "/bin/navit", sMapFilenamePath);
-        showInfos();
+
 
         Intent startupIntent = new Intent(this.getIntent());
         Log.d(TAG, "onCreate intent " + startupIntent.toString());
@@ -382,8 +394,8 @@ public class Navit extends Activity {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
             this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         } else {
-            if (this.getActionBar() != null) {
-                this.getActionBar().hide();
+            if (this.getSupportActionBar() != null) {
+                this.getSupportActionBar().hide();
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -466,7 +478,7 @@ public class Navit extends Activity {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            AlertDialog.Builder infobox = new AlertDialog.Builder(this);
+            androidx.appcompat.app.AlertDialog.Builder infobox = new androidx.appcompat.app.AlertDialog.Builder(this);
             infobox.setTitle(getTstring(R.string.permissions_info_box_title)); // TRANS
             infobox.setCancelable(false);
             infobox.setMessage(getTstring(R.string.permissions_not_granted));

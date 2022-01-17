@@ -19,7 +19,6 @@ import static org.navitproject.navit.NavitAppConfig.getTstring;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ExpandableListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -30,11 +29,14 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -218,7 +220,7 @@ public class NavitDownloadSelectMapActivity extends ExpandableListActivity {
     }
 
     private void askForMapDeletion(final String mapLocation) {
-        AlertDialog.Builder deleteMapBox = new AlertDialog.Builder(this);
+        AlertDialog.Builder deleteMapBox = new androidx.appcompat.app.AlertDialog.Builder(this);
         deleteMapBox.setTitle(getTstring(R.string.map_delete));
         deleteMapBox.setCancelable(true);
 

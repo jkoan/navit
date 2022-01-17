@@ -10,7 +10,6 @@ package org.navitproject.navit;
 // Project type now is Android library:
 // http://developer.android.com/guide/developing/projects/projects-eclipse.html#ReferencingLibraryProject
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
@@ -29,6 +28,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 
 
-public class FileBrowserActivity extends Activity {
+public class FileBrowserActivity extends AppCompatActivity {
     // Intent Action Constants
     public static final String INTENT_ACTION_SELECT_DIR = "ua.com.vassiliev.androidfilebrowser.SELECT_DIRECTORY_ACTION";
     private static final String INTENT_ACTION_SELECT_FILE = "ua.com.vassiliev.androidfilebrowser.SELECT_FILE_ACTION";
