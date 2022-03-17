@@ -508,7 +508,7 @@ static struct point transform_project_onto_view_plane(struct transformation *t, 
     return result;
 }
 
-static int transform_points_too_close(struct point screen_point, struct point screen_point_old, int mindist) {
+static long transform_points_too_close(struct point screen_point, struct point screen_point_old, int mindist) {
     if (!mindist) {
         return 0;
     }
@@ -527,7 +527,7 @@ struct z_clip_result {
 static struct z_clip_result transform_z_clip_if_necessary(struct coord_3d coord, int zlimit,
         struct z_clip_result clip_result_old) {
     int visibility_changed;
-    struct z_clip_result clip_result= {{0,0}, 0, 0, 0};
+    struct z_clip_result clip_result= {{0,0,0}, 0, 0, 0};
     clip_result.visible=(coord.z < zlimit ? 0:1);
     visibility_changed=(clip_result_old.visible != -1)&&(clip_result.visible != clip_result_old.visible);
     if (visibility_changed) {
@@ -551,7 +551,7 @@ int transform(struct transformation *t, enum projection required_projection, str
     struct coord_3d rotated_coord;
     struct point screen_point;
     int zlimit=t->znear;
-    struct z_clip_result clip_result, clip_result_old= {{0,0}, -1, 0, 0};
+    struct z_clip_result clip_result, clip_result_old= {{0,0,0}, -1, 0, 0};
     int i,result_idx = 0,result_idx_last=0;
     dbg(lvl_debug,"count=%d", count);
     for (i=0; i < count; i++) {
