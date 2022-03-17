@@ -21,6 +21,7 @@
 #include "gui_internal_menu.h"
 #include "gui_internal_keyboard.h"
 #include "gui_internal_search.h"
+#include "ZoneDetect/library/zonedetect.h"
 #ifdef HAVE_API_ANDROID
 #include "util.h"
 #endif
@@ -445,6 +446,8 @@ static void gui_internal_search_changed(struct gui_priv *this, struct widget *wm
     gui_internal_widget_render(this, l->data);
 }
 
+static char iso2[3];
+
 static void gui_internal_search_list_set_default_country(struct gui_priv *this) {
     struct attr search_attr, country_name, country_iso2, *country_attr;
     struct item *item;
@@ -454,6 +457,36 @@ static void gui_internal_search_list_set_default_country(struct gui_priv *this) 
 
     country_attr=country_default();
     tracking=navit_get_tracking(this->nav);
+    
+    // Override default country with country of current position if available
+    if(tracking_get_attr(tracking, attr_position_coord_geo, &search_attr, NULL)) {
+        // Use Zonedb to get current country
+        // Set country_attr to this country
+        char *gui_file=g_strjoin(NULL, navit_get_user_data_directory(TRUE), "/country21.bin", NULL);
+        ZoneDetect *const cd = ZDOpenDatabase(gui_file);
+        float safezone = 0;
+        ZoneDetectResult *results = ZDLookup(cd, search_attr.u.coord_geo->lat, search_attr.u.coord_geo->lng, &safezone);
+        unsigned int index = 0;
+        while(results[index].lookupResult != ZD_LOOKUP_END) {
+            printf("%s:\n", ZDLookupResultToString(results[index].lookupResult));
+            printf("  meta: %u\n", results[index].metaId);
+            printf("  polygon: %u\n", results[index].polygonId);
+            if(results[index].data) {
+                for(unsigned int i = 0; i < results[index].numFields; i++) {
+                    if(results[index].fieldNames[i] && results[index].data[i]) {
+                        if(!strcmp(results[index].fieldNames[i], "Alpha2")) {
+                            strncpy(iso2, results[index].data[i],2);
+                            country_attr->u.str=iso2;
+                        }
+                        printf("  %s: %s\n", results[index].fieldNames[i], results[index].data[i]);
+                    }
+                }
+            }
+            
+            index++;
+        }
+        ZDFreeResults(results);
+    }
     if (tracking && tracking_get_attr(tracking, attr_country_id, &search_attr, NULL))
         country_attr=&search_attr;
     if (country_attr) {
