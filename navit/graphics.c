@@ -772,7 +772,10 @@ void graphics_gc_set_dashes(struct graphics_gc *gc, int width, int offset, unsig
  * @author Martin Schaller (04/2008)
 */
 struct graphics_image * graphics_image_new_scaled(struct graphics *gra, char *path, int w, int h) {
-    return graphics_image_new_scaled_rotated(gra, path, w, h, 0);
+    if(w>=0 && h>=0)
+        return graphics_image_new_scaled_rotated(gra, path, w, h, 0);
+    else
+        return NULL;
 }
 
 static void image_new_helper(struct graphics *gra, struct graphics_image *this_, char *path, char *name, int width,
