@@ -131,6 +131,7 @@ void debug_level_set(const char *name, dbg_level level) {
     } else if (!strcmp(name, DEBUG_MODULE_GLOBAL)) {
         debug_set_global_level(level, 0);
     } else {
+        dbg(lvl_error, "set level %s -> %i", name, level);
         g_hash_table_insert(debug_hash, g_strdup(name), GINT_TO_POINTER(level));
         g_hash_table_foreach(debug_hash, debug_update_level, NULL);
     }
