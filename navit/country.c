@@ -354,6 +354,11 @@ struct item_methods country_meth = {
     NULL, 			/* coord_get */
     NULL, 			/* attr_rewind */
     country_attr_get, 	/* attr_get */
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 struct country_search *
