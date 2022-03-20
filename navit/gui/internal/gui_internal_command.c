@@ -41,6 +41,12 @@
 #include <arpa/inet.h>
 #endif
 
+#ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
+#define USE_UIKIT 1
+#else
+#define USE_UIKIT 0
+#endif
+
 static int gui_internal_cmd_escape(struct gui_priv *this, char *function, struct attr **in, struct attr ***out) {
     struct attr escaped;
     if (!in || !in[0]) {
@@ -937,6 +943,9 @@ static int gui_internal_cmd2_set(struct gui_priv *this, char *function, struct a
 }
 
 int gui_internal_cmd2_quit(struct gui_priv *this, char *function, struct attr **in, struct attr ***out) {
+#if USE_UIKIT
+    return 0;
+#else
     struct attr navit;
     gui_internal_prune_menu(this, NULL);
     navit.type=attr_navit;
@@ -944,6 +953,7 @@ int gui_internal_cmd2_quit(struct gui_priv *this, char *function, struct attr **
     config_remove_attr(config, &navit);
     event_main_loop_quit();
     return 0;
+#endif
 }
 
 static char *gui_internal_append_attr(char *str, enum escape_mode mode, char *pre, struct attr *attr, char *post) {
