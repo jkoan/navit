@@ -3185,3 +3185,6 @@ msgstr "Französisch-Guayana"
 #, c-format
 #~ msgid "Set next visit to %ld, %ld \n"
 #~ msgstr "Setze nächsten Besuch auf %ld, %ld \n"
+
+msgid "Tunnel detected"
+msgstr "Tunnel erkannt"
