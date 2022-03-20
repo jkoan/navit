@@ -25,7 +25,7 @@
 
 int main(int argc, char **argv) {
     int ret;
-    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+    //NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     NSString *appFolderPath = [[NSBundle mainBundle] resourcePath];
     //NSString *locale = [[NSLocale currentLocale] localeIdentifier];
     NSString *language = [[NSLocale preferredLanguages] firstObject];
@@ -56,6 +56,6 @@ int main(int argc, char **argv) {
     ret=main_real(argc, argv);
     g_free(argv[0]);
     g_free(user);
-    [pool release];
+    //[pool release];
     return ret;
 }
