@@ -58,7 +58,7 @@ void corelocation_req_auth(void) {
 
 /** C exit procedure */
 void corelocation_exit(void) {
-    [locationcontroller dealloc];
+    //[locationcontroller dealloc];
 }
 
 /** Core location implementation */
@@ -74,7 +74,7 @@ void corelocation_exit(void) {
 - (id) init {
     self = [super init];
     if (self != nil) {
-        self.locationManager = [[[CLLocationManager alloc] init] autorelease];
+        self.locationManager = [[CLLocationManager alloc] init];//autorelease];
 
         self.locationManager.allowsBackgroundLocationUpdates = true;
         self.locationManager.distanceFilter = kCLDistanceFilterNone;
