@@ -57,7 +57,8 @@ struct vehicle_priv {
     char *timep;
     char *nmea;
     enum attr_position_valid valid;  /**< Whether the vehicle has valid position data **/
-
+    int active;
+    int satsused;
 };
 
 static void vehicle_demo_destroy(struct vehicle_priv *priv) {
@@ -69,7 +70,7 @@ static void vehicle_demo_destroy(struct vehicle_priv *priv) {
 }
 
 static void nmea_chksum(char *nmea) {
-    int i;
+    size_t i;
     if (nmea && strlen(nmea) > 3) {
         unsigned char csum=0;
         for (i = 1 ; i < strlen(nmea)-4 ; i++)
@@ -82,7 +83,7 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
         enum attr_type type, struct attr *attr) {
     char ns='N',ew='E',*timep,*rmc,*gga;
     int hr,min,sec,year,mon,day;
-    double lat,lng;
+    double lat,lng,*hdop;
     switch (type) {
     case attr_position_speed:
         attr->u.numd = &priv->speed;
@@ -99,10 +100,28 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
         attr->u.str=priv->timep;
         break;
     case attr_position_fix_type:
-        attr->u.num = 2;
+        if(priv->satsused++<5)
+            attr->u.num = attr_position_valid_invalid;
+        else
+            attr->u.num = attr_position_valid_valid;
+        if(priv->satsused==10)
+            priv->satsused=0;
         break;
     case attr_position_sats_used:
-        attr->u.num = 9;
+        attr->u.num = priv->satsused;
+        break;
+    case attr_position_hdop:
+        hdop=attr->u.numd;
+        if(priv->satsused > 3) {
+            *hdop=4.1;
+        }
+        if(priv->satsused > 4) {
+            *hdop=2.1;
+        }
+        if(priv->satsused > 7) {
+            *hdop=1.1;
+        }
+        dbg(lvl_info, "HDOP: %f", *hdop);
         break;
     case attr_position_nmea:
         lat=priv->geo.lat;
@@ -134,6 +153,9 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
     case attr_position_valid:
         attr->u.num=priv->valid;
         break;
+    case attr_active:
+        attr->u.num=priv->active;
+        break;
     default:
         return 0;
     }
@@ -153,7 +175,7 @@ static int vehicle_demo_set_attr_do(struct vehicle_priv *priv, struct attr *attr
         priv->config_speed=attr->u.num;
         break;
     case attr_interval:
-        priv->interval=attr->u.num;
+        priv->interval=(int)attr->u.num;
         if (priv->timer)
             event_remove_timeout(priv->timer);
         priv->timer=event_add_timeout(priv->interval, 1, priv->timer_callback);
@@ -167,11 +189,13 @@ static int vehicle_demo_set_attr_do(struct vehicle_priv *priv, struct attr *attr
         priv->position_set=1;
         dbg(lvl_debug,"position_set %f %f", priv->geo.lat, priv->geo.lng);
         break;
+    case attr_active:
+        priv->active=(int)attr->u.num;
+        break;
     case attr_profilename:
     case attr_source:
     case attr_name:
     case attr_follow:
-    case attr_active:
     case attr_vehicle_request_location_authorization:
         // Ignore; used by Navit's infrastructure, but not relevant for this vehicle.
         break;
@@ -190,6 +214,7 @@ struct vehicle_methods vehicle_demo_methods = {
     vehicle_demo_destroy,
     vehicle_demo_position_attr_get,
     vehicle_demo_set_attr,
+    NULL
 };
 
 static void vehicle_demo_timer(struct vehicle_priv *priv) {
@@ -199,7 +224,7 @@ static void vehicle_demo_timer(struct vehicle_priv *priv) {
     struct map *route_map=NULL;
     struct map_rect *mr=NULL;
     struct item *item=NULL;
-
+    
     len = (priv->config_speed * priv->interval / 1000)/ 3.6;
     dbg(lvl_debug, "###### Entering simulation loop");
     if (!priv->config_speed)
@@ -255,11 +280,16 @@ static void vehicle_demo_timer(struct vehicle_priv *priv) {
                 dbg(lvl_debug, "ci=0x%x,0x%x", ci.x, ci.y);
                 transform_to_geo(projection_mg, &ci,
                                  &priv->geo);
-                if (priv->valid != attr_position_valid_valid) {
-                    priv->valid = attr_position_valid_valid;
-                    callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                if(priv->active) {
+                    if ((priv->valid != attr_position_valid_valid)) {
+                        priv->valid = attr_position_valid_valid;
+                        callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                    } else {
+                        priv->valid = attr_position_valid_invalid;
+                        callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                    }
+                    callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
                 }
-                callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
                 break;
             }
         }
@@ -285,6 +315,8 @@ static struct vehicle_priv *vehicle_demo_new(struct vehicle_methods
     ret->config_speed=40;
     ret->timer_callback=callback_new_1(callback_cast(vehicle_demo_timer), ret);
     ret->valid = attr_position_valid_invalid;
+    ret->active = 0;
+    ret->satsused = 0;
     *meth = vehicle_demo_methods;
     while (attrs && *attrs)
         vehicle_demo_set_attr_do(ret, *attrs++);
