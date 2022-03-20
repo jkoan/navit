@@ -25,10 +25,10 @@
 #include "plugin.h"
 #include "speech.h"
 #include "attr.h"
-#import "VSSpeechSynthesizer.h"
+#import "VSSpeechSynthesizer.h"	
 #import <UIKit/UIKit.h>
 
-#define DEFAULT_HFP_DELAY 0.5
+#define DEFAULT_HFP_DELAY 0.01
 
 struct speech_priv {
     VSSpeechSynthesizer *speech;
@@ -38,13 +38,13 @@ static int speech_iphone_say(struct speech_priv *this, const char *text) {
     dbg(lvl_debug,"enter %s",text);
     NSString *s=[[NSString alloc]initWithUTF8String: text];
     [this->speech startSpeakingString:s];
-    [s release];
+    //[s release];
     dbg(lvl_debug,"ok");
     return 1;
 }
 
 static void speech_iphone_destroy(struct speech_priv *this) {
-    [this->speech release];
+    //[this->speech release];
     g_free(this);
 }
 
@@ -62,11 +62,10 @@ static struct speech_priv *speech_iphone_new(struct speech_methods *meth, struct
     [this->speech init];
     dbg(lvl_debug,"this->speech=%p",this->speech);
 
-    [this->speech setRate:0.5];
-    NSLog(@"iOS version: %f", [[[UIDevice currentDevice] systemVersion] floatValue]);
-
-    [this->speech setVolume:100.0];
     [this->speech setPitch:0.8];
+    [this->speech setRate:0.5];
+    [this->speech setVolume:1.0];
+    NSLog(@"iOS version: %f", [[[UIDevice currentDevice] systemVersion] floatValue]);
 
     struct attr *attr;
 
