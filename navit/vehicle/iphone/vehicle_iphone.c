@@ -57,6 +57,7 @@ struct vehicle_priv {
     struct event_timeout *timer;
     char str_time[200];
     enum attr_position_valid valid;  /**< Whether the vehicle has valid position data **/
+    int active;
 };
 
 void vehicle_iphone_update(void *arg,
@@ -94,7 +95,46 @@ static int vehicle_iphone_position_attr_get(struct vehicle_priv *priv,
     case attr_position_nmea:
         return 0;
     case attr_position_valid:
-        attr->u.num=&priv->valid;
+    case attr_position_fix_type:
+        attr->u.num=priv->valid;
+        break;
+    case attr_position_sats_used:
+            attr->u.num=6;
+            if(priv->radius > 0 && priv->radius > 80) {
+                attr->u.num=2;
+                break;
+            }
+            if(priv->radius > 0 && priv->radius > 60) {
+                attr->u.num=3;
+                break;
+            }
+            if(priv->radius > 0 && priv->radius > 40) {
+                attr->u.num=4;
+                break;
+            }
+            if(priv->radius > 0 && priv->radius > 20) {
+                attr->u.num=5;
+                break;
+            }
+            if(priv->radius < 0) {
+                attr->u.num=0;
+                break;
+            }
+            break;
+        case attr_position_hdop:
+            if(priv->radius > 0 && priv->radius < 50) {
+                *attr->u.numd=4.1;
+            }
+            if(priv->radius > 0 && priv->radius <= 30) {
+                *attr->u.numd=2.1;
+            }
+            if(priv->radius > 0 && priv->radius <= 10) {
+                *attr->u.numd=1.1;
+            }
+            dbg(lvl_info, "HDOP: %f", *attr->u.numd);
+            break;
+    case attr_active:
+        attr->u.num=priv->active;
         break;
     default:
         return 0;
@@ -109,7 +149,7 @@ static int vehicle_iphone_req_loc_auth(void) {
 }
 
 static int vehicle_iphone_set_attr(struct vehicle_priv *priv, struct attr *attr) {
-    if (attr->type == attr_navit) {
+	    if (attr->type == attr_navit) {
         priv->navit = attr->u.navit;
 
         // We have the navit instance, get the graphics and set our callback
@@ -131,6 +171,10 @@ static int vehicle_iphone_set_attr(struct vehicle_priv *priv, struct attr *attr)
 
         return 1;
     }
+    
+    if(attr->type == attr_active)
+       priv->active = (int)attr->u.num;
+    
     if (attr->type == attr_vehicle_request_location_authorization)
         corelocation_req_auth();
     return 1;
@@ -159,12 +203,22 @@ void vehicle_iphone_update(void *arg,
     strcpy(priv->str_time, str_time);
     priv->radius = radius;
 
-    dbg(lvl_debug,"position_get lat:%f lng:%f (spd:%f dir:%f time:%s)", priv->geo.lat, priv->geo.lng, priv->speed,
-        priv->direction, priv->str_time);
-    callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
-    if (priv->valid != attr_position_valid_valid) {
-        priv->valid = attr_position_valid_valid;
-        callback_list_call_attr_0(priv->cbl, attr_position_valid);
+    dbg(lvl_info,"position_get lat:%f lng:%f (spd:%f dir:%f time:%s accur.:%f)", priv->geo.lat, priv->geo.lng, priv->speed,
+        priv->direction, priv->str_time, priv->radius);
+    if(priv->active)
+        callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
+    if((priv->radius<100) && (priv->radius > 0)) {
+        if (priv->valid != attr_position_valid_valid) {
+            priv->valid = attr_position_valid_valid;
+            callback_list_call_attr_0(priv->cbl, attr_position_valid);
+            dbg(lvl_info,"position valid - Acc: %fm", priv->radius);
+        }
+    } else {
+        if (priv->valid != attr_position_valid_invalid) {
+            priv->valid = attr_position_valid_invalid;
+            callback_list_call_attr_0(priv->cbl, attr_position_valid);
+            dbg(lvl_info,"position invalid - Acc: %fm", priv->radius);
+        }
     }
 }
 
@@ -181,6 +235,7 @@ static struct vehicle_priv *vehicle_iphone_new(struct vehicle_methods
     ret->cbl = cbl;
     ret->interval=1000;
     ret->config_speed=40;
+    ret->active=1;
     if ((speed=attr_search(attrs, attr_speed))) {
         ret->config_speed=speed->u.num;
     }
