@@ -2529,8 +2529,8 @@ static void route_graph_add_street(struct route_graph *this, struct item *item, 
 #endif
     int segmented = 0;
     struct roadprofile *roadp;
-    int default_flags_value = AF_ALL;
-    int *default_flags;
+    unsigned int default_flags_value = AF_ALL;
+    unsigned int *default_flags;
     struct route_graph_point *s_pnt,*e_pnt; /* Start and end point */
     struct coord c,l; /* Current and previous point */
     struct attr attr;
