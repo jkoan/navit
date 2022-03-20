@@ -69,7 +69,7 @@ static struct graphics_priv {
     CGContextRef layer_context;
     struct callback_list *cbl;
     struct point p, pclean;
-    int w, h, wraparound, overlay_disabled, cleanup;
+    int w, h, wraparound, overlay_disabled, cleanup, x, y;
     struct graphics_priv *parent, *next, *overlays;
 } *global_graphics_cocoa;
 
@@ -162,6 +162,7 @@ float startScale = 1;
 @interface NavitViewController : UIViewController {
     NSRect frame;
     CGLayerRef layer;
+    NavitView* myView;
 }
 
 @property (nonatomic) NSRect frame;
@@ -185,8 +186,8 @@ float startScale = 1;
         startScale = sender.scale;
     } else if(sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateChanged) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
 
         if((startScale / sender.scale > 2) ||  (startScale / sender.scale < 0.5)) {
             if((sender.scale > 1)) {
@@ -204,30 +205,30 @@ float startScale = 1;
 
     if (sender.state == UIGestureRecognizerStateBegan) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_3(global_graphics_cocoa->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
 
     }
 
     if (sender.state == UIGestureRecognizerStateChanged) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_1(global_graphics_cocoa->cbl, attr_motion, (void *)&p);
     }
 
     if(sender.state == UIGestureRecognizerStateEnded) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_3(global_graphics_cocoa->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
     }
 }
 
 - (IBAction)handleTap:(UITapGestureRecognizer *)sender {
     if (sender.state == UIGestureRecognizerStateEnded) {
-        struct CGPoint pc=[sender locationInView: self.view];
+        struct CGPoint pc=[sender locationInView: myView];
         struct point p;
         p.x=pc.x;
         p.y=pc.y;
@@ -240,23 +241,23 @@ float startScale = 1;
 
     if (sender.state == UIGestureRecognizerStateBegan) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_3(global_graphics_cocoa->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
 
     }
 
     if (sender.state == UIGestureRecognizerStateChanged) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_1(global_graphics_cocoa->cbl, attr_motion, (void *)&p);
     }
 
     if(sender.state == UIGestureRecognizerStateEnded) {
         struct point p;
-        p.x=[sender locationInView: self.view].x;
-        p.y=[sender locationInView: self.view].y;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
         callback_list_call_attr_3(global_graphics_cocoa->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
     }
 }
@@ -265,8 +266,8 @@ float startScale = 1;
 
     NSLog(@"rotated enter");
 
-    int width =(int)UIScreen.mainScreen.bounds.size.width;
-    int height = (int)UIScreen.mainScreen.bounds.size.height;
+    int width = myView.frame.size.width;
+    int height = myView.frame.size.height;
 
     UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
     int lt_ten=1;
@@ -314,7 +315,7 @@ void free_graphics(struct graphics_priv *gr) {
 }
 
 static void setup_graphics(struct graphics_priv *gr) {
-    CGRect lr=CGRectMake(0, 0, gr->w, gr->h);
+    CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
     gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
     gr->layer_context=CGLayerGetContext(gr->layer);
 #if REVERSE_Y
@@ -328,21 +329,21 @@ static void setup_graphics(struct graphics_priv *gr) {
 
 - (void)loadView {
     NSLog(@"loadView");
-    NavitView* myV = [NavitView alloc];
-
+    //NavitView* myV = [NavitView alloc];
+    UIView *myV = [[UIView alloc] initWithFrame: CGRectMake ( 0, 0, 200, 150)];
 #if USE_UIKIT
     myV.tag = 100;
 #endif
 
-    if (global_graphics_cocoa) {
-        global_graphics_cocoa->view=myV;
-        myV->graphics=global_graphics_cocoa;
-
-        global_graphics_cocoa->w=frame.size.width;
-        global_graphics_cocoa->h=frame.size.height;
-
-        setup_graphics(global_graphics_cocoa);
-    }
+//    if (global_graphics_cocoa) {
+//        global_graphics_cocoa->view=myV;
+//        myV->graphics=global_graphics_cocoa;
+//
+//        global_graphics_cocoa->w=frame.size.width;
+//        global_graphics_cocoa->h=frame.size.height;
+//
+//        setup_graphics(global_graphics_cocoa);
+//    }
 
     [myV initWithFrame: frame];
 
@@ -354,12 +355,67 @@ static void setup_graphics(struct graphics_priv *gr) {
 - (void)viewDidLoad {
     NSLog(@"View loaded!");
 #if USE_UIKIT
+    myView = [NavitView alloc];
+    [myView initWithFrame: CGRectMake ( 0, 0, 200, 150)];
+    myView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview: myView];
+    
+    if (@available(iOS 11, *)) {
+        UILayoutGuide * guide = self.view.safeAreaLayoutGuide;
+        [myView.leadingAnchor constraintEqualToAnchor:guide.leadingAnchor].active = YES;
+        [myView.trailingAnchor constraintEqualToAnchor:guide.trailingAnchor].active = YES;
+        [myView.topAnchor constraintEqualToAnchor:guide.topAnchor].active = YES;
+        [myView.bottomAnchor constraintEqualToAnchor:guide.bottomAnchor].active = YES;
+        // if we have a
+        if(self.view.safeAreaInsets.top != 0) {
+            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
+        }
+    } else {
+        UILayoutGuide *margins = self.view.layoutMarginsGuide;
+        [myView.leadingAnchor constraintEqualToAnchor:margins.leadingAnchor].active = YES;
+        [myView.trailingAnchor constraintEqualToAnchor:margins.trailingAnchor].active = YES;
+        [myView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
+        [myView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
+        if(self.view.safeAreaInsets.top != 0) {
+            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
+        }
+    }
+    
+    if (global_graphics_cocoa) {
+        global_graphics_cocoa->view=myView;
+        myView->graphics=global_graphics_cocoa;
+    }
+    
+    [myView layoutIfNeeded];
+    
+//    frame.size.width=myView.bounds.size.width;
+//    frame.size.height=myView.bounds.size.height;
+    
     NSNotificationCenter *notficationcenter = NSNotificationCenter.defaultCenter;
     [notficationcenter addObserver:self selector:@selector(appMovedToBackground:) name:
                        UIApplicationWillResignActiveNotification object: nil];
     [notficationcenter addObserver:self selector:@selector(appMovedToForeground:) name:
                        UIApplicationDidBecomeActiveNotification object: nil];
 #endif
+}
+
+- (void)viewDidLayoutSubviews{
+    
+    if (global_graphics_cocoa && global_graphics_cocoa->w>0) {
+        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)myView.bounds.size.width-self.view.safeAreaInsets.left-self.view.safeAreaInsets.right, (int)myView.bounds.size.height-self.view.safeAreaInsets.top-self.view.safeAreaInsets.bottom);
+
+    }
+    
+    if (global_graphics_cocoa) {
+        global_graphics_cocoa->x=myView.frame.origin.x;
+        global_graphics_cocoa->y=myView.frame.origin.y;
+        global_graphics_cocoa->w=myView.bounds.size.width-self.view.safeAreaInsets.left-self.view.safeAreaInsets.right;
+        global_graphics_cocoa->h=myView.bounds.size.height-self.view.safeAreaInsets.top-self.view.safeAreaInsets.bottom;
+        NSLog(@"Height %f", myView.bounds.size.height);
+        NSLog(@"Top %f", self.view.safeAreaInsets.top);
+        NSLog(@"Bottom %f", self.view.safeAreaInsets.bottom);
+        setup_graphics(global_graphics_cocoa);
+    }
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -514,11 +570,11 @@ void onUncaughtException(NSException* exception) {
 
 #endif
 
-    if (global_graphics_cocoa) {
-        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)appFrame.size.width, (int)appFrame.size.height);
-
-    }
-
+//    if (global_graphics_cocoa) {
+//        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)self.viewController.view.frame.size.width, (int)self.viewController.view.frame.size.height);
+//
+//    }
+    
 #if USE_UIKIT
     return YES;
 #endif
@@ -758,8 +814,8 @@ static struct graphics_image_priv *image_new(struct graphics_priv *gra, struct g
     CGDataProviderRelease(imgDataProvider);
     dbg(lvl_debug,"size %dx%d, name:%s",(int)CGImageGetWidth(image),(int)CGImageGetHeight(image), path);
 
-    // Resize image
-    if(w && (*w>0) && (CGImageGetWidth(image)>0) && CGImageGetHeight(image)>0) {
+    // Resize image, check for CGImageGetWidth(image)>*w needed for iOS simulator
+    if(w && (*w>0) && (CGImageGetWidth(image)>(size_t)*w) && CGImageGetHeight(image)>0) {
         CGColorSpaceRef colorspace = CGImageGetColorSpace(image);
         CGContextRef context = CGBitmapContextCreate(NULL,
                                *w,
