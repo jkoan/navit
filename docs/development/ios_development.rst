@@ -23,11 +23,17 @@
 5. For arm64 devices use:
 
    ```bash
-   cmake -G Xcode ../ -DCMAKE_TOOLCHAIN_FILE=../Toolchain/xcode-iphone_new.cmake -DUSE_PLUGINS=0 -DBUILD_MAPTOOL=0 -DSAMPLE_MAP=0 -DXSLTS=iphone -DUSE_UIKIT=1 -T buildsystem=1 -DDEVELOPMENT_TEAM_ID="<enter your team id>" -DCODE_SIGN_IDENTITY="iPhone Developer"
+   cmake -G Xcode ../ -DCMAKE_TOOLCHAIN_FILE=../Toolchain/xcode-iphone_new.cmake -DUSE_PLUGINS=0 -DBUILD_MAPTOOL=0 -DSAMPLE_MAP=0 -DXSLTS=iphone -DUSE_UIKIT=1 -DDEVELOPMENT_TEAM_ID="<enter your team id>" -DCODE_SIGN_IDENTITY="iPhone Developer"
    ```
 
    For iOS device with arm7 use an old SDK and this command:
 
    ```bash
-   cmake -G Xcode ../ -DCMAKE_TOOLCHAIN_FILE=../Toolchain/xcode-iphone_new.cmake -DUSE_PLUGINS=0 -DBUILD_MAPTOOL=0 -DSAMPLE_MAP=0 -DXSLTS=iphone -DUSE_UIKIT=1 -T buildsystem=1 -DDEVELOPMENT_TEAM_ID="<enter your team id>" -DCODE_SIGN_IDENTITY="iPhone Developer" -DCMAKE_IOS_DEVELOPER_ROOT="/Volumes/Data/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" -IOS_ARCH="armv7" -DIPHONEOS_DEPLOYMENT_TARGET="9.2"
+   cmake -G Xcode ../ -DCMAKE_TOOLCHAIN_FILE=../Toolchain/xcode-iphone_new.cmake -DUSE_PLUGINS=0 -DBUILD_MAPTOOL=0 -DSAMPLE_MAP=0 -DXSLTS=iphone -DUSE_UIKIT=1 -DDEVELOPMENT_TEAM_ID="<enter your team id>" -DCODE_SIGN_IDENTITY="iPhone Developer" -DCMAKE_IOS_DEVELOPER_ROOT="/Volumes/Data/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer" -DIOS_ARCH="armv7" -DIPHONEOS_DEPLOYMENT_TARGET="9.2"
+   ```
+
+   For iOS Simulator use this command:
+
+   ```bash
+   cmake -G Xcode ../ -DCMAKE_TOOLCHAIN_FILE=../Toolchain/xcode-iphone_new.cmake -DUSE_PLUGINS=0 -DBUILD_MAPTOOL=0 -DSAMPLE_MAP=0 -DXSLTS=iphone -DUSE_UIKIT=1 -DDEVELOPMENT_TEAM_ID="<enter your team id>" -DCODE_SIGN_IDENTITY="iPhone Developer" -DIOS_PLATFORM=SIMULATOR
    ```
