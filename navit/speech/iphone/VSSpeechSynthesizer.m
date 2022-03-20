@@ -26,12 +26,19 @@ double hfpdelay;
 @implementation VSSpeechSynthesizer
 
 - (id)init {
+    
+    NSError *setCategoryErr = nil;
 
     self = [super init];
 
     if (self) {
         synth = [[AVSpeechSynthesizer alloc] init];
         session = [AVAudioSession sharedInstance];
+        [session setMode:(AVAudioSessionModeVoicePrompt) error:(&setCategoryErr)];
+        [session setPrefersNoInterruptionsFromSystemAlerts:(true) error:(&setCategoryErr)];
+        [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth |
+         AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
+        NSLog (@"AVAudioSession initialized: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
         use_hfp = YES;
         force_hfp = NO;
         current_is_hfp = NO;
@@ -40,7 +47,9 @@ double hfpdelay;
 
         NSNotificationCenter *notficationcenter = NSNotificationCenter.defaultCenter;
         [notficationcenter addObserver:self selector:@selector(handleInterruption:) name:
-                           AVAudioSessionInterruptionNotification object: session];
+         AVAudioSessionInterruptionNotification object: session];
+        [notficationcenter addObserver:self selector:@selector(handleRouteChange:) name:
+         AVAudioSessionRouteChangeNotification object: session];
 
     }
     return self;
@@ -55,11 +64,46 @@ double hfpdelay;
             objectForKey:AVAudioSessionInterruptionTypeKey] unsignedIntegerValue];
     if (AVAudioSessionInterruptionTypeBegan == interruptionType) {
         NSLog (@"AVAudioSession interrupted");
-        interrupted=YES;
+        [synth stopSpeakingAtBoundary:(AVSpeechBoundaryImmediate)];
+        utterance=nil;
     } else if (AVAudioSessionInterruptionTypeEnded == interruptionType) {
         NSLog (@"AVAudioSession interruption ended");
-        interrupted=NO;
     }
+}
+
+- (void) handleRouteChange:(NSNotification*)note {
+    UInt8 reasonValue = [[note.userInfo valueForKey:AVAudioSessionRouteChangeReasonKey] intValue];
+    AVAudioSessionRouteDescription *routeDescription = [note.userInfo valueForKey:AVAudioSessionRouteChangePreviousRouteKey];
+    NSLog(@"Route change:");
+    switch (reasonValue) {
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+            NSLog(@"     NewDeviceAvailable");
+            utterance=nil;
+            break;
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:
+            NSLog(@"     OldDeviceUnavailable");
+            utterance=nil;
+            break;
+        case AVAudioSessionRouteChangeReasonCategoryChange:
+            NSLog(@"     CategoryChange");
+            NSLog(@"        New Category: %@", [[AVAudioSession sharedInstance] category]);
+            break;
+        case AVAudioSessionRouteChangeReasonOverride:
+            NSLog(@"     Override");
+            break;
+        case AVAudioSessionRouteChangeReasonWakeFromSleep:
+            NSLog(@"     WakeFromSleep");
+            break;
+        case AVAudioSessionRouteChangeReasonNoSuitableRouteForCategory:
+            NSLog(@"     NoSuitableRouteForCategory");
+            break;
+        default:
+            NSLog(@"     ReasonUnknown");
+    }
+    
+    NSLog(@"Previous route:\n");
+    NSLog(@"%@", routeDescription);
+
 }
 
 + (BOOL)isSystemSpeaking {
@@ -67,28 +111,23 @@ double hfpdelay;
 }
 
 - (void)speechSynthesizer:(AVSpeechSynthesizer *)synthesizer
-    didFinishSpeechUtterance:(AVSpeechUtterance *)utterance {
+    didFinishSpeechUtterance:(AVSpeechUtterance *)utterance1 {
 
     NSError *activationErr = nil;
 
-    // Deactivate session but not for the silent HFP announcement
-    if(strcmp(utterance.speechString.UTF8String, "XantippeXantippe")) {
-        [session setActive:false error:&activationErr];
-    }
+    // Deactivate session
+    [session setActive:false error:&activationErr];
+    utterance=nil;
+    NSLog(@"didFinishSpeechUtterance");
 }
 
 - (id)startSpeakingString:(id)string {
 
     NSError *activationErr = nil;
 
-    // Don't try to play announcements if the session is interrupted, else they all get queued and will be played
-    // when the interruption ends
-    if(!self.isInterrupted) {
-
         [self useHFP:1 force:2];    // Checks before each announcement if there is background audio playing
         // If that is detected, we use A2DP and not HFP. force:2 will keep current
         // settings for force_hfp and useHFP.
-        [session setActive:true error:&activationErr];
 
         utterance = [AVSpeechUtterance speechUtteranceWithString:string];
 
@@ -96,21 +135,18 @@ double hfpdelay;
         // to give time to establish a HFP connection so the navigation
         // announcement will not get trunkated at the beginning
         if(current_is_hfp) {
-            NSLog (@"AVSpeechUtterance delayed HFP by: %1.2f Error: %@", hfpdelay, activationErr.localizedFailureReason);
+            NSLog (@"AVSpeechUtterance delayed HFP by: %1.2f %@", hfpdelay, activationErr.localizedFailureReason==NULL?@"OK":activationErr.localizedFailureReason);
             [utterance setPreUtteranceDelay:(hfpdelay)];
         }
-
-        NSLog (@"AVSpeechUtterance play navigation announcement: %@ Error: %@", utterance.speechString,
-               activationErr.localizedFailureReason);
-
+        
         utterance.rate=rate;
         utterance.pitchMultiplier=pitch;
         utterance.volume=volume;
+        if(!session.isOtherAudioPlaying || current_is_hfp)
+            [session setActive:true error:&activationErr];
         [synth speakUtterance:utterance];
-        NSLog (@"AVSpeechUtterance play navigation announcement: %@ Error: %@", utterance.speechString,
-               activationErr.localizedFailureReason);
-    }
-
+        NSLog (@"AVSpeechUtterance play navigation announcement: %@ %@", utterance.speechString,
+               activationErr.localizedFailureReason==NULL?@"OK":activationErr.localizedFailureReason);
     return 0;
 }
 
@@ -164,32 +200,68 @@ double hfpdelay;
         use_hfp = newuse_hfp;
     }
 
-    // Get current options
+    // Get current options and route
+    //AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     AVAudioSessionCategoryOptions options = [session categoryOptions];
+    AVAudioSessionRouteDescription *activeRoute = [session currentRoute];
+    bool btavailable=NO;
 
-    if((use_hfp && force_hfp) || (((use_hfp || newuse_hfp) && !force_hfp) && ![session isOtherAudioPlaying])) {
-        // Force usage of HFP (only if no background music is playing) or if you explicily requested to use it
-        // always by setting 'speech_use_hfp="1"' in speech tag in navit.xml:
-        // radio gets muted while playing announcements,
-        // but music playback in background would switch to HFP as well during announcement playback.
-        // TODO: Do we want the speaker as default?
-
-        current_is_hfp = YES;
-
-        if(!(options & AVAudioSessionCategoryOptionAllowBluetooth))
-            [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth |
-                     AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
-        NSLog(@"AVAudioSession HFP: %@", setCategoryErr.localizedFailureReason);
-
+    for (AVAudioSessionPortDescription *output in activeRoute.outputs) {
+        NSLog(@"PortType: %@", [output portType]);
+        if (([[output portType] isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
+             [[output portType] isEqualToString:AVAudioSessionPortBluetoothHFP])) {
+            btavailable = YES;
+            //break;
+        }
+    }
+    
+    //[audioSession release];
+    
+    // Use Speaker when no Blutooth connection is available
+    if(!btavailable) {
+        if(!session.isOtherAudioPlaying) {
+            [session setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker |
+                 AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
+            NSLog(@"Configure AVAudioSession using Speaker: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+        } else {
+            [session setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
+            NSLog(@"Configure AVAudioSession using Speaker: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+        }
     } else {
 
-        current_is_hfp = NO;
-
-        // Allow A2DP: No radio mute, but better voice quality
-        if(!(options & AVAudioSessionCategoryOptionAllowBluetoothA2DP))
-            [session setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
-                     AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
-        NSLog(@"AVAudioSession A2DP: %@", setCategoryErr.localizedFailureReason);
+        if((use_hfp && force_hfp) || (((use_hfp || newuse_hfp) && !force_hfp) && ![session isOtherAudioPlaying])) {
+            // Force usage of HFP (only if no background music is playing) or if you explicily requested to use it
+            // always by setting 'speech_use_hfp="1"' in speech tag in navit.xml:
+            // radio gets muted while playing announcements,
+            // but music playback in background would switch to HFP as well during announcement playback.
+            
+            current_is_hfp = YES;
+            
+            if(!(options & AVAudioSessionCategoryOptionAllowBluetooth)) {
+                [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionAllowBluetooth |
+                 AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
+                NSLog(@"Configure AVAudioSession using HFP: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+            }
+            
+            NSLog(@"AVAudioSession using HFP: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+            
+        } else {
+            
+            current_is_hfp = NO;
+            
+            // Allow A2DP: No radio mute, but better voice quality
+            if(!(options & AVAudioSessionCategoryOptionAllowBluetoothA2DP)) {
+                [session setCategory:AVAudioSessionCategoryPlayback withOptions:AVAudioSessionCategoryOptionAllowBluetoothA2DP |
+                 AVAudioSessionCategoryOptionDuckOthers   error:&setCategoryErr];
+                NSLog(@"Configure AVAudioSession using A2DP: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+            }
+            
+            NSLog(@"AVAudioSession using A2DP: %@", setCategoryErr.localizedFailureReason==NULL?@"OK":setCategoryErr.localizedFailureReason);
+        }
+        
+        AVAudioSessionRouteDescription *routeDescription = [session currentRoute];
+        NSLog(@"AVAudioSession current route: %@", routeDescription);
+        
     }
 
     return 0;
