@@ -559,7 +559,7 @@ static void vehicle_log_gpx(struct vehicle *this_, struct log *log) {
     else
         attr_types=NULL;
     if (this_->meth.position_attr_get(this_->priv, attr_position_fix_type, &fix_attr)) {
-        if ( fix_attr.u.num == 0 )
+        if ( fix_attr.u.num == attr_position_valid_invalid )
             return;
     }
     if (!this_->meth.position_attr_get(this_->priv, attr_position_coord_geo, &attr))
@@ -635,7 +635,7 @@ static void vehicle_log_textfile(struct vehicle *this_, struct log *log) {
     if (!this_->meth.position_attr_get)
         return;
     if (this_->meth.position_attr_get(this_->priv, attr_position_fix_type, &fix_attr)) {
-        if (fix_attr.u.num == 0)
+        if (fix_attr.u.num == attr_position_valid_invalid)
             return;
     }
     if (!this_->meth.position_attr_get(this_->priv, attr_position_coord_geo, &pos_attr))
@@ -662,7 +662,7 @@ static void vehicle_log_binfile(struct vehicle *this_, struct log *log) {
     if (!this_->meth.position_attr_get)
         return;
     if (this_->meth.position_attr_get(this_->priv, attr_position_fix_type, &fix_attr)) {
-        if (fix_attr.u.num == 0)
+        if (fix_attr.u.num == attr_position_valid_invalid)
             return;
     }
     if (!this_->meth.position_attr_get(this_->priv, attr_position_coord_geo, &pos_attr))
