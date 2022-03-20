@@ -25,9 +25,9 @@
 	<key>LSApplicationCategoryType</key>
 	<string>Travel</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
-	<key>UIStatusBarHidden</key>
 	<true/>
+	<key>UIStatusBarHidden</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>navit needs access to your location to be of a kind of use</string>
 	<key>NSLocationAlwaysUsageDescription</key>
