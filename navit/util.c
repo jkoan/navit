@@ -217,7 +217,7 @@ char *str_escape(enum escape_mode mode, const char *in) {
 char *strncpy_unescape(char *dest, const char *src, size_t n) {
     char *dest_ptr;	/* A pointer to the currently parsed character inside string dest */
 
-    for (dest_ptr=dest; (dest_ptr-dest) < n && (*src != '\0'); src++, dest_ptr++) {
+    for (dest_ptr=dest; (dest_ptr-dest) < (long long)n && (*src != '\0'); src++, dest_ptr++) {
         if (*src == '\\') {
             src++;
         }
@@ -227,7 +227,7 @@ char *strncpy_unescape(char *dest, const char *src, size_t n) {
             return dest;
         }
     }
-    if ((dest_ptr-dest) < n)
+    if ((dest_ptr-dest) < (long)n)
         *dest_ptr='\0';	/* Add a trailing '\0' if any room is remaining */
     else {
         // strncpy_unescape will return a non NUL-terminated string. Trouble ahead if this is not handled properly
@@ -270,7 +270,7 @@ static char * parse_for_systematic_comparison(const char *s) {
 
     dbg(lvl_debug, "enter\n");
 
-    while (i < strlen(in)) {
+    while (i < (int)strlen(in)) {
         c = in[i];
         if ((c <= 0x20) || (c == ',') || (c == '-') || (c == '.') || (c == '/')) {
             /* whitespace */
@@ -456,6 +456,7 @@ int compare_name_systematic(const char *s1, const char *s2) {
 }
 
 static void hash_callback(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(key)
     GList **l=user_data;
     *l=g_list_prepend(*l, value);
 }
@@ -468,6 +469,7 @@ GList *g_hash_to_list(GHashTable *h) {
 }
 
 static void hash_callback_key(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(value)
     GList **l=user_data;
     *l=g_list_prepend(*l, key);
 }
@@ -510,7 +512,7 @@ gchar *g_strconcat_printf(gchar *buffer, gchar *fmt, ...) {
 #ifndef HAVE_GLIB
 int g_utf8_strlen_force_link(gchar *buffer, int max);
 int g_utf8_strlen_force_link(gchar *buffer, int max) {
-    return g_utf8_strlen(buffer, max);
+    return (int)g_utf8_strlen(buffer, max);
 }
 #endif
 
@@ -523,11 +525,11 @@ int g_utf8_strlen_force_link(gchar *buffer, int max) {
 char *stristr(const char *String, const char *Pattern) {
     char *pptr, *sptr, *start;
 
-    for (start = (char *)String; *start != (int)NULL; start++) {
+    for (start = (char *)String; *start != NULL; start++) {
         /* find start of pattern in string */
-        for ( ; ((*start!=(int)NULL) && (toupper(*start) != toupper(*Pattern))); start++)
+        for ( ; ((*start!=NULL) && (toupper(*start) != toupper(*Pattern))); start++)
             ;
-        if ((int)NULL == *start)
+        if (NULL == *start)
             return NULL;
 
         pptr = (char *)Pattern;
@@ -714,7 +716,7 @@ void square_shape_str(char *s) {
                 if (last_break) {
                     *last_break =
                         '\n';	/* Replace the previous non alnum character with a line break, this creates a new line and prevents the previous line from being too long */
-                    cur_cols = c-last_break;
+                    cur_cols = (int)(c-last_break);
                 }
             }
             last_break = c;	/* Record this position as a candidate to insert a line break */
@@ -944,7 +946,7 @@ struct spawn_process_info {
  */
 char *shell_escape(char *arg) {
     char *r;
-    int arglen=strlen(arg);
+    int arglen=(int)strlen(arg);
     int i,j,rlen;
 #ifdef HAVE_API_WIN32_BASE
     {
@@ -1017,9 +1019,9 @@ char *shell_escape(char *arg) {
 static char* spawn_process_compose_cmdline(char **argv) {
     int i,j;
     char *cmdline=shell_escape(argv[0]);
-    for(i=1,j=strlen(cmdline); argv[i]; i++) {
+    for(i=1,j=(int)strlen(cmdline); argv[i]; i++) {
         char *arg=shell_escape(argv[i]);
-        int arglen=strlen(arg);
+        int arglen=(int)strlen(arg);
         cmdline[j]=' ';
         cmdline=g_realloc(cmdline,j+1+arglen+1);
         memcpy(cmdline+j+1,arg,arglen+1);
@@ -1144,6 +1146,7 @@ spawn_process(char **argv) {
  *
  */
 int spawn_process_check_status(struct spawn_process_info *pi, int block) {
+#pragma unused(block)
     if(pi==NULL) {
         dbg(lvl_error,"Trying to get process status of NULL, assuming process is terminated.");
         return 255;
@@ -1248,7 +1251,7 @@ static void spawn_process_sigchld(int sig) {
 }
 #endif
 
-void spawn_process_init() {
+void spawn_process_init(void) {
 #ifdef _POSIX_C_SOURCE
     struct sigaction act;
     act.sa_handler=spawn_process_sigchld;
