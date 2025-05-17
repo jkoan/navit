@@ -34,6 +34,8 @@
 #define RELATION_MEMBER_PRINT_FORMAT "%d:"LONGLONG_FMT":%s"
 #define RELATION_MEMBER_PARSE_FORMAT "%d:"LONGLONG_FMT":%n"
 
+long long int getcurrentid(void);
+
 struct tile_data {
     char buffer[1024];
     int tile_depth;
