@@ -626,6 +626,7 @@ g_mem_chunk_new (const gchar  *name,
 		 gsize         area_size,
 		 gint          type)
 {
+#pragma unused(name, area_size, type)
   GMemChunk *mem_chunk;
   g_return_val_if_fail (atom_size > 0, NULL);
 
@@ -667,9 +668,15 @@ g_mem_chunk_free (GMemChunk *mem_chunk,
   g_slice_free1 (mem_chunk->alloc_size, mem);
 }
 
-void	g_mem_chunk_clean	(GMemChunk *mem_chunk)	{}
-void	g_mem_chunk_reset	(GMemChunk *mem_chunk)	{}
-void	g_mem_chunk_print	(GMemChunk *mem_chunk)	{}
+void	g_mem_chunk_clean	(GMemChunk *mem_chunk)	{
+#pragma unused(mem_chunk)
+}
+void	g_mem_chunk_reset	(GMemChunk *mem_chunk)	{
+#pragma unused(mem_chunk)
+}
+void	g_mem_chunk_print	(GMemChunk *mem_chunk)	{
+#pragma unused(mem_chunk)
+}
 void	g_mem_chunk_info	(void)			{}
 void	g_blow_chunks		(void)			{}
 
@@ -677,6 +684,7 @@ GAllocator*
 g_allocator_new (const gchar *name,
 		 guint        n_preallocs)
 {
+#pragma unused(name, n_preallocs)
   static struct _GAllocator {
     gchar      *name;
     guint16     n_preallocs;
@@ -695,6 +703,7 @@ g_allocator_new (const gchar *name,
 void
 g_allocator_free (GAllocator *allocator)
 {
+#pragma unused(allocator)
 }
 
 #ifdef ENABLE_GC_FRIENDLY_DEFAULT
