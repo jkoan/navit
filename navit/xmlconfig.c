@@ -20,6 +20,8 @@
 /* see http://library.gnome.org/devel/glib/stable/glib-Simple-XML-Subset-Parser.html
  * for details on how the xml file parser works.
  */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wincompatible-function-pointer-types"
 
 #include <stdlib.h>
 #include <glib.h>
@@ -171,7 +173,7 @@ static int find_boolean(struct xmlstate *state, const char *attribute, int deflt
  * */
 static int convert_number(const char *val) {
     if (val)
-        return g_ascii_strtoull(val,NULL,0);
+        return (int)g_ascii_strtoull(val,NULL,0);
     else
         return 0;
 }
@@ -225,23 +227,23 @@ static int xmlconfig_announce(struct xmlstate *state) {
 #define DESTROY(x) (void (*)(void *))(x)
 
 static struct object_func object_funcs[] = {
-    { attr_announcement,NEW(announcement_new),  GET(announcement_get_attr), NULL, NULL, SET(announcement_set_attr), ADD(announcement_add_attr) },
-    { attr_arrows,     NEW(arrows_new)},
-    { attr_spikes,     NEW(spikes_new)},
-    { attr_circle,     NEW(circle_new),   NULL, NULL, NULL, NULL, ADD(element_add_attr)},
-    { attr_coord,      NEW(coord_new_from_attrs)},
-    { attr_cursor,     NEW(cursor_new),   NULL, NULL, NULL, NULL, ADD(cursor_add_attr)},
-    { attr_debug,      NEW(debug_new)},
-    { attr_graphics,   NEW(graphics_new), GET(graphics_get_attr)},
-    { attr_gui,        NEW(gui_new), GET(gui_get_attr), NULL, NULL, SET(gui_set_attr), ADD(gui_add_attr)},
-    { attr_icon,       NEW(icon_new),     NULL, NULL, NULL, NULL, ADD(element_add_attr)},
-    { attr_image,      NEW(image_new)},
-    { attr_itemgra,    NEW(itemgra_new),  NULL, NULL, NULL, NULL, ADD(itemgra_add_attr)},
-    { attr_plugins,    NEW(plugins_new),  NULL, NULL, NULL, NULL, NULL, NULL, INIT(plugins_init)},
-    { attr_plugin,     NEW(plugin_new)},
-    { attr_polygon,    NEW(polygon_new),  NULL, NULL, NULL, NULL, ADD(element_add_attr)},
-    { attr_polyline,   NEW(polyline_new), NULL, NULL, NULL, NULL, ADD(element_add_attr)},
-    { attr_text,       NEW(text_new)},
+    { attr_announcement,NEW(announcement_new),  GET(announcement_get_attr), NULL, NULL, SET(announcement_set_attr), ADD(announcement_add_attr), NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_arrows,     NEW(arrows_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_spikes,     NEW(spikes_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_circle,     NEW(circle_new),   NULL, NULL, NULL, NULL, ADD(element_add_attr), NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_coord,      NEW(coord_new_from_attrs), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_cursor,     NEW(cursor_new),   NULL, NULL, NULL, NULL, ADD(cursor_add_attr), NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_debug,      NEW(debug_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_graphics,   NEW(graphics_new), GET(graphics_get_attr),NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_gui,        NEW(gui_new), GET(gui_get_attr), NULL, NULL, SET(gui_set_attr), ADD(gui_add_attr),NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_icon,       NEW(icon_new),     NULL, NULL, NULL, NULL, ADD(element_add_attr), NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_image,      NEW(image_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_itemgra,    NEW(itemgra_new),  NULL, NULL, NULL, NULL, ADD(itemgra_add_attr), NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_plugins,    NEW(plugins_new),  NULL, NULL, NULL, NULL, NULL, NULL, INIT(plugins_init), NULL, NULL, NULL, NULL},
+    { attr_plugin,     NEW(plugin_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_polygon,    NEW(polygon_new),  NULL, NULL, NULL, NULL, ADD(element_add_attr),NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_polyline,   NEW(polyline_new), NULL, NULL, NULL, NULL, ADD(element_add_attr),NULL, NULL, NULL, NULL, NULL, NULL},
+    { attr_text,       NEW(text_new), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
 };
 
 struct object_func *
@@ -286,8 +288,18 @@ object_func_lookup(enum attr_type type) {
         return &vehicle_func;
     case attr_vehicleprofile:
         return &vehicleprofile_func;
+    case attr_headup:
+        return &headup_func;
+    case attr_btheadup:
+        return &headup_func;
+    case attr_obd2:
+        return &headup_func;
+    case attr_glass:
+        return &headup_func;
+    case attr_tpms:
+        return &headup_func;
     default:
-        for (i = 0 ; i < sizeof(object_funcs)/sizeof(struct object_func); i++) {
+        for (i = 0 ; i < (int)sizeof(object_funcs)/(int)sizeof(struct object_func); i++) {
             if (object_funcs[i].type == type)
                 return &object_funcs[i];
         }
@@ -335,7 +347,7 @@ static char *element_fixmes[]= {
 };
 
 static void initStatic(void) {
-    elements=g_new0(struct element_func, 46); //45 is a number of elements + ending NULL element
+    elements=g_new0(struct element_func, 47); //45 is a number of elements + ending NULL element
 
     elements[0].name="config";
     elements[0].parent=NULL;
@@ -560,6 +572,11 @@ static void initStatic(void) {
     elements[44].parent="itemgra";
     elements[44].func=NULL;
     elements[44].type=attr_spikes;
+    
+    elements[45].name="headup";
+    elements[45].parent="navit";
+    elements[45].func=NULL;
+    elements[45].type=attr_headup;
 }
 
 /**
@@ -580,6 +597,7 @@ static void start_element(xml_context *context,
                           const gchar        **attribute_values,
                           gpointer             user_data,
                           xmlerror             **error) {
+#pragma unused(context)
     struct xmlstate *new=NULL, **parent = user_data;
     struct element_func *e=elements,*func=NULL;
     struct attr_fixme *attr_fixme=attr_fixmes;
@@ -695,6 +713,7 @@ static void end_element (xml_context *context,
                          const gchar         *element_name,
                          gpointer             user_data,
                          xmlerror             **error) {
+#pragma unused(context, error)
     struct xmlstate *curr, **state = user_data;
 
     if (!strcmp(element_name,"xml"))
@@ -722,6 +741,7 @@ static gboolean parse_file(struct xmldocument *document, xmlerror **error);
  */
 static void xinclude(xml_context *context, const gchar **attribute_names, const gchar **attribute_values,
                      struct xmldocument *doc_old, xmlerror **error) {
+#pragma unused(context)
     struct xmldocument doc_new;
     struct file_wordexp *we;
     int i,count;
@@ -811,7 +831,7 @@ static int strncmp_len(const char *s1, int s1len, const char *s2) {
     ret=strncmp(s1, s2, s1len);
     if (ret)
         return ret;
-    return strlen(s2)-s1len;
+    return (int)strlen(s2)-(int)s1len;
 }
 
 static int xpointer_value(const char *test, int len, struct xistate *elem, const char **out, int out_len) {
@@ -846,7 +866,7 @@ static int xpointer_test(const char *test, int len, struct xistate *elem) {
     c=test[len-1];
     if (c != '\'' && c != '"')
         return 0;
-    eq=strcspn(test, "=");
+    eq=(int)strcspn(test, "=");
     if (eq >= len || test[eq+1] != c)
         return 0;
     vlen=eq;
@@ -866,7 +886,7 @@ static int xpointer_test(const char *test, int len, struct xistate *elem) {
 
 static int xpointer_element_match(const char *xpointer, int len, struct xistate *elem) {
     int start,tlen;
-    start=strcspn(xpointer, "[");
+    start=(int)strcspn(xpointer, "[");
     if (start > len)
         start=len;
     if (strncmp_len(xpointer, start, elem->element) && (start != 1 || xpointer[0] != '*'))
@@ -877,7 +897,7 @@ static int xpointer_element_match(const char *xpointer, int len, struct xistate 
         return 0;
     for (;;) {
         start++;
-        tlen=strcspn(xpointer+start,"]");
+        tlen=(int)strcspn(xpointer+start,"]");
         if (start + tlen > len)
             return 1;
         if (!xpointer_test(xpointer+start, tlen, elem))
@@ -895,7 +915,7 @@ static int xpointer_xpointer_match(const char *xpointer, int len, struct xistate
     c=xpointer+1;
     len--;
     do {
-        s=strcspn(c, "/");
+        s=(int)strcspn(c, "/");
         if (s > len)
             s=len;
         if (! xpointer_element_match(c, s, first))
@@ -914,12 +934,12 @@ static int xpointer_match(const char *xpointer, struct xistate *first) {
     int len;
     if (! xpointer)
         return 1;
-    len=strlen(xpointer);
+    len=(int)strlen(xpointer);
     if (strncmp(xpointer,prefix,strlen(prefix)))
         return 0;
     if (xpointer[len-1] != ')')
         return 0;
-    return xpointer_xpointer_match(xpointer+strlen(prefix), len-strlen(prefix)-1, first);
+    return xpointer_xpointer_match(xpointer+strlen(prefix), len-(int)strlen(prefix)-1, first);
 
 }
 
@@ -1006,10 +1026,11 @@ static void xi_text (xml_context *context,
                      gsize                   text_len,
                      gpointer                user_data,
                      xmlerror               **error) {
+#pragma unused(context, error)
     struct xmldocument *doc=user_data;
     int i;
     if (doc->active) {
-        for (i = 0 ; i < text_len ; i++) {
+        for (i = 0 ; i < (int)text_len ; i++) {
             if (!isspace(text[i])) {
                 struct xmldocument *doc=user_data;
                 struct xmlstate *curr, **state = doc->user_data;
@@ -1029,16 +1050,15 @@ static void xi_text (xml_context *context,
 }
 
 #if USE_EZXML
-static void parse_node_text(ezxml_t node, void *data, void (*start)(void *, const char *, const char **, const char **,
-                            void *,
-                            void *),
+static void parse_node_text(ezxml_t node, void *data,
+                            void (*start)(void *, const char *, const char **, const char **, void *, void *),
                             void (*end)(void *, const char *, void *, void *),
                             void (*text)(void *, const char *, int, void *, void *)) {
     while (node) {
         if (start)
             start(NULL, node->name, (const char **)node->attr, (const char **)(node->attr+1), data, NULL);
         if (text && node->txt)
-            text(NULL, node->txt, strlen(node->txt), data, NULL);
+            text(NULL, node->txt, (int)strlen(node->txt), data, NULL);
         if (node->child)
             parse_node_text(node->child, data, start, end, text);
         if (end)
@@ -1217,7 +1237,7 @@ static gboolean parse_file(struct xmldocument *document, xmlerror **error) {
 #else
 static void parse_node(struct xmldocument *document, ezxml_t node) {
     while (node) {
-        xi_start_element(NULL,node->name, node->attr, node->attr+1, document, NULL);
+        xi_start_element(NULL,node->name, (const gchar **)node->attr, (const gchar **)node->attr+1, document, NULL);
         if (node->txt)
             xi_text(NULL,node->txt,strlen(node->txt),document,NULL);
         if (node->child)
@@ -1228,6 +1248,7 @@ static void parse_node(struct xmldocument *document, ezxml_t node) {
 }
 
 static gboolean parse_file(struct xmldocument *document, xmlerror **error) {
+#pragma unused(error)
     FILE *f;
     ezxml_t root;
 
@@ -1326,6 +1347,7 @@ struct attr_iter {
 
 struct attr_iter *
 navit_object_attr_iter_new(void * unused) {
+#pragma unused(unused)
     return g_new0(struct attr_iter, 1);
 }
 
@@ -1414,3 +1436,5 @@ void navit_object_destroy(struct navit_object *obj) {
     attr_list_free(obj->attrs);
     g_free(obj);
 }
+
+#pragma clang diagnostic pop
