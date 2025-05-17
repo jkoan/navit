@@ -57,6 +57,7 @@ struct traffic_message ** traffic_null_get_messages(struct traffic_priv * this_)
  * @return Always `NULL`
  */
 struct traffic_message ** traffic_null_get_messages(struct traffic_priv * this_) {
+#pragma unused(this_)
     return NULL;
 }
 
@@ -80,6 +81,9 @@ static struct traffic_methods traffic_null_meth = {
  */
 static struct traffic_priv * traffic_null_new(struct navit *nav, struct traffic_methods *meth,
         struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(nav)
+#pragma unused(attrs)
+#pragma unused(cbl)
     struct traffic_priv *ret;
 
     dbg(lvl_debug, "enter");
