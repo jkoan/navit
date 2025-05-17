@@ -72,9 +72,9 @@ void profile_timer(int level, const char *module, const char *function, const ch
 
         sprintf(buffer, "profile:%s", module);
         va_start(ap, fmt);
-        debug_vprintf(lvl_debug, buffer, strlen(buffer), function, strlen(function), 1, fmt, ap);
+        debug_vprintf(lvl_debug, buffer, (int)strlen(buffer), function, (int)strlen(function), 1, fmt, ap);
         va_end(ap);
-        debug_printf(lvl_debug, buffer, strlen(buffer), function, strlen(function), 0, " %7.1f ms\n", msec);
+        debug_printf(lvl_debug, buffer, (int)strlen(buffer), function, (int)strlen(function), 0, " %7.1f ms\n", msec);
         gettimeofday(&last[level], NULL);
     } else {
         gettimeofday(&curr, NULL);
