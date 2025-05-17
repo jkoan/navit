@@ -120,13 +120,13 @@ struct messagelist
     struct attr num_attr,age_attr;
 
     if (attr_generic_get_attr(attrs, NULL, attr_message_maxage, &age_attr, NULL)) {
-        this->maxage = age_attr.u.num;
+        this->maxage = (int)age_attr.u.num;
     } else {
         this->maxage = 10;
     }
 
     if (attr_generic_get_attr(attrs, NULL, attr_message_maxnum, &num_attr, NULL)) {
-        this->maxnum = num_attr.u.num;
+        this->maxnum = (int)num_attr.u.num;
     } else {
         this->maxnum = 3;
     }
