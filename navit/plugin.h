@@ -51,6 +51,8 @@ enum plugin_category {
     plugin_category_font,
     /** Category for plugins which retrieve traffic information. */
     plugin_category_traffic,
+    /** Category for plugins which provide connectivity to a headup display. */
+    plugin_category_headup,
     /** Dummy for last entry. */
     plugin_category_last,
 };
