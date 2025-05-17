@@ -56,7 +56,7 @@ static void get_line(struct map_rect_priv *mr) {
         }
         dbg(lvl_debug,"read textfile line: %s", mr->line);
         remove_comment_line(mr->line);
-        mr->lastlen=strlen(mr->line)+1;
+        mr->lastlen=(int)strlen(mr->line)+1;
         if (strlen(mr->line) >= TEXTFILE_LINE_SIZE-1)
             dbg(lvl_error, "line too long: %s", mr->line);
     }
@@ -71,13 +71,14 @@ static void map_destroy_textfile(struct map_priv *m) {
 }
 
 static void textfile_coord_rewind(void *priv_data) {
+#pragma unused(priv_data)
 }
 
 static int parse_line(struct map_rect_priv *mr, int attr) {
     int pos;
 
     pos=coord_parse(mr->line, projection_mg, &mr->c);
-    if (pos < strlen(mr->line) && attr) {
+    if (pos < (int)strlen(mr->line) && attr) {
         strcpy(mr->attrs, mr->line+pos);
     }
     return pos;
@@ -155,6 +156,11 @@ static struct item_methods methods_textfile = {
     textfile_coord_get,
     textfile_attr_rewind,
     textfile_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_rect_priv *map_rect_new_textfile(struct map_priv *map, struct map_selection *sel) {
@@ -268,7 +274,7 @@ static struct item *map_rect_get_item_textfile(struct map_rect_priv *mr) {
             }
             dbg(lvl_debug,"map_rect_get_item_textfile: point found");
             mr->eoc=0;
-            mr->item.id_lo=mr->pos;
+            mr->item.id_lo=(int)mr->pos;
         } else {
             if (parse_line(mr, 1)) {
                 get_line(mr);
@@ -279,7 +285,7 @@ static struct item *map_rect_get_item_textfile(struct map_rect_priv *mr) {
                 get_line(mr);
                 continue;
             }
-            mr->item.id_lo=mr->pos;
+            mr->item.id_lo=(int)mr->pos;
             strcpy(mr->attrs, mr->line);
             get_line(mr);
             dbg(lvl_debug,"mr=%p attrs=%s", mr, mr->attrs);
@@ -324,9 +330,16 @@ static struct map_methods map_methods_textfile = {
     map_rect_destroy_textfile,
     map_rect_get_item_textfile,
     map_rect_get_item_byid_textfile,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_priv *map_new_textfile(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *m;
     struct attr *data=attr_search(attrs, attr_data);
     struct attr *charset=attr_search(attrs, attr_charset);
@@ -340,7 +353,7 @@ static struct map_priv *map_new_textfile(struct map_methods *meth, struct attr *
         return NULL;
     dbg(lvl_debug,"map_new_textfile %s", data->u.str);
     wdata=g_strdup(data->u.str);
-    len=strlen(wdata);
+    len=(int)strlen(wdata);
     if (len && wdata[len-1] == '|') {
         wdata[len-1]='\0';
         is_pipe=1;
@@ -355,7 +368,7 @@ static struct map_priv *map_new_textfile(struct map_methods *meth, struct attr *
     m->is_pipe=is_pipe;
     m->no_warning_if_map_file_missing=(no_warn!=NULL) && (no_warn->u.num);
     if (flags)
-        m->flags=flags->u.num;
+        m->flags=(int)flags->u.num;
     dbg(lvl_debug,"map_new_textfile %s %s", m->filename, wdata);
     if (charset) {
         m->charset=g_strdup(charset->u.str);
