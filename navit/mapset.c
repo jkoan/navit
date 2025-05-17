@@ -51,6 +51,7 @@ struct attr_iter {
  * @return The new mapset
  */
 struct mapset *mapset_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct mapset *ms;
 
     ms=g_new0(struct mapset, 1);
@@ -70,6 +71,7 @@ struct mapset *mapset_dup(struct mapset *ms) {
 
 struct attr_iter *
 mapset_attr_iter_new(void* unused) {
+#pragma unused(unused)
     return g_new0(struct attr_iter, 1);
 }
 
