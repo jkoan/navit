@@ -202,13 +202,19 @@ transform_new(struct pcoord *center, int scale, int yaw) {
 }
 
 int transform_get_hog(struct transformation *this_) {
+#ifdef ENABLE_ROLL
     return HOG(*this_);
+#else
+#pragma unused(this_)
+    return 0;
+#endif
 }
 
 void transform_set_hog(struct transformation *this_, int hog) {
 #ifdef ENABLE_ROLL
     this_->hog=hog;
 #else
+#pragma unused(hog, this_)
     dbg(lvl_error,"not supported");
 #endif
 
@@ -220,6 +226,8 @@ int transform_get_attr(struct transformation *this_, enum attr_type type, struct
     case attr_hog:
         attr->u.num=this_->hog;
         break;
+#else
+#pragma unused(iter, this_)
 #endif
     default:
         return 0;
@@ -234,6 +242,8 @@ int transform_set_attr(struct transformation *this_, struct attr *attr) {
     case attr_hog:
         this_->hog=attr->u.num;
         return 1;
+#else
+#pragma unused(this_)
 #endif
     default:
         return 0;
@@ -739,6 +749,9 @@ transform_get_selection(struct transformation *this_, enum projection pro, int o
     struct map_selection *ret,*curri,*curro;
     struct coord_geo g;
 
+    if(this_==NULL)
+        return 0;
+
     ret=map_selection_dup(this_->map_sel);
     curri=this_->map_sel;
     curro=ret;
@@ -804,6 +817,7 @@ void transform_set_roll(struct transformation *this_,int roll) {
     this_->roll=roll;
     transform_setup_matrix(this_);
 #else
+#pragma unused(this_, roll)
     dbg(lvl_error,"not supported");
 #endif
 }
@@ -812,6 +826,7 @@ int transform_get_roll(struct transformation *this_) {
 #ifdef ENABLE_ROLL
     return this_->roll;
 #else
+#pragma unused(this_)
     return 0;
 #endif
 }
@@ -1040,6 +1055,7 @@ double transform_distance(enum projection pro, struct coord *c1, struct coord *c
         double dx,dy,scale=transform_scale((c1->y+c2->y)/2);
         dx=c1->x-c2->x;
         dy=c1->y-c2->y;
+        dbg(lvl_debug,"distance: %f", sqrt(dx*dx+dy*dy)/scale);
         return sqrt(dx*dx+dy*dy)/scale;
 #else
         int dx,dy,f,scale=transform_int_scale((c1->y+c2->y)/2);
