@@ -125,7 +125,7 @@ static void search_house_number_interpolation_split(char *str, struct house_numb
         inter->rev=0;
         return;
     }
-    len=pos-str;
+    len=(int)(pos-str);
     first=g_malloc(len+1);
     strncpy(first, str, len);
     first[len]='\0';
@@ -224,7 +224,7 @@ char *search_next_interpolated_house_number(struct item *item, struct house_numb
 
         house_number_interpolation_clear_current(inter);
         curr_interpol_attr=house_number_interpol_attrs[inter->curr_interpol_attr_idx];
-        if (curr_interpol_attr.house_number_interpol_attr==house_number_interpol_attr_END) {
+        if (curr_interpol_attr.house_number_interpol_attr==(enum attr_type)house_number_interpol_attr_END) {
             return NULL;
         }
         if (item_attr_get(item, curr_interpol_attr.house_number_interpol_attr, &attr)) {
