@@ -1,7 +1,12 @@
 if(BUILD_MAPTOOL)
-
+# This little macro lets you set any XCode specific property
+macro (set_xcode_property TARGET XCODE_PROPERTY XCODE_VALUE)
+    set_property (TARGET ${TARGET} PROPERTY XCODE_ATTRIBUTE_${XCODE_PROPERTY} ${XCODE_VALUE})
+endmacro (set_xcode_property)
+	
 	find_package(Protobuf-c REQUIRED)
 	include_directories(${PROTOBUF-C_INCLUDE_DIR})
+ message(STATUS "Protobuf: ${PROTOBUF-C_INCLUDE_DIR}")
 	include_directories(${CMAKE_CURRENT_BINARY_DIR})
 	#PROTOBUF_C_GENERATE_C(PROTO_SRCS PROTO_HDRS zfs.proto)
 
@@ -27,9 +32,9 @@ if(BUILD_MAPTOOL)
 	target_link_libraries(maptool maptool_core ${NAVIT_LIBNAME} ${NAVIT_LIBS})
 
 	if(BUILD_BUNDLE)
-        	set_target_properties(maptool PROPERTIES MACOSX_BUNDLE TRUE)
-		SET_XCODE_PROPERTY(maptool CODE_SIGN_IDENTITY ${CODE_SIGN_IDENTITY} )
-    		SET_XCODE_PROPERTY(maptool DEVELOPMENT_TEAM ${DEVELOPMENT_TEAM_ID} )
+        set_target_properties(maptool PROPERTIES MACOSX_BUNDLE TRUE)
+	#set_xcode_property(maptool CODE_SIGN_IDENTITY ${CODE_SIGN_IDENTITY} )
+    	#set_xcode_property(maptool DEVELOPMENT_TEAM ${DEVELOPMENT_TEAM_ID} )
 	endif(BUILD_BUNDLE)
 
 	install(TARGETS maptool
