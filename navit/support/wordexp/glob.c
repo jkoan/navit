@@ -100,6 +100,7 @@ int glob(const char *pattern, int flags,
 #include <stdlib.h>
 
 static int glob_requires_match(const char *pattern, int flags) {
+#pragma unused(flags)
     for (;;) {
         switch (*pattern++) {
         case '\0':
@@ -136,7 +137,7 @@ static int glob_recursive(const char *path1, const char *path2, const char *patt
         return 0;
     }
     dbg(lvl_debug,"searching for %s in %s",pattern,path);
-    flen=strcspn(pattern,"/");
+    flen=(int)strcspn(pattern,"/");
     next=pattern+flen;
     if (*next == '/')
         next++;
@@ -178,7 +179,7 @@ int glob(const char *pattern, int flags, int (*errfunc) (const char *epath, int 
 void globfree(glob_t *pglob) {
     int i;
 
-    for (i=0; i < pglob->gl_pathc; i++) {
+    for (i=0; i < (int)(pglob->gl_pathc); i++) {
         free (pglob->gl_pathv[i]);
     }
     free (pglob->gl_pathv);
