@@ -33,6 +33,9 @@
 #include "glib.h"
 #include "galias.h"
 
+guint
+g_spaced_primes_closest (guint num);
+
 
 static const guint g_primes[] =
 {
@@ -79,7 +82,7 @@ g_spaced_primes_closest (guint num)
 {
   gint i;
 
-  for (i = 0; i < g_nprimes; i++)
+  for (i = 0; i < (gint)g_nprimes; i++)
     if (g_primes[i] > num)
       return g_primes[i];
 
