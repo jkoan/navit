@@ -66,6 +66,8 @@ time_t mkgmtime(struct tm * pt);
 time_t iso8601_to_time(char * iso8601);
 char * time_to_iso8601(time_t time);
 char * current_to_iso8601(void);
+char *stristr(const char *String, const char *Pattern);
+void spawn_process_init(void);
 
 #if defined(_MSC_VER) || (!defined(HAVE_GETTIMEOFDAY) && defined(HAVE_API_WIN32_BASE))
 
