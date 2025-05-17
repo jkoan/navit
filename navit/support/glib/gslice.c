@@ -124,6 +124,12 @@
 #define P2ALIGN(size)   ALIGN (size, P2ALIGNMENT)
 #endif
 
+#if defined(__arm__)
+    #define IOS_LT_10
+#else
+    #undef IOS_LT_10
+#endif
+
 /* special helpers to avoid gmessage.c dependency */
 static void mem_error (const char *format, ...) G_GNUC_PRINTF (1,2);
 #define mem_assert(cond)    do { if (G_LIKELY (cond)) ; else mem_error ("assertion failed: %s", #cond); } while (0)
@@ -178,7 +184,7 @@ typedef struct {
 static gpointer     slab_allocator_alloc_chunk       (gsize      chunk_size);
 static void         slab_allocator_free_chunk        (gsize      chunk_size,
                                                       gpointer   mem);
-static void         private_thread_memory_cleanup    (gpointer   data);
+//static void         private_thread_memory_cleanup    (gpointer   data);
 static gpointer     allocator_memalign               (gsize      alignment,
                                                       gsize      memsize);
 static void         allocator_memfree                (gsize      memsize,
@@ -197,7 +203,9 @@ static int      smc_notify_free   (void   *pointer,
 static GPrivate   *private_thread_memory = NULL;
 static gsize       sys_page_size = 0;
 static gsize       sys_valignment = ((32*1024*1024));
+#ifdef G_OS_WIN32
 static guint8      *virtual_mem = 0;
+#endif
 static Allocator   allocator[1] = { { 0, }, };
 static SliceConfig slice_config = {
   FALSE,        /* always_malloc */
@@ -226,7 +234,7 @@ g_slice_set_config (GSliceConfig ckey,
       slice_config.working_set_msecs = value;
       break;
     case G_SLICE_CONFIG_COLOR_INCREMENT:
-      slice_config.color_increment = value;
+      slice_config.color_increment = (guint)value;
     default: ;
     }
 }
@@ -265,7 +273,7 @@ g_slice_get_config_state (GSliceConfig ckey,
     case G_SLICE_CONFIG_CONTENTION_COUNTER:
       array[i++] = SLAB_CHUNK_SIZE (allocator, address);
       array[i++] = allocator->contention_counters[address];
-      array[i++] = allocator_get_magazine_threshold (allocator, address);
+      array[i++] = (guint)allocator_get_magazine_threshold (allocator, (guint)address);
       *n_values = i;
       return g_memdup (array, sizeof (array[0]) * *n_values);
     default:
@@ -313,7 +321,11 @@ g_slice_init_nomessage (void)
     printf("SPAGE_SIZE: %d, SVALIGN:%d\n", sys_page_size, sys_valignment);
   }
 #else
-  sys_page_size = sysconf (_SC_PAGESIZE); /* = sysconf (_SC_PAGE_SIZE); = getpagesize(); */
+#ifdef IOS_LT_10
+  sys_page_size = getpagesize();
+#else
+  sys_page_size = sysconf (_SC_PAGE_SIZE);
+#endif
   sys_valignment = sys_page_size;
 #endif
   mem_assert (sys_page_size >= 2 * LARGEALIGNMENT);
@@ -451,7 +463,7 @@ thread_memory_from_self (void)
         }
       if (!tmem)
 	{
-          const guint n_magazines = MAX_SLAB_INDEX (allocator);
+          const guint n_magazines = (guint)MAX_SLAB_INDEX (allocator);
 	  tmem = g_malloc0 (sizeof (ThreadMemory) + sizeof (Magazine) * 2 * n_magazines);
 	  tmem->magazine1 = (Magazine*) (tmem + 1);
 	  tmem->magazine2 = &tmem->magazine1[n_magazines];
@@ -525,7 +537,7 @@ allocator_get_magazine_threshold (Allocator *allocator,
    * the content of a single magazine doesn't exceed ca. 16KB.
    */
   gsize chunk_size = SLAB_CHUNK_SIZE (allocator, ix);
-  guint threshold = MAX (MIN_MAGAZINE_SIZE, allocator->max_page_size / MAX (5 * chunk_size, 5 * 32));
+  guint threshold = (guint)MAX (MIN_MAGAZINE_SIZE, allocator->max_page_size / MAX (5 * chunk_size, 5 * 32));
   guint contention_counter = allocator->contention_counters[ix];
   if (G_UNLIKELY (contention_counter))  /* single CPU bias */
     {
@@ -544,7 +556,7 @@ magazine_cache_update_stamp (void)
     {
       GTimeVal tv;
       g_get_current_time (&tv);
-      allocator->last_stamp = tv.tv_sec * 1000 + tv.tv_usec / 1000; /* milli seconds */
+      allocator->last_stamp = (guint)(tv.tv_sec * 1000 + tv.tv_usec / 1000); /* milli seconds */
       allocator->stamp_counter = 0;
     }
   else
@@ -664,7 +676,7 @@ magazine_cache_pop_magazine (guint  ix,
   g_mutex_lock_a (allocator->magazine_mutex, &allocator->contention_counters[ix]);
   if (!allocator->magazines[ix])
     {
-      guint magazine_threshold = allocator_get_magazine_threshold (allocator, ix);
+      guint magazine_threshold = (guint)allocator_get_magazine_threshold (allocator, ix);
       gsize i, chunk_size = SLAB_CHUNK_SIZE (allocator, ix);
       ChunkLink *chunk, *head;
       g_mutex_unlock (allocator->magazine_mutex);
@@ -704,38 +716,38 @@ magazine_cache_pop_magazine (guint  ix,
 }
 
 /* --- thread magazines --- */
-static void
-private_thread_memory_cleanup (gpointer data)
-{
-  ThreadMemory *tmem = data;
-  const guint n_magazines = MAX_SLAB_INDEX (allocator);
-  guint ix;
-  for (ix = 0; ix < n_magazines; ix++)
-    {
-      Magazine *mags[2];
-      guint j;
-      mags[0] = &tmem->magazine1[ix];
-      mags[1] = &tmem->magazine2[ix];
-      for (j = 0; j < 2; j++)
-        {
-          Magazine *mag = mags[j];
-          if (mag->count >= MIN_MAGAZINE_SIZE)
-            magazine_cache_push_magazine (ix, mag->chunks, mag->count);
-          else
-            {
-              const gsize chunk_size = SLAB_CHUNK_SIZE (allocator, ix);
-              g_mutex_lock (allocator->slab_mutex);
-              while (mag->chunks)
-                {
-                  ChunkLink *chunk = magazine_chain_pop_head (&mag->chunks);
-                  slab_allocator_free_chunk (chunk_size, chunk);
-                }
-              g_mutex_unlock (allocator->slab_mutex);
-            }
-        }
-    }
-  g_free (tmem);
-}
+//static void
+//private_thread_memory_cleanup (gpointer data)
+//{
+//  ThreadMemory *tmem = data;
+//  const guint n_magazines = MAX_SLAB_INDEX (allocator);
+//  guint ix;
+//  for (ix = 0; ix < n_magazines; ix++)
+//    {
+//      Magazine *mags[2];
+//      guint j;
+//      mags[0] = &tmem->magazine1[ix];
+//      mags[1] = &tmem->magazine2[ix];
+//      for (j = 0; j < 2; j++)
+//        {
+//          Magazine *mag = mags[j];
+//          if (mag->count >= MIN_MAGAZINE_SIZE)
+//            magazine_cache_push_magazine (ix, mag->chunks, mag->count);
+//          else
+//            {
+//              const gsize chunk_size = SLAB_CHUNK_SIZE (allocator, ix);
+//              g_mutex_lock (allocator->slab_mutex);
+//              while (mag->chunks)
+//                {
+//                  ChunkLink *chunk = magazine_chain_pop_head (&mag->chunks);
+//                  slab_allocator_free_chunk (chunk_size, chunk);
+//                }
+//              g_mutex_unlock (allocator->slab_mutex);
+//            }
+//        }
+//    }
+//  g_free (tmem);
+//}
 
 static void
 thread_memory_magazine1_reload (ThreadMemory *tmem,
@@ -816,7 +828,7 @@ g_slice_alloc (gsize mem_size)
   if (G_LIKELY (acat == 1))     /* allocate through magazine layer */
     {
       ThreadMemory *tmem = thread_memory_from_self();
-      guint ix = SLAB_INDEX (allocator, chunk_size);
+      guint ix = (guint)SLAB_INDEX (allocator, chunk_size);
       if (G_UNLIKELY (thread_memory_magazine1_is_empty (tmem, ix)))
         {
           thread_memory_swap_magazines (tmem, ix);
@@ -871,7 +883,7 @@ g_slice_free1 (gsize    mem_size,
   if (G_LIKELY (acat == 1))             /* allocate through magazine layer */
     {
       ThreadMemory *tmem = thread_memory_from_self();
-      guint ix = SLAB_INDEX (allocator, chunk_size);
+      guint ix = (guint)SLAB_INDEX (allocator, chunk_size);
       if (G_UNLIKELY (thread_memory_magazine2_is_full (tmem, ix)))
         {
           thread_memory_swap_magazines (tmem, ix);
@@ -924,7 +936,7 @@ g_slice_free_chain_with_offset (gsize    mem_size,
   if (G_LIKELY (acat == 1))             /* allocate through magazine layer */
     {
       ThreadMemory *tmem = thread_memory_from_self();
-      guint ix = SLAB_INDEX (allocator, chunk_size);
+      guint ix = (guint)SLAB_INDEX (allocator, chunk_size);
       while (slice)
         {
           guint8 *current = slice;
@@ -1060,7 +1072,7 @@ static gpointer
 slab_allocator_alloc_chunk (gsize chunk_size)
 {
   ChunkLink *chunk;
-  guint ix = SLAB_INDEX (allocator, chunk_size);
+  guint ix = (guint)SLAB_INDEX (allocator, chunk_size);
   /* ensure non-empty slab */
   if (!allocator->slab_stack[ix] || !allocator->slab_stack[ix]->chunks)
     allocator_add_slab (allocator, ix, chunk_size);
@@ -1080,7 +1092,7 @@ slab_allocator_free_chunk (gsize    chunk_size,
 {
   ChunkLink *chunk;
   gboolean was_empty;
-  guint ix = SLAB_INDEX (allocator, chunk_size);
+  guint ix = (guint)SLAB_INDEX (allocator, chunk_size);
   gsize page_size = allocator_aligned_page_size (allocator, SLAB_BPAGE_SIZE (allocator, chunk_size));
   gsize addr = ((gsize) mem / page_size) * page_size;
   /* mask page adress */
@@ -1193,6 +1205,7 @@ allocator_memfree (gsize    memsize,
                    gpointer mem)
 {
 #if     HAVE_COMPLIANT_POSIX_MEMALIGN || HAVE_MEMALIGN || HAVE_VALLOC
+#pragma unused(memsize)
   free (mem);
 #else
   mem_assert (memsize <= sys_page_size);
@@ -1301,6 +1314,8 @@ smc_tree_abort (int errval)
   const char *syserr = "unknown error";
 #if HAVE_STRERROR
   syserr = strerror (errval);
+#else
+#pragma unused(errval)
 #endif
   mem_error ("MemChecker: failure in debugging tree: %s", syserr);
 }
@@ -1371,7 +1386,7 @@ smc_tree_insert (SmcKType key,
   if (!entry ||                                                                         /* need create */
       entry >= smc_tree_root[ix0][ix1].entries + smc_tree_root[ix0][ix1].n_entries ||   /* need append */
       entry->key != key)                                                                /* need insert */
-    entry = smc_tree_branch_grow_L (&smc_tree_root[ix0][ix1], entry - smc_tree_root[ix0][ix1].entries);
+    entry = smc_tree_branch_grow_L (&smc_tree_root[ix0][ix1], (unsigned int)(entry - smc_tree_root[ix0][ix1].entries));
   entry->key = key;
   entry->value = value;
   g_mutex_unlock (smc_tree_mutex);
@@ -1414,7 +1429,7 @@ smc_tree_remove (SmcKType key)
           entry < smc_tree_root[ix0][ix1].entries + smc_tree_root[ix0][ix1].n_entries &&
           entry->key == key)
         {
-          unsigned int i = entry - smc_tree_root[ix0][ix1].entries;
+          unsigned int i = (unsigned int)(entry - smc_tree_root[ix0][ix1].entries);
           smc_tree_root[ix0][ix1].n_entries -= 1;
           g_memmove (entry, entry + 1, (smc_tree_root[ix0][ix1].n_entries - i) * sizeof (entry[0]));
           if (!smc_tree_root[ix0][ix1].n_entries)
