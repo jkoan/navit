@@ -144,7 +144,7 @@ int search_list_level(enum attr_type attr_type) {
  */
 char *search_fix_spaces(const char *str) {
     int i;
-    int len=strlen(str);
+    int len=(int)strlen(str);
     char c,*s,*d,*ret=g_strdup(str);
 
     for (i = 0 ; i < len ; i++) {
@@ -209,7 +209,7 @@ static GList *search_split_phrases(char *str) {
 }
 
 static char *search_phrase_str(struct phrase *p) {
-    int len=p->end-p->start;
+    int len=(int)(p->end-p->start);
     char *ret=g_malloc(len+1);
     strncpy(ret, p->start, len);
     ret[len]='\0';
