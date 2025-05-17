@@ -575,6 +575,9 @@ PNG_EXPORT_VAR (PNG_CONST int FARDATA) png_pass_height[7];
 */
 #endif
 
+void png_64bit_product (long v1, long v2, unsigned long *hi_product,
+                        unsigned long *lo_product);
+
 #endif /* PNG_NO_EXTERN */
 
 /* Three color definitions.  The order of the red, green, and blue, (and the
