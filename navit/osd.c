@@ -303,7 +303,7 @@ void osd_set_std_attr(struct attr **attrs, struct osd_item *item, int flags) {
 
     attr=attr_search(attrs, attr_osd_configuration);
     if (attr)
-        item->osd_configuration = attr->u.num;
+        item->osd_configuration = (int)attr->u.num;
 
     attr=attr_search(attrs, attr_enable_expression);
     if (attr) {
@@ -312,27 +312,27 @@ void osd_set_std_attr(struct attr **attrs, struct osd_item *item, int flags) {
 
     attr = attr_search(attrs, attr_w);
     if (attr) {
-        item->rel_w = attr->u.num;
+        item->rel_w = (int)attr->u.num;
     }
 
     attr = attr_search(attrs, attr_h);
     if (attr) {
-        item->rel_h = attr->u.num;
+        item->rel_h = (int)attr->u.num;
     }
 
     attr = attr_search(attrs, attr_x);
     if (attr) {
-        item->rel_x = attr->u.num;
+        item->rel_x = (int)attr->u.num;
     }
 
     attr = attr_search(attrs, attr_y);
     if (attr) {
-        item->rel_y = attr->u.num;
+        item->rel_y = (int)attr->u.num;
     }
 
     attr = attr_search(attrs, attr_font_size);
     if (attr)
-        item->font_size = attr->u.num;
+        item->font_size = (int)attr->u.num;
 
     attr=attr_search(attrs, attr_background_color);
     if (attr)
