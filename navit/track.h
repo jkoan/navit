@@ -62,6 +62,8 @@ int tracking_remove_attr(struct tracking *this_, struct attr *attr);
 struct tracking *tracking_ref(struct tracking *this_);
 void tracking_unref(struct tracking *this_);
 void tracking_init(void);
+void tracking_set_obd2(struct tracking *this, struct headup *obd);
+
 /* end of prototypes */
 #ifdef __cplusplus
 }
