@@ -31,8 +31,10 @@
 #include "transform.h"
 #include "plugin.h"
 #include "vehicle.h"
-#include "event.h"
+#include "navit/event.h"
 #include "util.h"
+#include <stdlib.h>
+#include "track.h"
 
 /**
  * @defgroup vehicle-demo Vehicle Demo
@@ -57,8 +59,8 @@ struct vehicle_priv {
     char *timep;
     char *nmea;
     enum attr_position_valid valid;  /**< Whether the vehicle has valid position data **/
+    double height;
     int active;
-    int satsused;
 };
 
 static void vehicle_demo_destroy(struct vehicle_priv *priv) {
@@ -70,10 +72,10 @@ static void vehicle_demo_destroy(struct vehicle_priv *priv) {
 }
 
 static void nmea_chksum(char *nmea) {
-    size_t i;
+    int i;
     if (nmea && strlen(nmea) > 3) {
         unsigned char csum=0;
-        for (i = 1 ; i < strlen(nmea)-4 ; i++)
+        for (i = 1 ; i < (int)strlen(nmea)-4 ; i++)
             csum^=(unsigned char)(nmea[i]);
         sprintf(nmea+strlen(nmea)-3,"%02X\n",csum);
     }
@@ -83,8 +85,12 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
         enum attr_type type, struct attr *attr) {
     char ns='N',ew='E',*timep,*rmc,*gga;
     int hr,min,sec,year,mon,day;
-    double lat,lng,*hdop;
+    double lat,lng;
+    int *flags;
     switch (type) {
+//    case attr_lag:  // used
+//            attr->u.numd = 1;
+//            break;
     case attr_position_speed:
         attr->u.numd = &priv->speed;
         break;
@@ -100,28 +106,19 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
         attr->u.str=priv->timep;
         break;
     case attr_position_fix_type:
-        if(priv->satsused++<5)
-            attr->u.num = attr_position_valid_invalid;
-        else
+        if((flags = tracking_get_current_flags(navit_get_tracking(priv->navit)))) {
+            if(*flags & AF_UNDERGROUND)
+                attr->u.num = attr_position_valid_invalid;
+            else
+                attr->u.num = attr_position_valid_valid;
+        } else
             attr->u.num = attr_position_valid_valid;
-        if(priv->satsused==10)
-            priv->satsused=0;
         break;
     case attr_position_sats_used:
-        attr->u.num = priv->satsused;
+        attr->u.num = 5 + ((rand() % 2 + 1) * (rand() %2 == 0?-1:1));
         break;
-    case attr_position_hdop:
-        hdop=attr->u.numd;
-        if(priv->satsused > 3) {
-            *hdop=4.1;
-        }
-        if(priv->satsused > 4) {
-            *hdop=2.1;
-        }
-        if(priv->satsused > 7) {
-            *hdop=1.1;
-        }
-        dbg(lvl_info, "HDOP: %f", *hdop);
+    case attr_position_height:
+        attr->u.numd = &priv->height;
         break;
     case attr_position_nmea:
         lat=priv->geo.lat;
@@ -153,9 +150,6 @@ static int vehicle_demo_position_attr_get(struct vehicle_priv *priv,
     case attr_position_valid:
         attr->u.num=priv->valid;
         break;
-    case attr_active:
-        attr->u.num=priv->active;
-        break;
     default:
         return 0;
     }
@@ -174,6 +168,9 @@ static int vehicle_demo_set_attr_do(struct vehicle_priv *priv, struct attr *attr
     case attr_speed:
         priv->config_speed=attr->u.num;
         break;
+    case attr_position_height:
+        priv->height = *attr->u.numd;
+        break;
     case attr_interval:
         priv->interval=(int)attr->u.num;
         if (priv->timer)
@@ -189,15 +186,14 @@ static int vehicle_demo_set_attr_do(struct vehicle_priv *priv, struct attr *attr
         priv->position_set=1;
         dbg(lvl_debug,"position_set %f %f", priv->geo.lat, priv->geo.lng);
         break;
-    case attr_active:
-        priv->active=(int)attr->u.num;
-        break;
     case attr_profilename:
     case attr_source:
     case attr_name:
     case attr_follow:
-    case attr_vehicle_request_location_authorization:
         // Ignore; used by Navit's infrastructure, but not relevant for this vehicle.
+        break;
+    case attr_active:
+        priv->active=(int)attr->u.num;
         break;
     default:
         dbg(lvl_error,"unsupported attribute %s",attr_to_name(attr->type));
@@ -214,91 +210,101 @@ struct vehicle_methods vehicle_demo_methods = {
     vehicle_demo_destroy,
     vehicle_demo_position_attr_get,
     vehicle_demo_set_attr,
-    NULL
+    NULL,
 };
 
 static void vehicle_demo_timer(struct vehicle_priv *priv) {
     struct coord c, c2, pos, ci;
-    int slen, len, dx, dy;
+    int slen, len, dx, dy, obd;
+    double obdspeed;
     struct route *route=NULL;
     struct map *route_map=NULL;
     struct map_rect *mr=NULL;
     struct item *item=NULL;
-    
-    len = (priv->config_speed * priv->interval / 1000)/ 3.6;
-    dbg(lvl_debug, "###### Entering simulation loop");
-    if (!priv->config_speed)
-        return;
-    if (priv->route)
-        route=priv->route;
-    else if (priv->navit)
-        route=navit_get_route(priv->navit);
-    if (route)
-        route_map=route_get_map(route);
-    if (route_map)
-        mr=map_rect_new(route_map, NULL);
-    if (mr)
-        item=map_rect_get_item(mr);
-    if (item && item->type == type_route_start)
-        item=map_rect_get_item(mr);
-    while(item && item->type!=type_street_route)
-        item=map_rect_get_item(mr);
-    if (item && item_coord_get(item, &pos, 1)) {
-        priv->position_set=0;
-        dbg(lvl_debug, "current pos=0x%x,0x%x", pos.x, pos.y);
-        dbg(lvl_debug, "last pos=0x%x,0x%x", priv->last.x, priv->last.y);
-        if (priv->last.x == pos.x && priv->last.y == pos.y) {
-            dbg(lvl_warning, "endless loop");
-        }
-        priv->last = pos;
-        while (item && priv->config_speed) {
-            if (!item_coord_get(item, &c, 1)) {
-                item=map_rect_get_item(mr);
-                continue;
+
+    if(priv->active) { // Only if the demo vehicle is active
+        navit_get_obdconnected(priv->navit, &obd);
+        if(obd) {
+            navit_get_obdspeed(priv->navit, &obdspeed);
+            len = (obdspeed * priv->interval / 1000)/ 3.6;
+        } else
+            len = (priv->config_speed * priv->interval / 1000)/ 3.6;
+        dbg(lvl_debug, "###### Entering simulation loop");
+        if (!priv->config_speed)
+            return;
+        if (priv->route)
+            route=priv->route;
+        else if (priv->navit)
+            route=navit_get_route(priv->navit);
+        if (route)
+            route_map=route_get_map(route);
+        if (route_map)
+            mr=map_rect_new(route_map, NULL);
+        if (mr)
+            item=map_rect_get_item(mr);
+        if (item && item->type == type_route_start)
+            item=map_rect_get_item(mr);
+        while(item && item->type!=type_street_route)
+            item=map_rect_get_item(mr);
+        if (item && item_coord_get(item, &pos, 1)) {
+            priv->position_set=0;
+            dbg(lvl_debug, "current pos=0x%x,0x%x", pos.x, pos.y);
+            dbg(lvl_debug, "last pos=0x%x,0x%x", priv->last.x, priv->last.y);
+            if (priv->last.x == pos.x && priv->last.y == pos.y) {
+                dbg(lvl_warning, "endless loop");
+                //item_coord_get(item, &pos, 1);
             }
-            dbg(lvl_debug, "next pos=0x%x,0x%x", c.x, c.y);
-            slen = transform_distance(projection_mg, &pos, &c);
-            dbg(lvl_debug, "len=%d slen=%d", len, slen);
-            if (slen < len) {
-                len -= slen;
-                pos = c;
-            } else {
-                if (item_coord_get(item, &c2, 1) || map_rect_get_item(mr)) {
-                    dx = c.x - pos.x;
-                    dy = c.y - pos.y;
-                    ci.x = pos.x + dx * len / slen;
-                    ci.y = pos.y + dy * len / slen;
-                    priv->direction =
-                        transform_get_angle_delta(&pos, &c, 0);
-                    priv->speed=priv->config_speed;
-                } else {
-                    ci.x = pos.x;
-                    ci.y = pos.y;
-                    priv->speed=0;
-                    dbg(lvl_debug,"destination reached");
+            priv->last = pos;
+            while (item && priv->config_speed) {
+                if (!item_coord_get(item, &c, 1)) {
+                    item=map_rect_get_item(mr);
+                    continue;
                 }
-                dbg(lvl_debug, "ci=0x%x,0x%x", ci.x, ci.y);
-                transform_to_geo(projection_mg, &ci,
-                                 &priv->geo);
-                if(priv->active) {
-                    if ((priv->valid != attr_position_valid_valid)) {
-                        priv->valid = attr_position_valid_valid;
-                        callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                dbg(lvl_debug, "next pos=0x%x,0x%x", c.x, c.y);
+                slen = transform_distance(projection_mg, &pos, &c);
+                dbg(lvl_debug, "len=%d slen=%d", len, slen);
+                if (slen < len) {
+                    len -= slen;
+                    pos = c;
+                } else {
+                    if (item_coord_get(item, &c, 1) || map_rect_get_item(mr)) {
+                        dx = c.x - pos.x;
+                        dy = c.y - pos.y;
+                        ci.x = pos.x + dx * len / slen;
+                        ci.y = pos.y + dy * len / slen;
+                        priv->direction =
+                            transform_get_angle_delta(&pos, &c, 0);
+
+                        if(obd) {
+
+                            priv->speed=obdspeed;
+                        } else
+                            priv->speed=priv->config_speed + ((rand() % 5 + 1) * (rand() %2 == 0?-1:1));   // a little random + or - 1 to 5 km/h
+                        priv->height=priv->height + ((rand() % 50 + 1) * (rand() %2 == 0?-1:1));       // a little random + or - 1 to 50 m
                     } else {
-                        priv->valid = attr_position_valid_invalid;
+                        ci.x = pos.x;
+                        ci.y = pos.y;
+                        priv->speed=0;
+                        dbg(lvl_debug,"destination reached");
+                    }
+                    dbg(lvl_debug, "ci=0x%x,0x%x", ci.x, ci.y);
+                    transform_to_geo(projection_mg, &ci,
+                                     &priv->geo);
+                    if (priv->valid != attr_position_valid_valid) {
+                        priv->valid = attr_position_valid_valid;
                         callback_list_call_attr_0(priv->cbl, attr_position_valid);
                     }
                     callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
+                    break;
                 }
-                break;
             }
+        } else {
+            if (priv->position_set)
+                callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
         }
-    } else {
-        if (priv->position_set)
-            callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
+        if (mr)
+            map_rect_destroy(mr);
     }
-    if (mr)
-        map_rect_destroy(mr);
 }
 
 
@@ -312,11 +318,10 @@ static struct vehicle_priv *vehicle_demo_new(struct vehicle_methods
     ret = g_new0(struct vehicle_priv, 1);
     ret->cbl = cbl;
     ret->interval=1000;
-    ret->config_speed=40;
+    ret->config_speed=105;
+    ret->height=-10;
     ret->timer_callback=callback_new_1(callback_cast(vehicle_demo_timer), ret);
     ret->valid = attr_position_valid_invalid;
-    ret->active = 0;
-    ret->satsused = 0;
     *meth = vehicle_demo_methods;
     while (attrs && *attrs)
         vehicle_demo_set_attr_do(ret, *attrs++);
