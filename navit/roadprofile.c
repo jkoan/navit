@@ -26,13 +26,13 @@
 static void roadprofile_set_attr_do(struct roadprofile *this, struct attr *attr) {
     switch (attr->type) {
     case attr_speed:
-        this->speed=attr->u.num;
+        this->speed=(int)attr->u.num;
         break;
     case attr_maxspeed:
-        this->maxspeed=attr->u.num;
+        this->maxspeed=(int)attr->u.num;
         break;
     case attr_route_weight:
-        this->route_weight=attr->u.num;
+        this->route_weight=(int)attr->u.num;
         break;
     default:
         break;
@@ -41,6 +41,7 @@ static void roadprofile_set_attr_do(struct roadprofile *this, struct attr *attr)
 
 struct roadprofile *
 roadprofile_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct roadprofile *this_;
     struct attr **attr;
     this_=g_new0(struct roadprofile, 1);
@@ -75,6 +76,7 @@ int roadprofile_remove_attr(struct roadprofile *this_, struct attr *attr) {
 
 struct attr_iter *
 roadprofile_attr_iter_new(void * unused) {
+#pragma unused(unused)
     return (struct attr_iter *)g_new0(void *,1);
 }
 
