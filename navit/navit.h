@@ -52,6 +52,7 @@ struct transformation;
 struct vehicleprofile;
 struct command_table;
 struct item;
+struct headup;
 void navit_add_mapset(struct navit *this_, struct mapset *ms);
 struct mapset *navit_get_mapset(struct navit *this_);
 struct map *navit_get_search_results_map(struct navit *this_);
@@ -133,6 +134,23 @@ struct navit * navit_ref(struct navit *this_);
 void navit_unref(struct navit *this_);
 void navit_store_center(struct navit * this_);
 int navit_is_nightlayout(struct navit * this_);
+void navit_set_tpms(struct navit *this, struct headup *tpms);
+void navit_set_googleglass(struct navit *this, struct headup *gg1);
+void navit_set_obd2(struct navit *this, struct headup *obd2);
+void navit_set_btheadup(struct navit *this, struct headup *btheadup);
+void navit_get_obdspeed(struct navit *this, double *speed);
+void navit_get_obdcoolanttemp(struct navit *this, double *coolanttemp);
+void navit_get_obdvoltage(struct navit *this, double *voltage);
+void navit_get_obdoiltemp(struct navit *this, double *oiltemp);
+void navit_get_obdconnected(struct navit *this, int *connected);
+void navit_get_tpms_pressure_fl(struct navit *this, double *pressure);
+void navit_get_tpms_pressure_fr(struct navit *this, double *pressure);
+void navit_get_tpms_pressure_rl(struct navit *this, double *pressure);
+void navit_get_tpms_pressure_rr(struct navit *this, double *pressure);
+void navit_get_tpmsconnected(struct navit *this, int *connected);
+void navit_get_tpms_alarm(struct navit *this, long *alarm);
+char* navit_get_locallanguage(struct navit * this_);
+
 /* end of prototypes */
 #ifdef __cplusplus
 }
