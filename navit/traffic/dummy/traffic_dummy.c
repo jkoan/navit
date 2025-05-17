@@ -169,6 +169,9 @@ static struct traffic_methods traffic_dummy_meth = {
  */
 static struct traffic_priv * traffic_dummy_new(struct navit *nav, struct traffic_methods *meth,
         struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(nav)
+#pragma unused(attrs)
+#pragma unused(cbl)
     struct traffic_priv *ret;
 
     dbg(lvl_debug, "enter");
