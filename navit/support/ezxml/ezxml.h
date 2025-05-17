@@ -38,6 +38,8 @@ extern "C" {
 #define EZXML_NAMEM   0x80 // name is malloced
 #define EZXML_TXTM    0x40 // txt is malloced
 #define EZXML_DUP     0x20 // attribute name and value are strduped
+#define EZXML_WS      "\t\r\n " // whitespace
+#define EZXML_ERRL    128  // maximum error string length
 
 typedef struct ezxml *ezxml_t;
 struct ezxml {
@@ -51,6 +53,22 @@ struct ezxml {
     ezxml_t child;   // head of sub tag list, NULL if none
     ezxml_t parent;  // parent tag, NULL if current tag is root tag
     short flags;     // additional information
+};
+
+typedef struct ezxml_root *ezxml_root_t;
+struct ezxml_root {       // additional data for the root tag
+    struct ezxml xml;     // is a super-struct built on top of ezxml struct
+    ezxml_t cur;          // current xml tree insertion point
+    char *m;              // original xml string
+    size_t len;           // length of allocated memory for mmap, -1 for malloc
+    char *u;              // UTF-8 conversion of string if original was UTF-16
+    char *s;              // start of work area
+    char *e;              // end of work area
+    char **ent;           // general entities (ampersand sequences)
+    char ***attr;         // default attributes
+    char ***pi;           // processing instructions
+    short standalone;     // non-zero if <?xml standalone="yes"?>
+    char err[EZXML_ERRL]; // error string
 };
 
 // Given a string of xml data and its length, parses it and creates an ezxml
@@ -93,6 +111,34 @@ ezxml_t ezxml_idx(ezxml_t xml, int idx);
 // returns the value of the requested tag attribute, or NULL if not found
 const char *ezxml_attr(ezxml_t xml, const char *attr);
 
+// called when the parser finds a processing instruction
+void ezxml_proc_inst(ezxml_root_t root, char *s, size_t len);
+
+// checks for circular entity references, returns non-zero if no circular
+// references are found, zero otherwise
+int ezxml_ent_ok(char *name, char *s, char **ent);
+
+// called when the parser finds an internal doctype subset
+short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len);
+
+// Converts a UTF-16 string to UTF-8. Returns a new string that must be freed
+// or NULL if no conversion was needed.
+char *ezxml_str2utf8(char **s, size_t *len);
+
+// frees a tag attribute list
+void ezxml_free_attr(char **attr);
+
+// Recursively converts each tag to xml appending it to *s. Reallocates *s if
+// its length excedes max. start is the location of the previous tag in the
+// parent tag's character content. Returns *s.
+char *ezxml_toxml_r(ezxml_t xml, char **s, size_t *len, size_t *max,
+                    size_t start, char ***attr);
+
+// Encodes ampersand sequences appending the results to *dst, reallocating *dst
+// if length excedes max. a is non-zero for attribute encoding. Returns *dst
+char *ezxml_ampencode(const char *s, size_t len, char **dst, size_t *dlen,
+                      size_t *max, short a);
+
 // Traverses the ezxml sturcture to retrieve a specific subtag. Takes a
 // variable length list of tag names and indexes. The argument list must be
 // terminated by either an index of -1 or an empty string tag name. Example: 
@@ -100,6 +146,29 @@ const char *ezxml_attr(ezxml_t xml, const char *attr);
 // This retrieves the title of the 3rd book on the 1st shelf of library.
 // Returns NULL if not found.
 ezxml_t ezxml_get(ezxml_t xml, ...);
+
+// same as ezxml_get but takes an already initialized va_list
+ezxml_t ezxml_vget(ezxml_t xml, va_list ap);
+
+// set an error string and return root
+ezxml_t ezxml_err(ezxml_root_t root, char *s, const char *err, ...);
+
+// Recursively decodes entity and character references and normalizes new lines
+// ent is a null terminated array of alternating entity names and values. set t
+// to '&' for general entity decoding, '%' for parameter entity decoding, 'c'
+// for cdata sections, ' ' for attribute normalization, or '*' for non-cdata
+// attribute normalization. Returns s, or if the decoded string is longer than
+// s, returns a malloced string that must be freed.
+char *ezxml_decode(char *s, char **ent, char t);
+
+// called when parser finds closing tag
+ezxml_t ezxml_close_tag(ezxml_root_t root, char *name, char *s);
+
+// called when parser finds start of new tag
+void ezxml_open_tag(ezxml_root_t root, char *name, char **attr);
+
+// called when parser finds character content between open and closing tag
+void ezxml_char_content(ezxml_root_t root, char *s, size_t len, char t);
 
 // Converts an ezxml structure back to xml. Returns a string of xml data that
 // must be freed.

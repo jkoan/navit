@@ -42,24 +42,11 @@
 #include "libc.h"
 #endif
 
-#define EZXML_WS   "\t\r\n "  // whitespace
-#define EZXML_ERRL 128        // maximum error string length
-
-typedef struct ezxml_root *ezxml_root_t;
-struct ezxml_root {       // additional data for the root tag
-    struct ezxml xml;     // is a super-struct built on top of ezxml struct
-    ezxml_t cur;          // current xml tree insertion point
-    char *m;              // original xml string
-    size_t len;           // length of allocated memory for mmap, -1 for malloc
-    char *u;              // UTF-8 conversion of string if original was UTF-16
-    char *s;              // start of work area
-    char *e;              // end of work area
-    char **ent;           // general entities (ampersand sequences)
-    char ***attr;         // default attributes
-    char ***pi;           // processing instructions
-    short standalone;     // non-zero if <?xml standalone="yes"?>
-    char err[EZXML_ERRL]; // error string
-};
+#if defined(__arm__)
+    #define IOS_LT_10
+#else
+    #undef IOS_LT_10
+#endif
 
 char *EZXML_NIL[] = { NULL }; // empty, null terminated array of strings
 
@@ -368,7 +355,7 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
             else *s = '\0'; // null terminate tag name
             for (i = 0; root->attr[i] && strcmp(n, root->attr[i][0]); i++);
 
-            while (*(n = ++s + strspn(s, EZXML_WS)) && *n != '>') {
+            do {
                 if (*(s = n + strcspn(n, EZXML_WS))) *s = '\0'; // attr name
                 else { ezxml_err(root, t, "malformed <!ATTLIST"); break; }
 
@@ -409,7 +396,8 @@ short ezxml_internal_dtd(ezxml_root_t root, char *s, size_t len)
                 root->attr[i][j + 1] = (v) ? ezxml_decode(v, root->ent, *c)
                                            : NULL;
                 root->attr[i][j] = n; // attribute name 
-            }
+                s++;
+            } while (*(n = s + strspn(s, EZXML_WS)) && *n != '>');
         }
         else if (! strncmp(s, "<!--", 4)) s = strstr(s + 4, "-->"); // comments
         else if (! strncmp(s, "<?", 2)) { // processing instructions
@@ -641,7 +629,11 @@ ezxml_t ezxml_parse_fd(int fd)
     fstat(fd, &st);
 
 #ifndef EZXML_NOMMAP
-    l = (st.st_size + sysconf(_SC_PAGESIZE) - 1) & ~(sysconf(_SC_PAGESIZE) -1);
+#ifdef IOS_LT_10
+    l = (st.st_size + getpagesize() - 1) & ~(getpagesize() -1);
+#else
+    l = (st.st_size + sysconf (_SC_PAGE_SIZE) - 1) & ~(sysconf (_SC_PAGE_SIZE) -1);
+#endif
     if ((m = mmap(NULL, l, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) !=
         MAP_FAILED) {
         madvise(m, l, MADV_SEQUENTIAL); // optimize for sequential access
@@ -817,7 +809,7 @@ void ezxml_free(ezxml_t xml)
         }            
         if (root->pi[0]) free(root->pi); // free processing instructions
 
-        if (root->len == -1) free(root->m); // malloced xml data
+        if (root->len == (size_t) -1) free(root->m); // malloced xml data
 #ifndef EZXML_NOMMAP
         else if (root->len) munmap(root->m, root->len); // mem mapped xml data
 #endif // EZXML_NOMMAP
@@ -938,8 +930,7 @@ ezxml_t ezxml_set_attr(ezxml_t xml, const char *name, const char *value)
 
         xml->attr[l] = (char *)name; // set attribute name
         xml->attr[l + 2] = NULL; // null terminate attribute list
-        xml->attr[l + 3] = realloc(xml->attr[l + 1],
-                                   (c = strlen(xml->attr[l + 1])) + 2);
+        xml->attr[l + 3] = realloc(xml->attr[l + 1], (c =  (int)strlen(xml->attr[l + 1])) + 2);
         strcpy(xml->attr[l + 3] + c, " "); // set name/value as not malloced
         if (xml->flags & EZXML_DUP) xml->attr[l + 3][c] = EZXML_NAMEM;
     }
