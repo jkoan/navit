@@ -21,16 +21,16 @@
 #import "corelocation.h"
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+//#import <UIKit/UIKit.h>
 
 /* global location structure */
 corelocation *locationcontroller = NULL;
 
 /** C update procedure */
-void corelocation_update(double lat, double lng, double dir, double spd, char * str_time, double radius) {
+void corelocation_update(double lat, double lng, double dir, double spd, char * str_time, double radius, double height) {
     FT_LOCATION_CB pf_cb = locationcontroller->pf_cb;
     void * pv_arg = locationcontroller->pv_arg;
-    if(pf_cb) pf_cb(pv_arg, lat, lng, dir, spd, str_time, radius);
+    if(pf_cb) pf_cb(pv_arg, lat, lng, dir, spd, str_time, radius, height);
 }
 
 /** C init procedure */
@@ -85,6 +85,9 @@ void corelocation_exit(void) {
         self.eventDate = [NSDate date];
         self.dateFormatter = [[NSDateFormatter alloc] init];
         [self.dateFormatter setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
+        //iOS delivers localtime in the CLLocation, convert to UTC
+        NSTimeZone *timeZone = [NSTimeZone timeZoneWithName: @"UTC"];
+        [self.dateFormatter setTimeZone:timeZone];
     }
     return self;
 }
@@ -96,7 +99,7 @@ void corelocation_exit(void) {
     //NSLog(@"New Location: %@", [newLocation description]);
     NSString *newDateString = [self.dateFormatter stringFromDate:newLocation.timestamp];
     const char* cString = [newDateString cStringUsingEncoding:NSASCIIStringEncoding];
-//    NSLog(@"Location Update: %f %f %f %f %s %f", newLocation.coordinate.latitude, newLocation.coordinate.longitude, newLocation.course, newLocation.speed, cString, newLocation.horizontalAccuracy);
+    //NSLog(@"Location Update: %f %f %f %f %s %f %f", newLocation.coordinate.latitude, newLocation.coordinate.longitude, newLocation.course, newLocation.speed, cString, newLocation.horizontalAccuracy, newLocation.altitude);
     if(self.pf_cb) {
         self.pf_cb(
             self.pv_arg,
@@ -105,7 +108,8 @@ void corelocation_exit(void) {
             (double) newLocation.course,
             (double) newLocation.speed,
             (char *) cString,
-            (double) newLocation.horizontalAccuracy
+            (double) newLocation.horizontalAccuracy,
+            (double) newLocation.altitude
         );
     }
 }
@@ -113,7 +117,7 @@ void corelocation_exit(void) {
 /** Error EVENT */
 - (void)locationManager:(CLLocationManager *)manager
     didFailWithError:(NSError *)error {
-    NSLog(@"Error: %@", [error description]);
+    NSLog(@"Location Error: %@", [error description]);
 }
 
 /** Destructor */
