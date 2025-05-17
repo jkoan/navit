@@ -123,7 +123,7 @@ EXTRACT_PLURAL_EXPRESSION (const char *nullentry, struct expression **pluralp,
 #if defined HAVE_STRTOUL || defined _LIBC
 	  n = strtoul (nplurals, &endp, 10);
 #else
-	  for (endp = nplurals, n = 0; *endp >= '0' && *endp <= '9'; endp++)
+	  for (endp = (char*)nplurals, n = 0; *endp >= '0' && *endp <= '9'; endp++)
 	    n = n * 10 + (*endp - '0');
 #endif
 	  if (nplurals == endp)

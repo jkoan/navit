@@ -19,6 +19,8 @@
 /* Tell glibc's <string.h> to provide a prototype for mempcpy().
    This must come before <config.h> because <config.h> may include
    <features.h>, and once <features.h> has been included, it's too late.  */
+#define HAVE_STPCPY 1
+
 #ifndef _GNU_SOURCE
 # define _GNU_SOURCE	1
 #endif
@@ -157,7 +159,7 @@ char *getwd ();
 #  if VMS
 #   define getcwd(buf, max) (getcwd) (buf, max, 0)
 #  elif !(defined(__clang__) && defined(__BIONIC_FORTIFY))
-char *getcwd ();
+// FIXME: char *getcwd ();
 #  endif
 # endif
 # ifndef HAVE_STPCPY
@@ -748,8 +750,8 @@ _nl_find_msg (struct loaded_l10nfile *domain_file,
   if (domain->hash_tab != NULL)
     {
       /* Use the hashing table.  */
-      nls_uint32 len = strlen (msgid);
-      nls_uint32 hash_val = hash_string (msgid);
+      nls_uint32 len = (nls_uint32)strlen (msgid);
+      nls_uint32 hash_val = (nls_uint32)hash_string (msgid);
       nls_uint32 idx = hash_val % domain->hash_size;
       nls_uint32 incr = 1 + (hash_val % (domain->hash_size - 2));
 

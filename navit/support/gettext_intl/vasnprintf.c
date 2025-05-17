@@ -256,7 +256,7 @@ VASNPRINTF (CHAR_T *resultbuf, size_t *lengthp, const CHAR_T *format, va_list ar
 		    *a.arg[dp->arg_index].a.a_count_short_pointer = length;
 		    break;
 		  case TYPE_COUNT_INT_POINTER:
-		    *a.arg[dp->arg_index].a.a_count_int_pointer = length;
+		    *a.arg[dp->arg_index].a.a_count_int_pointer = (int)length;
 		    break;
 		  case TYPE_COUNT_LONGINT_POINTER:
 		    *a.arg[dp->arg_index].a.a_count_longint_pointer = length;
@@ -768,7 +768,7 @@ VASNPRINTF (CHAR_T *resultbuf, size_t *lengthp, const CHAR_T *format, va_list ar
 		      {
 			/* Verify that snprintf() has NUL-terminated its
 			   result.  */
-			if (count < maxlen && result[length + count] != '\0')
+			if (count < (int)maxlen && result[length + count] != '\0')
 			  abort ();
 			/* Portability hack.  */
 			if (retcount > count)
@@ -826,7 +826,7 @@ VASNPRINTF (CHAR_T *resultbuf, size_t *lengthp, const CHAR_T *format, va_list ar
 #endif
 
 		    /* Make room for the result.  */
-		    if (count >= maxlen)
+		    if (count >= (int)maxlen)
 		      {
 			/* Need at least count bytes.  But allocate
 			   proportionally, to avoid looping eternally if

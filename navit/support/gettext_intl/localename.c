@@ -683,6 +683,9 @@
 # endif
 #endif
 
+const char *
+_nl_locale_name (int category, const char *categoryname);
+
 /* XPG3 defines the result of 'setlocale (category, NULL)' as:
    "Directs 'setlocale()' to query 'category' and return the current
     setting of 'local'."
@@ -711,6 +714,7 @@ _nl_locale_name (int category, const char *categoryname)
 # if defined HAVE_SETLOCALE && defined HAVE_LC_MESSAGES && defined HAVE_LOCALE_NULL
   retval = setlocale (category, NULL);
 # else
+#pragma unused(category)
   /* Setting of LC_ALL overwrites all other.  */
   retval = getenv ("LC_ALL");
   if (retval == NULL || retval[0] == '\0')

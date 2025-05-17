@@ -203,7 +203,7 @@ _nl_expand_alias (const char *name)
 	    ++locale_alias_path;
 
 	  if (start < locale_alias_path)
-	    added = read_alias_file (start, locale_alias_path - start);
+	    added =  read_alias_file (start, (int)(locale_alias_path - start));
 	}
     }
   while (added != 0);
@@ -369,7 +369,7 @@ read_alias_file (const char *fname, int fname_len)
 
 
 static int
-extend_alias_table ()
+extend_alias_table (void)
 {
   size_t new_size;
   struct alias_map *new_map;

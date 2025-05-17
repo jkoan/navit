@@ -77,6 +77,23 @@ char *alloca ();
 #include "asnprintf.c"
 #endif
 
+int
+libintl_vfprintf (FILE *stream, const char *format, va_list args);
+int
+libintl_fprintf (FILE *stream, const char *format, ...);
+int
+libintl_vsprintf (char *resultbuf, const char *format, va_list args);
+int
+libintl_sprintf (char *resultbuf, const char *format, ...);
+int
+libintl_vsnprintf (char *resultbuf, size_t length, const char *format, va_list args);
+int
+libintl_vprintf (const char *format, va_list args);
+int
+libintl_printf (const char *format, ...);
+int
+libintl_snprintf (char *resultbuf, size_t length, const char *format, ...);
+
 DLL_EXPORTED
 int
 libintl_vfprintf (FILE *stream, const char *format, va_list args)
@@ -91,7 +108,7 @@ libintl_vfprintf (FILE *stream, const char *format, va_list args)
       if (result != NULL)
 	{
 	  if (fwrite (result, 1, length, stream) == length)
-	    retval = length;
+	    retval = (int)length;
 	  free (result);
 	}
       return retval;
@@ -147,7 +164,7 @@ libintl_vsprintf (char *resultbuf, const char *format, va_list args)
 	  return -1;
 	}
       else
-	return length;
+	return (int)length;
     }
 }
 
@@ -197,7 +214,7 @@ libintl_vsnprintf (char *resultbuf, size_t length, const char *format, va_list a
 	  return -1;
 	}
       else
-	return length;
+	return (int)length;
     }
 }
 

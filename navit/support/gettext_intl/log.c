@@ -26,6 +26,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+void
+_nl_log_untranslated (const char *logfilename, const char *domainname,
+                      const char *msgid1, const char *msgid2, int plural);
+
+void
+_nl_log_untranslated (const char *logfilename, const char *domainname,
+                      const char *msgid1, const char *msgid2, int plural);
+
 /* Print an ASCII string with quotes and escape sequences where needed.  */
 static void
 print_escaped (FILE *stream, const char *str)

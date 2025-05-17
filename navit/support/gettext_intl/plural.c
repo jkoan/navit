@@ -9,7 +9,9 @@
 #define yylval __gettextlval
 #define yychar __gettextchar
 #define yydebug __gettextdebug
+#if !defined(__APPLE__)
 #define yynerrs __gettextnerrs
+#endif
 # define	EQUOP2	257
 # define	CMPOP2	258
 # define	ADDOP2	259
