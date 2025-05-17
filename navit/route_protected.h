@@ -54,26 +54,26 @@ extern "C" {
  * but there are also points which don't do that (e.g. at the end of a dead-end).
  */
 struct route_graph_point {
-	struct route_graph_point *hash_next; /**< Pointer to a chained hashlist of all route_graph_points with this hash */
-	struct route_graph_segment *start;   /**< Pointer to a list of segments of which this point is the start. The links
+    struct route_graph_point *hash_next; /**< Pointer to a chained hashlist of all route_graph_points with this hash */
+    struct route_graph_segment *start;   /**< Pointer to a list of segments of which this point is the start. The links
 	                                      *  of this linked-list are in route_graph_segment->start_next.*/
-	struct route_graph_segment *end;     /**< Pointer to a list of segments of which this pointer is the end. The links
+    struct route_graph_segment *end;     /**< Pointer to a list of segments of which this pointer is the end. The links
 	                                      *  of this linked-list are in route_graph_segment->end_next. */
-	struct route_graph_segment *seg;     /**< Pointer to the segment one should use to reach the destination at
+    struct route_graph_segment *seg;     /**< Pointer to the segment one should use to reach the destination at
 	                                      *  least costs */
-	struct fibheap_el *el;				 /**< When this point is put on a Fibonacci heap, this is a pointer
+    struct fibheap_el *el;				 /**< When this point is put on a Fibonacci heap, this is a pointer
 	                                      *  to this point's heap element */
-	int value;                           /**< The cost at which one can reach the destination from this point on.
+    int value;                           /**< The cost at which one can reach the destination from this point on.
 	                                      *  {@code INT_MAX} indicates that the destination is unreachable from this
 	                                      *  point, or that this point has not yet been examined. */
-	int rhs;                             /**< Lookahead value based on neighbors’ `value`; used for recalculation and
+    int rhs;                             /**< Lookahead value based on neighbors’ `value`; used for recalculation and
 	                                      *   equal to `value` after the route graph has been flooded. */
-	int dst_val;                         /**< For points close to the destination, this is the cost of the point if it
+    int dst_val;                         /**< For points close to the destination, this is the cost of the point if it
 	                                      *   is the last in the graph; `INT_MAX` for all other points. */
     struct route_graph_segment *dst_seg; /**< For points close to the destination, this is the segment over which the
                                           * destination can be reached directly */
-	struct coord c;                      /**< Coordinates of this point */
-	int flags;                           /**< Flags for this point (e.g. traffic distortion) */
+    struct coord c;                      /**< Coordinates of this point */
+    int flags;                           /**< Flags for this point (e.g. traffic distortion) */
 };
 
 /**
@@ -82,53 +82,53 @@ struct route_graph_point {
  * This is a segment in the route graph or path. A segment represents a driveable way.
  */
 struct route_segment_data {
-	struct item item;                    /**< The item (e.g. street) that this segment represents. */
-	int flags;                           /**< Flags e.g. for access, restrictions, segmentation or roundabouts. */
-	int len;                             /**< Length of this segment, in meters */
-	int score;                           /**< Used by the traffic module to give preference to some
+    struct item item;                    /**< The item (e.g. street) that this segment represents. */
+    int flags;                           /**< Flags e.g. for access, restrictions, segmentation or roundabouts. */
+    int len;                             /**< Length of this segment, in meters */
+    int score;                           /**< Used by the traffic module to give preference to some
 	                                      *   segments over others */
-	/*NOTE: After a segment, various fields may follow, depending on what flags are set. Order of fields:
-				1.) maxspeed			Maximum allowed speed on this segment. Present if AF_SPEED_LIMIT is set.
-				2.) offset				If the item is segmented (i.e. represented by more than one segment), this
-										indicates the position of this segment in the item. Present if AF_SEGMENTED is set.
-	 */
+    /*NOTE: After a segment, various fields may follow, depending on what flags are set. Order of fields:
+    			1.) maxspeed			Maximum allowed speed on this segment. Present if AF_SPEED_LIMIT is set.
+    			2.) offset				If the item is segmented (i.e. represented by more than one segment), this
+    									indicates the position of this segment in the item. Present if AF_SEGMENTED is set.
+     */
 };
 
 /**
  * @brief Size and weight limits for a route segment
  */
 struct size_weight_limit {
-	int width;
-	int length;
-	int height;
-	int weight;
-	int axle_weight;
+    int width;
+    int length;
+    int height;
+    int weight;
+    int axle_weight;
 };
 
 /**
  * @brief Data for a segment in the route graph
  */
 struct route_graph_segment_data {
-	struct item *item;                    /**< The item which this segment is part of */
-	int offset;                           /**< If the item passed in "item" is segmented (i.e. divided
+    struct item *item;                    /**< The item which this segment is part of */
+    int offset;                           /**< If the item passed in "item" is segmented (i.e. divided
 	                                       *   into several segments), this indicates the position of
 	                                       *   this segment within the item */
-	int flags;                            /**< Flags for this segment */
-	int len;                              /**< The length of this segment */
-	int maxspeed;                         /**< The maximum speed allowed on this segment in km/h,
+    int flags;                            /**< Flags for this segment */
+    int len;                              /**< The length of this segment */
+    int maxspeed;                         /**< The maximum speed allowed on this segment in km/h,
 	                                       *   -1 if not known */
-	int maxspeedcond;                         /**< The maximum conditional speed allowed on this segment in km/h,
+    int maxspeedcond;                         /**< The maximum conditional speed allowed on this segment in km/h,
 	                                           *   -1 if not known */
-	char* condition;
-	int maxspeedcondfwd;                         /**< The maximum conditional forward speed allowed on this segment in km/h,
+    char* condition;
+    int maxspeedcondfwd;                         /**< The maximum conditional forward speed allowed on this segment in km/h,
 	                                           *   -1 if not known */
-	char* fwdcondition;
-	int maxspeedcondbwd;                         /**< The maximum conditional backward speed allowed on this segment in km/h,
+    char* fwdcondition;
+    int maxspeedcondbwd;                         /**< The maximum conditional backward speed allowed on this segment in km/h,
 	                                           *   -1 if not known */
-	char* bwdcondition;
-	struct size_weight_limit size_weight; /**< Size and weight limits for this segment */
-	int dangerous_goods;
-	int score;                            /**< Used by the traffic module to give preference to some
+    char* bwdcondition;
+    struct size_weight_limit size_weight; /**< Size and weight limits for this segment */
+    int dangerous_goods;
+    int score;                            /**< Used by the traffic module to give preference to some
 	                                       *   segments over others */
 };
 
@@ -138,14 +138,14 @@ struct route_graph_segment_data {
  * This is a segment in the route graph. A segment represents a driveable way.
  */
 struct route_graph_segment {
-	struct route_graph_segment *next;		/**< Linked-list pointer to a list of all route_graph_segments */
-	struct route_graph_segment *start_next;	/**< Pointer to the next element in the list of segments that start at the
+    struct route_graph_segment *next;		/**< Linked-list pointer to a list of all route_graph_segments */
+    struct route_graph_segment *start_next;	/**< Pointer to the next element in the list of segments that start at the
 	                                         *  same point. Start of this list is in route_graph_point->start. */
-	struct route_graph_segment *end_next;	/**< Pointer to the next element in the list of segments that end at the
+    struct route_graph_segment *end_next;	/**< Pointer to the next element in the list of segments that end at the
 	                                         *  same point. Start of this list is in route_graph_point->end. */
-	struct route_graph_point *start;		/**< Pointer to the point this segment starts at. */
-	struct route_graph_point *end;			/**< Pointer to the point this segment ends at. */
-	struct route_segment_data data;			/**< The segment data */
+    struct route_graph_point *start;		/**< Pointer to the point this segment starts at. */
+    struct route_graph_point *end;			/**< Pointer to the point this segment ends at. */
+    struct route_segment_data data;			/**< The segment data */
 };
 
 /**
@@ -155,20 +155,21 @@ struct route_graph_segment {
  * each segment.
  */
 struct route_graph {
-	int busy;                                   /**< The graph is being built */
-	struct map_selection *sel;                  /**< The rectangle selection for the graph */
-	struct mapset_handle *h;                    /**< Handle to the mapset */
-	struct map *m;                              /**< Pointer to the currently active map */
-	struct map_rect *mr;                        /**< Pointer to the currently active map rectangle */
-	struct vehicleprofile *vehicleprofile;      /**< The vehicle profile */
-	struct callback *idle_cb;                   /**< Idle callback to process the graph */
-	struct callback *done_cb;                   /**< Callback when graph is done */
-	struct event_idle *idle_ev;                 /**< The pointer to the idle event */
-	struct route_graph_segment *route_segments; /**< Pointer to the first route_graph_segment in the linked list of all segments */
-	struct route_graph_segment *avoid_seg;
-	struct fibheap *heap;                       /**< Priority queue for points to be expanded */
+    int busy;                                   /**< The graph is being built */
+    struct map_selection *sel;                  /**< The rectangle selection for the graph */
+    struct mapset_handle *h;                    /**< Handle to the mapset */
+    struct map *m;                              /**< Pointer to the currently active map */
+    struct map_rect *mr;                        /**< Pointer to the currently active map rectangle */
+    struct vehicleprofile *vehicleprofile;      /**< The vehicle profile */
+    struct callback *idle_cb;                   /**< Idle callback to process the graph */
+    struct callback *done_cb;                   /**< Callback when graph is done */
+    struct event_idle *idle_ev;                 /**< The pointer to the idle event */
+    struct route_graph_segment
+        *route_segments; /**< Pointer to the first route_graph_segment in the linked list of all segments */
+    struct route_graph_segment *avoid_seg;
+    struct fibheap *heap;                       /**< Priority queue for points to be expanded */
 #define HASH_SIZE 8192
-	struct route_graph_point *hash[HASH_SIZE];  /**< A hashtable containing all route_graph_points in this graph */
+    struct route_graph_point *hash[HASH_SIZE];  /**< A hashtable containing all route_graph_points in this graph */
 };
 
 
@@ -186,7 +187,7 @@ struct route_graph_point *route_graph_get_point(struct route_graph *this, struct
 struct route_graph_point *route_graph_get_point_next(struct route_graph *this, struct coord *c,
         struct route_graph_point *last);
 void route_graph_add_segment(struct route_graph *this, struct route_graph_point *start,
-		struct route_graph_point *end, struct route_graph_segment_data *data);
+                             struct route_graph_point *end, struct route_graph_segment_data *data);
 int route_graph_segment_is_duplicate(struct route_graph_point *start, struct route_graph_segment_data *data);
 void route_graph_free_segments(struct route_graph *this);
 void route_graph_build_done(struct route_graph *rg, int cancel);
