@@ -19,13 +19,14 @@
 #ifndef VEHICLE_IPHONE_CORELOCATION_H
 #define VEHICLE_IPHONE_CORELOCATION_H
 
-typedef void(*FT_LOCATION_CB)(void *, double, double, double, double, char *, double);
+typedef void(*FT_LOCATION_CB)(void *, double, double, double, double, char *, double, double);
 void corelocation_update(double lat,
                          double lng,
                          double dir,
                          double spd,
                          char * time,
-                         double radius);
+                         double radius,
+                         double height);
 void corelocation_init(void * pv_arg, FT_LOCATION_CB pf_cb);
 void corelocation_exit(void);
 void corelocation_req_auth(void);
