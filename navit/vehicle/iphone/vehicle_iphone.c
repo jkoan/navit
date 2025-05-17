@@ -33,6 +33,10 @@
 #include "event.h"
 #include "corelocation.h"
 #include "graphics.h"
+#include "util.h"
+
+struct event_timeout *
+event_add_timeout(int timeout, int multi, struct callback *cb);
 
 /**
  * @defgroup vehicle-iphone Vehicle iPhone
@@ -43,7 +47,7 @@
  */
 
 struct vehicle_priv {
-    long interval;
+    int interval;
     int position_set;
     struct callback_list *cbl;
     struct navit *navit;
@@ -58,6 +62,9 @@ struct vehicle_priv {
     char str_time[200];
     enum attr_position_valid valid;  /**< Whether the vehicle has valid position data **/
     int active;
+    double altitude;
+    double hdop;
+    time_t lastfixms;
 };
 
 void vehicle_iphone_update(void *arg,
@@ -66,8 +73,11 @@ void vehicle_iphone_update(void *arg,
                            double dir,
                            double spd,
                            char * str_time,
-                           double radius
+                           double radius,
+                           double height
                           );
+
+void timer_callback(struct vehicle_priv *priv);
 
 static void vehicle_iphone_destroy(struct vehicle_priv *priv) {
     corelocation_exit();
@@ -76,6 +86,7 @@ static void vehicle_iphone_destroy(struct vehicle_priv *priv) {
 
 static int vehicle_iphone_position_attr_get(struct vehicle_priv *priv,
         enum attr_type type, struct attr *attr) {
+
     switch (type) {
     case attr_position_speed:
         attr->u.numd = &priv->speed;
@@ -99,42 +110,47 @@ static int vehicle_iphone_position_attr_get(struct vehicle_priv *priv,
         attr->u.num=priv->valid;
         break;
     case attr_position_sats_used:
-            attr->u.num=6;
-            if(priv->radius > 0 && priv->radius > 80) {
-                attr->u.num=2;
-                break;
-            }
-            if(priv->radius > 0 && priv->radius > 60) {
-                attr->u.num=3;
-                break;
-            }
-            if(priv->radius > 0 && priv->radius > 40) {
-                attr->u.num=4;
-                break;
-            }
-            if(priv->radius > 0 && priv->radius > 20) {
-                attr->u.num=5;
-                break;
-            }
-            if(priv->radius < 0) {
-                attr->u.num=0;
-                break;
-            }
+        attr->u.num=6;
+        if(priv->radius > 0 && priv->radius > 80) {
+            attr->u.num=2;
             break;
-        case attr_position_hdop:
-            if(priv->radius > 0 && priv->radius < 50) {
-                *attr->u.numd=4.1;
-            }
-            if(priv->radius > 0 && priv->radius <= 30) {
-                *attr->u.numd=2.1;
-            }
-            if(priv->radius > 0 && priv->radius <= 10) {
-                *attr->u.numd=1.1;
-            }
-            dbg(lvl_info, "HDOP: %f", *attr->u.numd);
+        }
+        if(priv->radius > 0 && priv->radius > 60) {
+            attr->u.num=3;
             break;
+        }
+        if(priv->radius > 0 && priv->radius > 40) {
+            attr->u.num=4;
+            break;
+        }
+        if(priv->radius > 0 && priv->radius > 20) {
+            attr->u.num=5;
+            break;
+        }
+        if(priv->radius < 0) {
+            attr->u.num=0;
+            break;
+        }
+        break;
+    case attr_position_hdop:
+
+        if(priv->radius > 0 && priv->radius < 50) {
+            priv->hdop=4.1;
+        }
+        if(priv->radius > 0 && priv->radius <= 30) {
+            priv->hdop=2.1;
+        }
+        if(priv->radius > 0 && priv->radius <= 10) {
+            priv->hdop=1.1;
+        }
+        attr->u.numd=&priv->hdop;
+        dbg(lvl_info, "HDOP: %f", *attr->u.numd);
+        break;
     case attr_active:
         attr->u.num=priv->active;
+        break;
+    case attr_position_height:
+        attr->u.numd=&priv->altitude;
         break;
     default:
         return 0;
@@ -149,7 +165,7 @@ static int vehicle_iphone_req_loc_auth(void) {
 }
 
 static int vehicle_iphone_set_attr(struct vehicle_priv *priv, struct attr *attr) {
-	    if (attr->type == attr_navit) {
+    if (attr->type == attr_navit) {
         priv->navit = attr->u.navit;
 
         // We have the navit instance, get the graphics and set our callback
@@ -171,10 +187,10 @@ static int vehicle_iphone_set_attr(struct vehicle_priv *priv, struct attr *attr)
 
         return 1;
     }
-    
+
     if(attr->type == attr_active)
-       priv->active = (int)attr->u.num;
-    
+        priv->active = (int)attr->u.num;
+
     if (attr->type == attr_vehicle_request_location_authorization)
         corelocation_req_auth();
     return 1;
@@ -187,37 +203,54 @@ struct vehicle_methods vehicle_iphone_methods = {
     NULL,
 };
 
+// for tunnel extrapolation to work we need to send coordinates as iOS will call vehicle_iphone_update infrequently
+// this timercallback will trigger once per second when position is invalid
+void timer_callback(struct vehicle_priv *priv) {
+    time_t now = time(NULL);
+    if((now - priv->lastfixms) > 2) // After two seconds without an update we set position to invalid
+        priv->valid = attr_position_valid_invalid;
+    if(priv->active && priv->valid==attr_position_valid_invalid)
+        callback_list_call_attr_0(priv->cbl, attr_position_coord_geo); // We
+}
+
 void vehicle_iphone_update(void *arg,
                            double lat,
                            double lng,
                            double dir,
                            double spd,
                            char * str_time,
-                           double radius
+                           double radius,
+                           double height
                           ) {
     struct vehicle_priv * priv = arg;
-    priv->geo.lat = lat;
-    priv->geo.lng = lng;
-    if(dir > 0) priv->direction = dir;
-    if(spd > 0) priv->speed = spd*3.6;
-    strcpy(priv->str_time, str_time);
-    priv->radius = radius;
 
-    dbg(lvl_info,"position_get lat:%f lng:%f (spd:%f dir:%f time:%s accur.:%f)", priv->geo.lat, priv->geo.lng, priv->speed,
-        priv->direction, priv->str_time, priv->radius);
-    if(priv->active)
-        callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
-    if((priv->radius<100) && (priv->radius > 0)) {
-        if (priv->valid != attr_position_valid_valid) {
-            priv->valid = attr_position_valid_valid;
-            callback_list_call_attr_0(priv->cbl, attr_position_valid);
-            dbg(lvl_info,"position valid - Acc: %fm", priv->radius);
-        }
-    } else {
-        if (priv->valid != attr_position_valid_invalid) {
-            priv->valid = attr_position_valid_invalid;
-            callback_list_call_attr_0(priv->cbl, attr_position_valid);
-            dbg(lvl_info,"position invalid - Acc: %fm", priv->radius);
+    if(priv->active) {
+
+        priv->geo.lat = lat;
+        priv->geo.lng = lng;
+        if(dir > 0) priv->direction = dir;
+        if(spd > 0) priv->speed = spd*3.6;
+        priv->altitude = height;
+        strcpy(priv->str_time, str_time);
+        priv->radius = radius;
+        priv->lastfixms = time(NULL);
+
+        dbg(lvl_debug,"position_get lat:%f lng:%f (spd:%f dir:%f time:%s accur.:%f)", priv->geo.lat, priv->geo.lng, priv->speed,
+            priv->direction, priv->str_time, priv->radius);
+        if(priv->active)
+            callback_list_call_attr_0(priv->cbl, attr_position_coord_geo);
+        if((priv->radius<35) && (priv->radius > 0)) {
+            if (priv->valid != attr_position_valid_valid) {
+                priv->valid = attr_position_valid_valid;
+                callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                dbg(lvl_error,"position valid - Acc: %fm", priv->radius);
+            }
+        } else {
+            if (priv->valid != attr_position_valid_invalid) {
+                priv->valid = attr_position_valid_invalid;
+                callback_list_call_attr_0(priv->cbl, attr_position_valid);
+                dbg(lvl_debug,"position invalid - Acc: %fm", priv->radius);
+            }
         }
     }
 }
@@ -236,11 +269,12 @@ static struct vehicle_priv *vehicle_iphone_new(struct vehicle_methods
     ret->interval=1000;
     ret->config_speed=40;
     ret->active=1;
+    ret->altitude=100;
     if ((speed=attr_search(attrs, attr_speed))) {
         ret->config_speed=speed->u.num;
     }
     if ((interval=attr_search(attrs, attr_interval)))
-        ret->interval=interval->u.num;
+        ret->interval=(int)interval->u.num;
     if ((position_coord_geo=attr_search(attrs, attr_position_coord_geo))) {
         ret->geo=*(position_coord_geo->u.coord_geo);
         ret->position_set=1;
@@ -248,6 +282,12 @@ static struct vehicle_priv *vehicle_iphone_new(struct vehicle_methods
     }
     *meth = vehicle_iphone_methods;
     ret->str_time[0] = '\0';
+
+    ret->interval=1000;
+    ret->timer_callback=callback_new_1(callback_cast(timer_callback), ret);
+
+    if (!ret->timer)
+        ret->timer=event_add_timeout(ret->interval, 1, ret->timer_callback);
 
     /** Initialize corelocation */
     corelocation_init(ret, vehicle_iphone_update);
