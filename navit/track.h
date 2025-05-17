@@ -50,7 +50,8 @@ struct item *tracking_get_current_item(struct tracking *_this);
 int *tracking_get_current_flags(struct tracking *_this);
 int tracking_get_current_tunnel(struct tracking *_this);
 void tracking_flush(struct tracking *tr);
-void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofile *vehicleprofile, enum projection pro);
+void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofile *vehicleprofile,
+                     enum projection pro);
 int tracking_set_attr(struct tracking *tr, struct attr *attr);
 struct tracking *tracking_new(struct attr *parent, struct attr **attrs);
 void tracking_set_mapset(struct tracking *this_, struct mapset *ms);
