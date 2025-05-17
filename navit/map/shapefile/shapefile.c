@@ -369,7 +369,7 @@ static int attr_resolve(struct map_rect_priv *mr, enum attr_type attr_type, stru
     if (attr_type != attr_any)
         type=attr_to_name(attr_type);
     if (attr_from_line(mr->line,type,&mr->attr_pos,value,name)) {
-        len=strlen(value);
+        len=(int)strlen(value);
         if (value[0] == '$' && value[1] == '{' && value[len-1] == '}') {
             int found=0;
             value[len-1]='\0';
@@ -459,9 +459,15 @@ static struct item_methods methods_shapefile = {
     shapefile_coord_get,
     shapefile_attr_rewind,
     shapefile_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_rect_priv *map_rect_new_shapefile(struct map_priv *map, struct map_selection *sel) {
+#pragma unused(sel)
     struct map_rect_priv *mr;
     char *dbfmapfile=g_strdup_printf("%s.dbfmap", map->filename);
     void *data;
@@ -469,10 +475,10 @@ static struct map_rect_priv *map_rect_new_shapefile(struct map_priv *map, struct
     int size;
     int changed=0;
     if ((file=file_create(dbfmapfile, 0))) {
-        size=file_size(file);
+        size=(int)file_size(file);
         data=file_data_read_all(file);
         if (data) {
-            if (!map->dbfmap_data || size != strlen(map->dbfmap_data) || strncmp(data,map->dbfmap_data,size)) {
+            if (!map->dbfmap_data || size != (int)strlen(map->dbfmap_data) || strncmp(data,map->dbfmap_data,size)) {
                 g_free(map->dbfmap_data);
                 map->dbfmap_data=g_malloc(size+1);
                 memcpy(map->dbfmap_data, data, size);
@@ -586,9 +592,16 @@ static struct map_methods map_methods_shapefile = {
     map_rect_destroy_shapefile,
     map_rect_get_item_shapefile,
     map_rect_get_item_byid_shapefile,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_priv *map_new_shapefile(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *m;
     struct attr *data=attr_search(attrs, attr_data);
     struct attr *charset=attr_search(attrs, attr_charset);
@@ -624,7 +637,7 @@ static struct map_priv *map_new_shapefile(struct map_methods *meth, struct attr 
     if (projectionname)
         m->pro=projection_from_name(projectionname->u.str, &m->offset);
     if (flags)
-        m->flags=flags->u.num;
+        m->flags=(int)flags->u.num;
     file_wordexp_destroy(wexp);
     return m;
 }
