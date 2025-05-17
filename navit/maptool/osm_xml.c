@@ -28,7 +28,7 @@
 
 long long int currentid;
 
-long long int getcurrentid() {
+long long int getcurrentid(void) {
     return currentid;
 }
 
