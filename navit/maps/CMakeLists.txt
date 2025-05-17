@@ -20,6 +20,10 @@ if(SAMPLE_MAP)
 			-P ${PROJECT_SOURCE_DIR}/cmake/navit_download.cmake
 			VERBATIM
 			)
+        add_custom_command(TARGET sample_map POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${CMAKE_CURRENT_BINARY_DIR}/${SAMPLE_MAP_NAME}.bin ${CMAKE_CURRENT_BINARY_DIR}/../resources/share/navit/${SAMPLE_MAP_NAME}.bin
+            )
 	else()
 		add_custom_command (
 			OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SAMPLE_MAP_NAME}.bin
@@ -38,6 +42,6 @@ if(SAMPLE_MAP)
 			)
 	endif()
 	install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${SAMPLE_MAP_NAME}.bin
-		DESTINATION ${SHARE_DIR}/maps
+		DESTINATION ${SHARE_DIR}
 		PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 endif()
