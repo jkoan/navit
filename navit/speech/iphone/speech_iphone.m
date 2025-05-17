@@ -25,20 +25,35 @@
 #include "plugin.h"
 #include "speech.h"
 #include "attr.h"
-#import "VSSpeechSynthesizer.h"	
+#include "vehicle.h"
+#import "VSSpeechSynthesizerNavit.h"
 #import <UIKit/UIKit.h>
+#include "ZoneDetect/library/zonedetect.h"
+#include "glib.h"
+#include "navit.h"
+#include "item.h"
+#include "coord.h"
+#include "attr.h"
 
-#define DEFAULT_HFP_DELAY 0.01
+#define DEFAULT_HFP_DELAY 0.5
 
 struct speech_priv {
-    VSSpeechSynthesizer *speech;
+    VSSpeechSynthesizerNavit *speech;
+    struct navit* navit;
 };
 
 static int speech_iphone_say(struct speech_priv *this, const char *text) {
     dbg(lvl_debug,"enter %s",text);
+    char* lang;
+
     NSString *s=[[NSString alloc]initWithUTF8String: text];
+
+    lang = navit_get_locallanguage(this->navit);
+
+    [this->speech setCountryLanguage:lang];
+
     [this->speech startSpeakingString:s];
-    //[s release];
+
     dbg(lvl_debug,"ok");
     return 1;
 }
@@ -56,18 +71,20 @@ static struct speech_methods speech_iphone_meth = {
 static struct speech_priv *speech_iphone_new(struct speech_methods *meth, struct attr **attrs, struct attr *parent) {
 #pragma unused(parent)
     struct speech_priv *this;
+    struct attr *attr;
+
     *meth=speech_iphone_meth;
     this=g_new0(struct speech_priv,1);
-    this->speech= [VSSpeechSynthesizer alloc];
+    this->speech= [VSSpeechSynthesizerNavit alloc];
     [this->speech init];
+    this->navit = parent->u.navit;
     dbg(lvl_debug,"this->speech=%p",this->speech);
 
     [this->speech setPitch:0.8];
     [this->speech setRate:0.5];
-    [this->speech setVolume:1.0];
-    NSLog(@"iOS version: %f", [[[UIDevice currentDevice] systemVersion] floatValue]);
+    [this->speech setVolume:0.8];
 
-    struct attr *attr;
+    NSLog(@"iOS version: %f", [[[UIDevice currentDevice] systemVersion] floatValue]);
 
     // With the attribute speech_use_hfp="1" user can force to use HFP always.
     // This will force background music to HFP as well.
@@ -82,6 +99,8 @@ static struct speech_priv *speech_iphone_new(struct speech_methods *meth, struct
         [this->speech setHFPDelay: attr->u.num*0.001];
     else
         [this->speech setHFPDelay:DEFAULT_HFP_DELAY];
+
+    [this->speech setLanguage:getenv("LANG")];
 
     return this;
 }
