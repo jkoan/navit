@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
             2) //IOS can have language "en" e.g. then the country selection in country.c does not work
         language=[NSString stringWithFormat:@"%@_%@", language, language.uppercaseString];
     char *lang=g_strdup_printf("%s.UTF-8",[language UTF8String]);
-    dbg(0,"lang %s",lang);
+    dbg(lvl_debug,"lang %s",lang);
     setenv("LANG",lang,0);
     setlocale(LC_ALL, NULL);
     setlocale(LC_NUMERIC,"C");
@@ -44,7 +44,21 @@ int main(int argc, char **argv) {
 #if IOS
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    char *user=(char *)[documentsDirectory cStringUsingEncoding:[NSString defaultCStringEncoding]]	;
+    char *user=(char *)[documentsDirectory cStringUsingEncoding:[NSString defaultCStringEncoding]];
+    NSFileManager *fMgr = [NSFileManager defaultManager];
+    NSString *mapPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.bin",
+                         @"osm_bbox_11.3,47.9,11.7,48.2"]];
+    NSError *error = nil;
+    NSString *rsrcPath = [[NSBundle mainBundle] pathForResource:@"share/navit/osm_bbox_11.3,47.9,11.7,48.2" ofType:@"bin"];
+
+    if(rsrcPath!=nil) {
+        if(![fMgr fileExistsAtPath:mapPath]) {
+            [fMgr copyItemAtPath:rsrcPath toPath:mapPath error:&error];
+            if (error) {
+                NSLog(@"Error on copying file: %@\nfrom path: %@\ntoPath: %@", error, rsrcPath, mapPath);
+            }
+        }
+    }
 #else
     char *user=g_strdup_printf("%s/../Documents",s);
 #endif
@@ -52,7 +66,7 @@ int main(int argc, char **argv) {
     argv[0]=g_strdup_printf("%s/bin/navit",s);
     setenv("NAVIT_USER_DATADIR",user,0);
 
-    dbg(0,"calling main_real");
+    dbg(lvl_debug,"calling main_real");
     ret=main_real(argc, argv);
     g_free(argv[0]);
     g_free(user);
