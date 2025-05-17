@@ -31,19 +31,19 @@ static void vehicleprofile_set_attr_do(struct vehicleprofile *this_, struct attr
     dbg(lvl_debug,"%s:%ld", attr_to_name(attr->type), attr->u.num);
     switch (attr->type) {
     case attr_flags:
-        this_->flags=attr->u.num;
+        this_->flags=(int) attr->u.num;
         break;
     case attr_flags_forward_mask:
-        this_->flags_forward_mask=attr->u.num;
+        this_->flags_forward_mask=(int) attr->u.num;
         break;
     case attr_flags_reverse_mask:
-        this_->flags_reverse_mask=attr->u.num;
+        this_->flags_reverse_mask=(int) attr->u.num;
         break;
     case attr_maxspeed_handling:
-        this_->maxspeed_handling=attr->u.num;
+        this_->maxspeed_handling=(int) attr->u.num;
         break;
     case attr_route_mode:
-        this_->mode=attr->u.num;
+        this_->mode=(int) attr->u.num;
         break;
     case attr_name:
         if(this_->name)
@@ -57,37 +57,37 @@ static void vehicleprofile_set_attr_do(struct vehicleprofile *this_, struct attr
         this_->route_depth = g_strdup(attr->u.str);
         break;
     case attr_vehicle_axle_weight:
-        this_->axle_weight=attr->u.num;
+        this_->axle_weight=(int) attr->u.num;
         break;
     case attr_vehicle_dangerous_goods:
-        this_->dangerous_goods=attr->u.num;
+        this_->dangerous_goods=(int) attr->u.num;
         break;
     case attr_vehicle_height:
-        this_->height=attr->u.num;
+        this_->height=(int) attr->u.num;
         break;
     case attr_vehicle_length:
-        this_->length=attr->u.num;
+        this_->length=(int) attr->u.num;
         break;
     case attr_vehicle_weight:
-        this_->weight=attr->u.num;
+        this_->weight=(int) attr->u.num;
         break;
     case attr_vehicle_width:
-        this_->width=attr->u.num;
+        this_->width=(int) attr->u.num;
         break;
     case attr_static_speed:
-        this_->static_speed=attr->u.num;
+        this_->static_speed=(int) attr->u.num;
         break;
     case attr_static_distance:
-        this_->static_distance=attr->u.num;
+        this_->static_distance=(int) attr->u.num;
         break;
     case attr_through_traffic_penalty:
-        this_->through_traffic_penalty=attr->u.num;
+        this_->through_traffic_penalty=(int) attr->u.num;
         break;
     case attr_turn_around_penalty:
-        this_->turn_around_penalty=attr->u.num;
+        this_->turn_around_penalty=(int) attr->u.num;
         break;
     case attr_turn_around_penalty2:
-        this_->turn_around_penalty2=attr->u.num;
+        this_->turn_around_penalty2=(int) attr->u.num;
         break;
     default:
         break;
@@ -95,6 +95,7 @@ static void vehicleprofile_set_attr_do(struct vehicleprofile *this_, struct attr
 }
 
 static void vehicleprofile_free_hash_item(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(key, user_data)
     struct navit_object *obj=value;
     obj->func->unref(obj);
 }
@@ -177,6 +178,7 @@ static void vehicleprofile_apply_attrs(struct vehicleprofile *this_, struct navi
 }
 
 static void vehicleprofile_debug_roadprofile(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(user_data)
     struct roadprofile *rp=value;
     dbg(lvl_debug,"type %s avg %d weight %d max %d",item_to_name((int)(long)key),rp->speed,rp->route_weight,rp->maxspeed);
 }
@@ -209,6 +211,7 @@ static void vehicleprofile_update(struct vehicleprofile *this_) {
 
 struct vehicleprofile *
 vehicleprofile_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct vehicleprofile *this_;
     struct attr **attr, *type_attr;
     if (! (type_attr=attr_search(attrs, attr_name))) {
@@ -228,6 +231,7 @@ vehicleprofile_new(struct attr *parent, struct attr **attrs) {
 
 struct attr_iter *
 vehicleprofile_attr_iter_new(void* unused) {
+#pragma unused(unused)
     return (struct attr_iter *)g_new0(void *,1);
 }
 
