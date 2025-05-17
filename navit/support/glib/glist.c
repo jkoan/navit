@@ -34,7 +34,10 @@
 #include "galias.h"
 
 
-void g_list_push_allocator (gpointer dummy) { /* present for binary compat only */ }
+void g_list_push_allocator (gpointer dummy) {
+#pragma unused (dummy)
+    /* present for binary compat only */
+}
 void g_list_pop_allocator  (void)           { /* present for binary compat only */ }
 
 #define _g_list_alloc()         g_slice_new (GList)
