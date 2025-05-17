@@ -23,6 +23,9 @@ set(POTFILES
 	${PROJECT_SOURCE_DIR}/navit/gui/internal/gui_internal_search.c
 	${PROJECT_SOURCE_DIR}/navit/gui/internal/gui_internal_widget.c
 	${PROJECT_SOURCE_DIR}/navit/osd/core/osd_core.c
+	${PROJECT_SOURCE_DIR}/navit/plugin/obd2/obd2.c
+        ${PROJECT_SOURCE_DIR}/navit/plugin/googleglass/googleglass.c
+        ${PROJECT_SOURCE_DIR}/navit/plugin/btheadup/btheadup.c
 	${CMAKE_CURRENT_BINARY_DIR}/navit_shipped.c
 	${CMAKE_CURRENT_BINARY_DIR}/strings_xml.c
 	)
