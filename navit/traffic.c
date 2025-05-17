@@ -323,6 +323,7 @@ static struct item_methods methods_traffic_item = {
     NULL,
     NULL,
     tm_type_set,
+    NULL,
 };
 
 /**
@@ -457,6 +458,7 @@ static int seg_data_equals(struct seg_data * l, struct seg_data * r) {
  */
 static int tm_item_add_message_data(struct item * item, char * msgid, int speed, int delay, struct attr ** attrs,
                                     struct route * route) {
+#pragma unused(attrs)
     int ret = 0;
     struct item_priv * priv_data = item->priv_data;
     GList * msglist;
@@ -885,6 +887,7 @@ static void tm_dump_to_textfile(struct map * map) {
  */
 static struct item * tm_add_item(struct map *map, enum item_type type, int id_hi, int id_lo,
                                  int flags, struct attr **attrs, struct coord *c, int count, char * id) {
+#pragma unused(id)
     struct item * ret = NULL;
     struct item_priv * priv_data;
     struct map_rect * mr;
@@ -1090,6 +1093,7 @@ static struct item * tm_rect_create_item(struct map_rect_priv *mr, enum item_typ
  * @return True if the attribute type was found, false if not
  */
 static int tm_get_attr(struct map_priv *priv, enum attr_type type, struct attr *attr) {
+#pragma unused(priv, type)
     if (attr_type == attr_traffic) {
         attr->type = attr_traffic;
         attr->u.traffic = NULL;
@@ -1987,14 +1991,14 @@ static void traffic_location_populate_route_graph(struct traffic_location * this
                     if (!(default_flags = item_get_default_flags(item->type)))
                         default_flags = &item_default_flags_value;
                     if (item_attr_get(item, attr_flags, &attr)) {
-                        data.flags = attr.u.num;
+                        data.flags = (int)attr.u.num;
                         segmented = (data.flags & AF_SEGMENTED);
                     } else
                         data.flags = *default_flags;
 
                     item_attr_rewind(item);
                     if ((data.flags & AF_SPEED_LIMIT) && (item_attr_get(item, attr_maxspeed, &attr)))
-                        data.maxspeed = attr.u.num;
+                        data.maxspeed = (int)attr.u.num;
 
                     /* clear flags we're not copying here */
                     data.flags &= ~(AF_DANGEROUS_GOODS | AF_SIZE_OR_WEIGHT_LIMIT);
@@ -2013,7 +2017,6 @@ static void traffic_location_populate_route_graph(struct traffic_location * this
                             route_graph_add_segment(rg, s_pnt, e_pnt, &data);
                     } else {
                         int isseg, rc;
-                        int sc = 0;
                         do {
                             isseg = item_coord_is_node(item);
                             rc = item_coord_get(item, &c, 1);
@@ -2033,7 +2036,6 @@ static void traffic_location_populate_route_graph(struct traffic_location * this
                         } while(rc);
                         e_pnt = route_graph_add_point(rg, &l);
                         dbg_assert(len >= 0);
-                        sc++;
                         data.len = len;
                         if (!route_graph_segment_is_duplicate(s_pnt, &data))
                             route_graph_add_segment(rg, s_pnt, e_pnt, &data);
@@ -2346,6 +2348,7 @@ static struct route_graph_point * traffic_route_flood_graph(struct route_graph *
  */
 static struct route_graph_segment * traffic_route_append(struct route_graph *rg,
         struct route_graph_segment * last, struct route_graph_point * end) {
+#pragma unused(rg)
     struct route_graph_segment * ret = NULL, * s = last, * s_cmp, * s_next;
     struct route_graph_point * p = end;
     int num_seg;
@@ -2448,6 +2451,7 @@ static struct route_graph_segment * traffic_route_append(struct route_graph *rg,
  */
 static struct route_graph_point * traffic_route_prepend(struct route_graph * rg,
         struct route_graph_point * start) {
+#pragma unused(rg)
     struct route_graph_point * ret = start;
     struct route_graph_segment * s, * s_cmp, * s_prev = NULL;
     int num_seg;
@@ -2540,23 +2544,23 @@ static struct traffic_point * traffic_location_get_point(struct traffic_location
     struct traffic_point * trpoint = NULL;
 
     switch(point) {
-    case 0:
-        trpoint = this_->from;
+case 0:
+            trpoint = this_->from;
         break;
-    case 1:
-        trpoint = this_->at;
+case 1:
+            trpoint = this_->at;
         break;
-    case 2:
-        trpoint = this_->to;
+case 2:
+            trpoint = this_->to;
         break;
-    case 16:
-        trpoint = this_->from ? this_->from : this_->at;
+case 16:
+            trpoint = this_->from ? this_->from : this_->at;
         break;
-    case 17:
-        trpoint = this_->to ? this_->to : this_->at;
+case 17:
+            trpoint = this_->to ? this_->to : this_->at;
         break;
-    default:
-        break;
+default:
+            break;
     }
 
     return trpoint;
@@ -2581,6 +2585,7 @@ static struct traffic_point * traffic_location_get_point(struct traffic_location
  */
 static int traffic_location_get_point_match(struct traffic_location * this_, struct route_graph_point * p, int point,
         struct route_graph * rg, struct route_graph_point * start, int match_start, struct mapset * ms) {
+#pragma unused(rg, ms)
     int ret = 0;
 
     /* The point from the location to match */
@@ -2623,6 +2628,7 @@ static int traffic_location_get_point_match(struct traffic_location * this_, str
  */
 static GList * traffic_location_get_matching_points(struct traffic_location * this_, int point,
         struct route_graph * rg, struct route_graph_point * start, int match_start, struct mapset * ms) {
+#pragma unused(match_start, start)
     GList * ret = NULL;
 
     /* The point from the location to match */
@@ -3450,7 +3456,7 @@ static int traffic_message_restore_segments(struct traffic_message * this_, stru
     while (1) {
         if (data_curr) {
             data_next = strchr(data_curr, 0x0a);
-            len = data_next ? (data_next - data_curr) : strlen(data_curr);
+            len = data_next ? (int)(data_next - data_curr) : (int)strlen(data_curr);
             line = g_new0(char, len + 1);
             strncpy(line, data_curr, len);
             dbg(lvl_debug, "*****checkpoint RESTORE-2, line: %s", line);
@@ -3479,9 +3485,9 @@ static int traffic_message_restore_segments(struct traffic_message * this_, stru
                     dbg(lvl_debug, "*****checkpoint RESTORE-4.1, parsing flags: %s", value);
                     char *tail;
                     if (value[0] == '0' && value[1] == 'x')
-                        flags = strtoul(value, &tail, 0);
+                        flags = (int)strtoul(value, &tail, 0);
                     else
-                        flags = strtol(value, &tail, 0);
+                        flags = (int)strtol(value, &tail, 0);
                     if (*tail) {
                         dbg(lvl_warning, "Incorrect value '%s' for attribute '%s': expected a number, assuming 0x%x. \n", value, name, flags);
                     }
@@ -3539,7 +3545,7 @@ static int traffic_message_restore_segments(struct traffic_message * this_, stru
             pitem->attrs = attr_list_dup(attrs);
             for (i = 0; attrs[i]; i++) {
                 if (attrs[i]->type == attr_delay)
-                    pitem->delay = attrs[i]->u.num;
+                    pitem->delay = (int)attrs[i]->u.num;
                 g_free(attrs[i]);
                 attrs[i] = NULL;
             }
@@ -3618,7 +3624,7 @@ static int traffic_message_restore_segments(struct traffic_message * this_, stru
                     if (!(default_flags = item_get_default_flags(map_item->type)))
                         default_flags = &item_default_flags_value;
                     if (item_attr_get(map_item, attr_flags, &attr)) {
-                        item_flags = attr.u.num;
+                        item_flags = (int)attr.u.num;
                         segmented = (item_flags & AF_SEGMENTED);
                     } else {
                         item_flags = *default_flags;
@@ -3627,7 +3633,7 @@ static int traffic_message_restore_segments(struct traffic_message * this_, stru
                     /* Get maxspeed, if any */
                     item_attr_rewind(map_item);
                     if ((item_flags & AF_SPEED_LIMIT) && (item_attr_get(map_item, attr_maxspeed, &attr)))
-                        maxspeed = attr.u.num;
+                        maxspeed = (int)attr.u.num;
                     else
                         maxspeed = INT_MAX;
                     /* Compare coordinates */
@@ -3911,156 +3917,156 @@ static struct seg_data * traffic_message_parse_events(struct traffic_message * t
         }
         if (this_->events[i]->event_class == event_class_congestion) {
             switch (this_->events[i]->type) {
-            case event_congestion_heavy_traffic:
+        case event_congestion_heavy_traffic:
             case event_congestion_traffic_building_up:
-            case event_congestion_traffic_heavier_than_normal:
-            case event_congestion_traffic_much_heavier_than_normal:
-                /* Heavy traffic: assume 10 km/h below the posted limit, unless explicitly specified */
-                if ((this_->events[i]->speed == INT_MAX) && (speed_penalty < 10))
-                    speed_penalty = 10;
+                case event_congestion_traffic_heavier_than_normal:
+                    case event_congestion_traffic_much_heavier_than_normal:
+                                /* Heavy traffic: assume 10 km/h below the posted limit, unless explicitly specified */
+                                if ((this_->events[i]->speed == INT_MAX) && (speed_penalty < 10))
+                                    speed_penalty = 10;
                 break;
-            case event_congestion_slow_traffic:
+        case event_congestion_slow_traffic:
             case event_congestion_traffic_congestion:
-            case event_congestion_traffic_problem:
-                /* Slow traffic or unspecified congestion: assume half the posted limit, unless explicitly specified */
-                if ((this_->events[i]->speed == INT_MAX) && (speed_factor > 50))
-                    speed_factor = 50;
+                case event_congestion_traffic_problem:
+                            /* Slow traffic or unspecified congestion: assume half the posted limit, unless explicitly specified */
+                            if ((this_->events[i]->speed == INT_MAX) && (speed_factor > 50))
+                                speed_factor = 50;
                 break;
-            case event_congestion_queue:
-                /* Queuing traffic: assume 20 km/h, unless explicitly specified */
-                if ((this_->events[i]->speed == INT_MAX) && (speed > 20))
-                    speed = 20;
+        case event_congestion_queue:
+                    /* Queuing traffic: assume 20 km/h, unless explicitly specified */
+                    if ((this_->events[i]->speed == INT_MAX) && (speed > 20))
+                        speed = 20;
                 break;
-            case event_congestion_stationary_traffic:
+        case event_congestion_stationary_traffic:
             case event_congestion_long_queue:
-                /* Stationary traffic or long queues: assume 5 km/h, unless explicitly specified */
-                if ((this_->events[i]->speed == INT_MAX) && (speed > 5))
-                    speed = 5;
+                        /* Stationary traffic or long queues: assume 5 km/h, unless explicitly specified */
+                        if ((this_->events[i]->speed == INT_MAX) && (speed > 5))
+                            speed = 5;
                 break;
-            default:
-                break;
+        default:
+                    break;
             }
         } else if (this_->events[i]->event_class == event_class_delay) {
             switch (this_->events[i]->type) {
-            case event_delay_delay:
+        case event_delay_delay:
             case event_delay_long_delay:
-                /* Delay or long delay: assume 30 minutes, unless explicitly specified */
-                if (this_->events[i]->quantifier) {
-                    if (!ret)
-                        ret = seg_data_new();
-                    if (ret->delay < this_->events[i]->quantifier->u.q_duration)
-                        ret->delay = this_->events[i]->quantifier->u.q_duration;
-                } else if (delay < 18000)
-                    delay = 18000;
+                        /* Delay or long delay: assume 30 minutes, unless explicitly specified */
+                        if (this_->events[i]->quantifier) {
+                            if (!ret)
+                                ret = seg_data_new();
+                            if (ret->delay < this_->events[i]->quantifier->u.q_duration)
+                                ret->delay = this_->events[i]->quantifier->u.q_duration;
+                        } else if (delay < 18000)
+                            delay = 18000;
                 break;
-            case event_delay_very_long_delay:
-                /* Very long delay: assume 1 hour, unless explicitly specified */
-                if (this_->events[i]->quantifier) {
-                    if (!ret)
-                        ret = seg_data_new();
-                    if (ret->delay < this_->events[i]->quantifier->u.q_duration)
-                        ret->delay = this_->events[i]->quantifier->u.q_duration;
-                } else if (delay < 36000)
-                    delay = 36000;
+        case event_delay_very_long_delay:
+                    /* Very long delay: assume 1 hour, unless explicitly specified */
+                    if (this_->events[i]->quantifier) {
+                        if (!ret)
+                            ret = seg_data_new();
+                        if (ret->delay < this_->events[i]->quantifier->u.q_duration)
+                            ret->delay = this_->events[i]->quantifier->u.q_duration;
+                    } else if (delay < 36000)
+                        delay = 36000;
                 break;
-            case event_delay_several_hours:
+        case event_delay_several_hours:
             case event_delay_uncertain_duration:
-                /* Delay of several hours or uncertain duration: assume 3 hours */
-                if (delay < 108000)
-                    delay = 108000;
+                        /* Delay of several hours or uncertain duration: assume 3 hours */
+                        if (delay < 108000)
+                            delay = 108000;
                 break;
-            default:
-                break;
+        default:
+                    break;
             }
         } else if (this_->events[i]->event_class == event_class_restriction) {
             switch (this_->events[i]->type) {
-            case event_restriction_blocked:
+        case event_restriction_blocked:
             case event_restriction_blocked_ahead:
-            case event_restriction_carriageway_blocked:
-            case event_restriction_carriageway_closed:
-            case event_restriction_closed:
-            case event_restriction_closed_ahead:
-                if (!ret)
-                    ret = seg_data_new();
+                case event_restriction_carriageway_blocked:
+                    case event_restriction_carriageway_closed:
+                        case event_restriction_closed:
+                            case event_restriction_closed_ahead:
+                                        if (!ret)
+                                            ret = seg_data_new();
                 ret->speed = 0;
                 break;
-            case event_restriction_intermittent_closures:
+        case event_restriction_intermittent_closures:
             case event_restriction_batch_service:
-            case event_restriction_single_alternate_line_traffic:
-                /* Assume 30% of the posted limit for all of these cases */
-                if (speed_factor > 30)
-                    speed_factor = 30;
+                case event_restriction_single_alternate_line_traffic:
+                            /* Assume 30% of the posted limit for all of these cases */
+                            if (speed_factor > 30)
+                                speed_factor = 30;
                 break;
-            case event_restriction_lane_blocked:
+        case event_restriction_lane_blocked:
             case event_restriction_lane_closed:
-            case event_restriction_reduced_lanes:
-                /* Assume speed is reduced proportionally to number of lanes, and never higher than 80 */
-                speed = 80;
+                case event_restriction_reduced_lanes:
+                            /* Assume speed is reduced proportionally to number of lanes, and never higher than 80 */
+                            speed = 80;
                 /* TODO determine actual numbers of lanes */
                 speed_factor = 67;
                 break;
-            case event_restriction_contraflow:
-                /* Contraflow: assume 80, unless explicitly specified */
-                speed = 80;
+        case event_restriction_contraflow:
+                    /* Contraflow: assume 80, unless explicitly specified */
+                    speed = 80;
                 break;
             /* restriction_speed_limit is not in the list: either it comes with a maxspeed attribute, which gets
              * evaluated regardless of the event it comes with, and if it doesn’t come with one, it carries no
              * useful information. */
-            default:
-                break;
+        default:
+                    break;
             }
         }
 
         for (j = 0; j < this_->events[i]->si_count; j++) {
             switch (this_->events[i]->si[j]->type) {
-            case si_vehicle_all:
-                /* For all vehicles */
-                flags |= AF_ALL;
+        case si_vehicle_all:
+                    /* For all vehicles */
+                    flags |= AF_ALL;
                 has_flags = 1;
                 break;
-            case si_vehicle_bus:
-                /* For buses only */
-                /* TODO what about other (e.g. chartered) buses? */
-                flags |= AF_PUBLIC_BUS;
+        case si_vehicle_bus:
+                    /* For buses only */
+                    /* TODO what about other (e.g. chartered) buses? */
+                    flags |= AF_PUBLIC_BUS;
                 has_flags = 1;
                 break;
-            case si_vehicle_car:
-                /* For cars only */
-                flags |= AF_CAR;
+        case si_vehicle_car:
+                    /* For cars only */
+                    flags |= AF_CAR;
                 has_flags = 1;
                 break;
-            case si_vehicle_car_with_caravan:
-                /* For cars with caravans only */
-                /* TODO no matching flag */
+        case si_vehicle_car_with_caravan:
+                    /* For cars with caravans only */
+                    /* TODO no matching flag */
+                    has_flags = 1;
+                break;
+        case si_vehicle_car_with_trailer:
+                    /* For cars with trailers only */
+                    /* TODO no matching flag */
+                    has_flags = 1;
+                break;
+        case si_vehicle_hazmat:
+                    /* For hazardous loads only */
+                    flags |= AF_DANGEROUS_GOODS;
                 has_flags = 1;
                 break;
-            case si_vehicle_car_with_trailer:
-                /* For cars with trailers only */
-                /* TODO no matching flag */
+        case si_vehicle_hgv:
+                    /* For heavy trucks only */
+                    flags |= AF_TRANSPORT_TRUCK | AF_DELIVERY_TRUCK;
                 has_flags = 1;
                 break;
-            case si_vehicle_hazmat:
-                /* For hazardous loads only */
-                flags |= AF_DANGEROUS_GOODS;
+        case si_vehicle_motor:
+                    /* For all motor vehicles */
+                    flags |= AF_MOTORIZED_FAST | AF_MOPED;
                 has_flags = 1;
                 break;
-            case si_vehicle_hgv:
-                /* For heavy trucks only */
-                flags |= AF_TRANSPORT_TRUCK | AF_DELIVERY_TRUCK;
-                has_flags = 1;
+        case si_vehicle_with_trailer:
+                    /* For vehicles with trailers only */
+                    /* TODO no matching flag */
+                    has_flags = 1;
                 break;
-            case si_vehicle_motor:
-                /* For all motor vehicles */
-                flags |= AF_MOTORIZED_FAST | AF_MOPED;
-                has_flags = 1;
-                break;
-            case si_vehicle_with_trailer:
-                /* For vehicles with trailers only */
-                /* TODO no matching flag */
-                has_flags = 1;
-                break;
-            default:
-                break;
+        default:
+                    break;
             }
         }
     }
@@ -4801,6 +4807,7 @@ static int traffic_xml_is_tagstack_valid(struct xml_state * state) {
  */
 static void traffic_xml_start(xml_context *dummy, const char *tag_name, const char **names,
                               const char **values, void *data, GError **error) {
+#pragma unused(dummy, error)
     struct xml_state * state = (struct xml_state *) data;
     struct xml_element * el;
 
@@ -4845,6 +4852,7 @@ static void traffic_xml_start(xml_context *dummy, const char *tag_name, const ch
  * @param data Points to a `struct xml_state` holding parser state
  */
 static void traffic_xml_end(xml_context *dummy, const char *tag_name, void *data, GError **error) {
+#pragma unused(dummy, error)
     struct xml_state * state = (struct xml_state *) data;
     struct xml_element * el = state->tagstack ? (struct xml_element *) state->tagstack->data : NULL;
     struct traffic_message * message;
@@ -4915,8 +4923,8 @@ static void traffic_xml_end(xml_context *dummy, const char *tag_name, void *data
                                                    location_fuzziness_new(traffic_xml_get_attr("fuzziness", el->names, el->values)),
                                                    location_ramps_new(traffic_xml_get_attr("ramps", el->names, el->values)),
                                                    item_type_from_road_type(traffic_xml_get_attr("road_class", el->names, el->values),
-                                                           /* TODO revisit default for road_is_urban */
-                                                           boolean_new(traffic_xml_get_attr("road_is_urban", el->names, el->values), 0)),
+                                                       /* TODO revisit default for road_is_urban */
+                                                       boolean_new(traffic_xml_get_attr("road_is_urban", el->names, el->values), 0)),
                                                    traffic_xml_get_attr("road_name", el->names, el->values),
                                                    traffic_xml_get_attr("road_ref", el->names, el->values),
                                                    traffic_xml_get_attr("tmc_table", el->names, el->values),
@@ -5014,6 +5022,7 @@ static void traffic_xml_end(xml_context *dummy, const char *tag_name, void *data
  * @param data Points to a `struct xml_state` holding parser state
  */
 static void traffic_xml_text(xml_context *dummy, const char *text, gsize len, void *data, GError **error) {
+#pragma unused(dummy, error)
     struct xml_state * state = (struct xml_state *) data;
     char * text_sz = g_strndup(text, len);
     struct xml_element * el = state->tagstack ? (struct xml_element *) state->tagstack->data : NULL;
@@ -5764,6 +5773,7 @@ struct item ** traffic_message_get_items(struct traffic_message * this_) {
  * @return A pointer to a `map_priv` structure for the map
  */
 static struct map_priv * traffic_map_new(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *ret;
     struct attr *traffic_attr;
 
@@ -5859,6 +5869,7 @@ static struct traffic_message ** traffic_get_messages_from_parsed_xml(struct xml
 }
 
 struct traffic_message ** traffic_get_messages_from_xml_file(struct traffic * this_, char * filename) {
+#pragma unused(this_)
     struct traffic_message ** ret = NULL;
     struct xml_state state;
     int read_success = 0;
@@ -5876,6 +5887,7 @@ struct traffic_message ** traffic_get_messages_from_xml_file(struct traffic * th
 }
 
 struct traffic_message ** traffic_get_messages_from_xml_string(struct traffic * this_, char * xml) {
+#pragma unused(this_)
     struct traffic_message ** ret = NULL;
     struct xml_state state;
     int read_success = 0;
