@@ -134,8 +134,9 @@ struct plugins {
     GList *list;
 } *pls;
 
-static struct plugin *plugin_new_from_path(char *plugin) {
 #ifdef USE_PLUGINS
+static struct plugin *plugin_new_from_path(char *plugin) {
+
     struct plugin *ret;
     if (! g_module_supported()) {
         return NULL;
@@ -143,12 +144,11 @@ static struct plugin *plugin_new_from_path(char *plugin) {
     ret=g_new0(struct plugin, 1);
     ret->name=g_strdup(plugin);
     return ret;
-#else
-    return NULL;
-#endif
 }
+#endif
 
 int plugin_load(struct plugin *pl) {
+#pragma unused(pl)
 #ifdef USE_PLUGINS
     gpointer init;
 
@@ -198,11 +198,11 @@ void plugin_set_lazy(struct plugin *pl, int lazy) {
 static int plugin_get_ondemand(struct plugin *pl) {
     return pl->ondemand;
 }
-#endif
 
 static void plugin_set_ondemand(struct plugin *pl, int ondemand) {
     pl->ondemand=ondemand;
 }
+#endif
 
 void plugin_call_init(struct plugin *pl) {
     pl->init();
@@ -212,6 +212,8 @@ void plugin_unload(struct plugin *pl) {
 #ifdef USE_PLUGINS
     g_module_close(pl->mod);
     pl->mod=NULL;
+#else
+#pragma unused(pl)
 #endif
 }
 
@@ -221,6 +223,7 @@ void plugin_destroy(struct plugin *pl) {
 
 struct plugins *
 plugins_new(struct attr * in, struct attr ** out) {
+#pragma unused(in, out)
     struct plugins *ret=g_new0(struct plugins, 1);
     ret->hash=g_hash_table_new(g_str_hash, g_str_equal);
     pls=ret;
@@ -296,6 +299,7 @@ plugin_new(struct attr *parent, struct attr **attrs) {
     file_wordexp_destroy(we);
     return pl;
 #else
+#pragma unused(parent, attrs)
     return 0;
 #endif
 }
@@ -321,6 +325,8 @@ int plugins_init(struct plugins *pls) {
     } else {
         dbg(lvl_error, "Warning: No plugins found. Is Navit installed correctly?");
     }
+#else
+#pragma unused(pls)
 #endif
     return 0;
 }
