@@ -39,6 +39,7 @@
 #include "util.h"
 #include "config.h"
 #include "callback.h"
+#include "headup.h"
 
 struct object_func tracking_func;
 
@@ -98,7 +99,7 @@ struct tracking {
     struct coord last[2], last_in, last_out;
     struct cdf_data cdf;
     struct attr *attr;
-    int valid;                               /**< Whether we have valid location data */
+    long valid;                               /**< Whether we have valid location data */
     int time;
     double direction, direction_matched;
     double speed;                            /**< Current speed */
@@ -116,6 +117,7 @@ struct tracking {
     int overspeed_pref;
     int overspeed_percent_pref;
     int tunnel_extrapolation;
+    struct headup *obd2;
 };
 
 
@@ -230,9 +232,9 @@ static void tracking_process_cdf(struct cdf_data *cdf, struct pcoord *pin, struc
 
             if (i != 0) {
                 sx += cdf->pos_hist[((cdf->first_pos + i) % cdf->hist_size)].x - cdf->pos_hist[((cdf->first_pos + i - 1) %
-                        cdf->hist_size)].x;
+                      cdf->hist_size)].x;
                 sy += cdf->pos_hist[((cdf->first_pos + i) % cdf->hist_size)].y - cdf->pos_hist[((cdf->first_pos + i - 1) %
-                        cdf->hist_size)].y;
+                      cdf->hist_size)].y;
             }
 
         }
@@ -319,6 +321,7 @@ tracking_get_street_data(struct tracking *tr) {
 }
 
 int tracking_get_attr(struct tracking *_this, enum attr_type type, struct attr *attr, struct attr_iter *attr_iter) {
+#pragma unused(attr_iter)
     struct item *item;
     struct map_rect *mr;
     struct tracking_line *tl;
@@ -633,7 +636,7 @@ void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofi
         valid.u.num=attr_position_valid_valid;
     if (valid.u.num == attr_position_valid_invalid) {
         tr->valid=valid.u.num;
-        return;
+        //return;
     }
     if (!vehicle_get_attr(tr->vehicle, attr_position_speed, &speed_attr, NULL) ||
             !vehicle_get_attr(tr->vehicle, attr_position_direction, &direction_attr, NULL) ||
@@ -672,12 +675,39 @@ void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofi
             tr->curr_in.y);
         tr->valid=attr_position_valid_static;
         tr->speed=0;
-        return;
+        if(!tr->tunnel_extrapolation)
+            return;
     }
     if (tr->tunnel) {
         tr->curr_in=tr->curr_out;
-        dbg(lvl_debug,"tunnel extrapolation speed %f dir %f",tr->speed,tr->direction);
-        dbg(lvl_debug,"old 0x%x,0x%x",tr->curr_in.x, tr->curr_in.y);
+        dbg(lvl_error,"tunnel extrapolation speed %f dir %f",tr->speed,tr->direction);
+        dbg(lvl_error,"old 0x%x,0x%x",tr->curr_in.x, tr->curr_in.y);
+
+        //Do we have an OBD2 device?
+        if (tr->obd2 && headup_get_attr(tr->obd2, attr_obd_connected, &speed_attr, NULL) && speed_attr.u.num
+                && headup_get_attr(tr->obd2, attr_speed, &speed_attr, NULL)) {
+            tr->speed = *speed_attr.u.numd;
+        } else {
+            double espeed;
+            time=iso8601_to_secs(time_attr.u.str);
+            int edirection;
+            if (time-tr->time == 1) {
+                dbg(lvl_error,"extrapolating speed from %f and %f (%f)",tr->speed, speed, speed-tr->speed);
+                espeed=speed+(speed-tr->speed)*lag.u.num/10;
+                dbg(lvl_error,"extrapolating angle from %f and %f (%d)",tr->direction, direction, tracking_angle_diff(direction,
+                        tr->direction,360));
+                edirection=direction+tracking_angle_diff(direction,tr->direction,360)*lag.u.num/10;
+            } else {
+                dbg(lvl_debug,"no speed and direction extrapolation");
+                espeed=speed;
+                edirection=direction;
+            }
+            dbg(lvl_debug,"lag %ld speed %f direction %d",lag.u.num,espeed,edirection);
+            dbg(lvl_debug,"old 0x%x,0x%x",tr->curr_in.x, tr->curr_in.y);
+            transform_project(pro, &tr->curr_in, espeed*lag.u.num/36, edirection, &tr->curr_in);
+            tr->time=time;
+            dbg(lvl_debug,"new 0x%x,0x%x",tr->curr_in.x, tr->curr_in.y);
+        }
         speed=tr->speed;
         direction=tr->curr_line->angle[tr->pos];
         transform_project(pro, &tr->curr_in, tr->speed*tr->tunnel_extrapolation/36, tr->direction, &tr->curr_in);
@@ -687,9 +717,9 @@ void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofi
         time=iso8601_to_secs(time_attr.u.str);
         int edirection;
         if (time-tr->time == 1) {
-            dbg(lvl_debug,"extrapolating speed from %f and %f (%f)",tr->speed, speed, speed-tr->speed);
+            dbg(lvl_error,"extrapolating speed from %f and %f (%f)",tr->speed, speed, speed-tr->speed);
             espeed=speed+(speed-tr->speed)*lag.u.num/10;
-            dbg(lvl_debug,"extrapolating angle from %f and %f (%d)",tr->direction, direction, tracking_angle_diff(direction,
+            dbg(lvl_error,"extrapolating angle from %f and %f (%d)",tr->direction, direction, tracking_angle_diff(direction,
                     tr->direction,360));
             edirection=direction+tracking_angle_diff(direction,tr->direction,360)*lag.u.num/10;
         } else {
@@ -772,30 +802,31 @@ void tracking_update(struct tracking *tr, struct vehicle *v, struct vehicleprofi
 }
 
 static int tracking_set_attr_do(struct tracking *tr, struct attr *attr, int initial) {
+#pragma unused(initial)
     switch (attr->type) {
     case attr_angle_pref:
-        tr->angle_pref=attr->u.num;
+        tr->angle_pref=(int)attr->u.num;
         return 1;
     case attr_connected_pref:
-        tr->connected_pref=attr->u.num;
+        tr->connected_pref=(int)attr->u.num;
         return 1;
     case attr_nostop_pref:
-        tr->nostop_pref=attr->u.num;
+        tr->nostop_pref=(int)attr->u.num;
         return 1;
     case attr_offroad_limit_pref:
-        tr->offroad_limit_pref=attr->u.num;
+        tr->offroad_limit_pref=(int)attr->u.num;
         return 1;
     case attr_route_pref:
-        tr->route_pref=attr->u.num;
+        tr->route_pref=(int)attr->u.num;
         return 1;
     case attr_overspeed_pref:
-        tr->overspeed_pref=attr->u.num;
+        tr->overspeed_pref=(int)attr->u.num;
         return 1;
     case attr_overspeed_percent_pref:
-        tr->overspeed_percent_pref=attr->u.num;
+        tr->overspeed_percent_pref=(int)attr->u.num;
         return 1;
     case attr_tunnel_extrapolation:
-        tr->tunnel_extrapolation=attr->u.num;
+        tr->tunnel_extrapolation=(int)attr->u.num;
         return 1;
     default:
         return 0;
@@ -845,6 +876,7 @@ struct object_func tracking_func = {
 
 struct tracking *
 tracking_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct tracking *this=g_new0(struct tracking, 1);
     struct attr hist_size;
     this->func=&tracking_func;
@@ -866,7 +898,7 @@ tracking_new(struct attr *parent, struct attr **attrs) {
             tracking_set_attr_do(this, *attrs, 1);
     }
 
-    tracking_init_cdf(&this->cdf, hist_size.u.num);
+    tracking_init_cdf(&this->cdf, (int)hist_size.u.num);
 
     return this;
 }
@@ -877,6 +909,10 @@ void tracking_set_mapset(struct tracking *this, struct mapset *ms) {
 
 void tracking_set_route(struct tracking *this, struct route *rt) {
     this->rt=rt;
+}
+
+void tracking_set_obd2(struct tracking *this, struct headup *obd) {
+    this->obd2 = obd;
 }
 
 void tracking_destroy(struct tracking *tr) {
@@ -1044,6 +1080,11 @@ static struct item_methods tracking_map_item_methods = {
     tracking_map_item_coord_get,
     tracking_map_item_attr_rewind,
     tracking_map_item_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 
@@ -1060,6 +1101,7 @@ static void tracking_map_rect_init(struct map_rect_priv *priv) {
 }
 
 static struct map_rect_priv *tracking_map_rect_new(struct map_priv *priv, struct map_selection *sel) {
+#pragma unused(sel)
     struct tracking *tracking=priv->tracking;
     struct map_rect_priv *ret=g_new0(struct map_rect_priv, 1);
     ret->tracking=tracking;
@@ -1141,9 +1183,13 @@ static struct map_methods tracking_map_meth = {
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_priv *tracking_map_new(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *ret;
     struct attr *tracking_attr;
 
