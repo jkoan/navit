@@ -1,3 +1,6 @@
+#ifndef __FAKE_H__
+#define __FAKE_H__
+
 #include "config.h"
 #ifndef HAVE_API_WIN32_BASE
 #define USE_POSIX_THREADS 1
@@ -47,6 +50,8 @@ char* g_convert               (const char  *str,
                                int        *bytes_read,
                                int        *bytes_written,
                                void      **error);
+pthread_key_t g_private_new_navit (void);
+
 #define G_LOCK_DEFINE_STATIC(name)    //void
 #define G_LOCK(name) //void //g_mutex_lock       (&G_LOCK_NAME (name))
 #define G_UNLOCK(name) //void //g_mutex_unlock   (&G_LOCK_NAME (name))
@@ -54,3 +59,5 @@ char* g_convert               (const char  *str,
 #define g_thread_supported() TRUE
 
 #define g_assert(expr) dbg_assert (expr)
+
+#endif /* __FAKE_H__ */

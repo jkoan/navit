@@ -29,6 +29,13 @@ char* g_convert (const char  *in,
 	int        *bytes_written,  
 	void      **error)
 {
+#pragma unused(len)
+#pragma unused(to_codeset)
+#pragma unused(from_codeset)
+#pragma unused(bytes_read)
+#pragma unused(bytes_written)
+#pragma unused(error)
+    
 	return g_strdup(in);
 }
 
@@ -52,7 +59,7 @@ CRITICAL_SECTION* g_mutex_new_navit(void)
 #endif
 
 GPrivate
-g_private_new_navit ()
+g_private_new_navit (void)
 {
 #if HAVE_API_WIN32_BASE
 	int dwTlsIndex;
