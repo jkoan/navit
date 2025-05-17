@@ -55,7 +55,7 @@ static int script_set_attr_int(struct script *scr, struct attr *attr) {
     case attr_update_period:
         if (scr->timeout)
             event_remove_timeout(scr->timeout);
-        scr->timeout=event_add_timeout(attr->u.num, 1, scr->cb);
+        scr->timeout=event_add_timeout((int)attr->u.num, 1, scr->cb);
         return 1;
     default:
         return 0;
