@@ -269,7 +269,7 @@
 			<polyline color="#aacc77"/>
 			<text text_size="5"/>
 		</itemgra>
-		<itemgra item_types="poly_water_tiled" order="0-">
+		<itemgra item_types="poly_water_tiled" order="0-4">
 			<polygon color="#82c8ea"/>
 		</itemgra>
 		<itemgra item_types="poly_land" order="0-">
@@ -497,7 +497,8 @@
 			<polyline color="#000000" width="1" dash="10"/>
 		</itemgra>
 		<itemgra item_types="border_country" order="0-">
-			<polyline color="#b8434e" width="1" dash="10,5,2,5"/>
+			<!--polyline color="#b8434e" width="2" dash="10,5,2,5"/-->
+            <polyline color="#0000FF" width="10"/>
 		</itemgra>
 		<itemgra item_types="border_state" order="0-">
 			<polyline color="#808080" width="1"/>
@@ -543,11 +544,6 @@
 				<polygon color="#f2ba1b33" src="diagonal-stripes.png" w="16" h="16"/>
 				<polyline color="#ff0000b5"/>
 				<text text_size="5"/>
-		</itemgra>
-		<itemgra item_types="poly_low_emission_zone" order="0-">
-			<polygon color="#00FF0010"/>
-            		<polyline color="#FF000080" width="3"/>
-            		<text text_size="15"/>
 		</itemgra>
 	</layer>
 	<layer name="heightlines">
@@ -1366,25 +1362,8 @@
 		<itemgra item_types="rail_tram" order="10-">
 			<polyline color="#606060" width="2"/>
 		</itemgra>
-		<itemgra item_types="wall,retaining_wall" order="12-">
+		<itemgra item_types="cliff" order="12-">
 			<polyline color="#606060" width="1"/>
-			<spikes color="#606060" width="20" distance="10"/>
-		</itemgra>
-		<itemgra item_types="cliff,embankment" order="12-16">
-			<polyline color="#606060" width="1"/>
-			<spikes color="#606060" width="5" distance="4"/>
-		</itemgra>
-		<itemgra item_types="cliff,embankment" order="17-">
-			<polyline color="#606060" width="1"/>
-			<spikes color="#606060" width="20" distance="10"/>
-		</itemgra>
-		<itemgra item_types="cliff,embankment" order="12-16">
-			<polyline color="#606060" width="1"/>
-			<spikes color="#606060" width="5" distance="4"/>
-		</itemgra>
-		<itemgra item_types="cliff,embankment" order="17-">
-			<polyline color="#606060" width="1"/>
-			<spikes color="#606060" width="20" distance="10"/>
 		</itemgra>
 	</layer>
 	<layer name="labels">
