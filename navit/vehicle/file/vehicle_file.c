@@ -38,7 +38,7 @@
 #include "plugin.h"
 #include "coord.h"
 #include "item.h"
-#include "event.h"
+#include "navit/event.h"
 #include "vehicle.h"
 #include "file.h"
 #ifdef HAVE_SOCKET
@@ -280,7 +280,7 @@ static int vehicle_file_open(struct vehicle_priv *priv) {
         if (p) {
             p++;
             int write_result;
-            write_result = write(priv->fd, p, strlen(p));
+            write_result = (int)write(priv->fd, p, strlen(p));
             if (write_result == -1) {
                 dbg(lvl_warning, "write failed.");
             }
@@ -396,7 +396,7 @@ static int vehicle_file_parse(struct vehicle_priv *priv, char *buffer) {
     char *nmea_data_buf, *p, *item[32];
     double lat, lng;
     int i, j, bcsum;
-    int len = strlen(buffer);
+    int len = (int)strlen(buffer);
     unsigned char csum = 0;
     int valid=0;
     int ret = 0;
@@ -677,7 +677,7 @@ static void vehicle_file_io(struct vehicle_priv *priv) {
         } else
             return;
     } else {
-        size = read(priv->fd, priv->buffer + priv->buffer_pos, buffer_size - priv->buffer_pos - 1);
+        size = (int)read(priv->fd, priv->buffer + priv->buffer_pos, buffer_size - priv->buffer_pos - 1);
     }
     if (size <= 0) {
         switch (priv->on_eof) {
@@ -710,7 +710,7 @@ static void vehicle_file_io(struct vehicle_priv *priv) {
     }
 
     if (str != priv->buffer) {
-        size = priv->buffer + priv->buffer_pos - str;
+        size = (int)(priv->buffer + priv->buffer_pos - str);
         memmove(priv->buffer, str, size + 1);
         priv->buffer_pos = size;
         dbg(lvl_debug, "now pos=%d buffer='%s'",
@@ -777,15 +777,15 @@ static void vehicle_file_disable_watch(struct vehicle_priv *priv) {
 */
 static void vehicle_file_destroy(struct vehicle_priv *priv) {
     if (priv->statefile && priv->nmea_data) {
-        struct attr readwrite= {attr_readwrite};
-        struct attr create= {attr_create};
+        struct attr readwrite= {attr_readwrite, {NULL}};
+        struct attr create= {attr_create, {NULL}};
         struct attr *attrs[]= {&readwrite,&create,NULL};
         struct file *f;
         readwrite.u.num=1;
         create.u.num=1;
         f=file_create(priv->statefile, attrs);
         if (f) {
-            file_data_write(f, 0, strlen(priv->nmea_data), priv->nmea_data);
+            file_data_write(f, 0, (int)strlen(priv->nmea_data), priv->nmea_data);
             file_fsync(f);
             file_destroy(f);
         }
@@ -920,11 +920,18 @@ static struct item_methods vehicle_file_sat_methods = {
     NULL,
     NULL,
     vehicle_file_sat_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct vehicle_methods vehicle_file_methods = {
     vehicle_file_destroy,
     vehicle_file_position_attr_get,
+    NULL,
+    NULL,
 };
 
 /**
@@ -970,7 +977,7 @@ static struct vehicle_priv *vehicle_file_new_file(struct vehicle_methods
         ret->statefile=g_strdup(state_file->u.str);
     time = attr_search(attrs, attr_time);
     if (time)
-        ret->time=time->u.num;
+        ret->time=(int)time->u.num;
     baudrate = attr_search(attrs, attr_baudrate);
     if (baudrate) {
         switch (baudrate->u.num) {
@@ -1002,7 +1009,7 @@ static struct vehicle_priv *vehicle_file_new_file(struct vehicle_methods
     }
     checksum_ignore = attr_search(attrs, attr_checksum_ignore);
     if (checksum_ignore)
-        ret->checksum_ignore=checksum_ignore->u.num;
+        ret->checksum_ignore=(int)checksum_ignore->u.num;
     ret->attrs = attrs;
     on_eof = attr_search(attrs, attr_on_eof);
     if (on_eof && !g_ascii_strcasecmp(on_eof->u.str, "stop"))
