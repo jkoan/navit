@@ -52,7 +52,7 @@
 #endif
 
 #if IOS
-//#include "gthreadprivate.h"
+#include <getopt.h>
 #endif
 
 int main_argc;
@@ -60,12 +60,12 @@ char * const* main_argv;
 
 static void print_usage(void) {
     printf("%s",_("navit usage:\n"
-                  "navit [options] [configfile]\n"
-                  "\t-c <file>: use <file> as config file, instead of using the default file.\n"
-                  "\t-d <n>: set the global debug output level to <n> (0=error, 1=warning, 2=info, 3=debug).\n"
-                  "\tSettings from config file will still take effect where they set a higher level.\n"
-                  "\t-h: print this usage info and exit.\n"
-                  "\t-v: print the version and exit.\n"));
+           "navit [options] [configfile]\n"
+           "\t-c <file>: use <file> as config file, instead of using the default file.\n"
+           "\t-d <n>: set the global debug output level to <n> (0=error, 1=warning, 2=info, 3=debug).\n"
+           "\tSettings from config file will still take effect where they set a higher level.\n"
+           "\t-h: print this usage info and exit.\n"
+           "\t-v: print the version and exit.\n"));
 }
 
 
@@ -93,6 +93,9 @@ int main_real(int argc, char * const* argv) {
     main_init(argv[0]);
     navit_nls_main_init();
     debug_init(argv[0]);
+// DEBUG ENTRY
+
+    setenv("CG_CONTEXT_SHOW_BACKTRACE", "1", 1);
 
     cp = getenv("NAVIT_LOGFILE");
     if (cp) {
