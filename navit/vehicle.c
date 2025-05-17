@@ -105,6 +105,7 @@ static int vehicle_add_log(struct vehicle *this_, struct log *log);
  */
 struct vehicle *
 vehicle_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct vehicle *this_;
     struct attr *source;
     struct vehicle_priv *(*vehicletype_new) (struct vehicle_methods *
@@ -186,6 +187,7 @@ void vehicle_destroy(struct vehicle *this_) {
  */
 struct attr_iter *
 vehicle_attr_iter_new(void * unused) {
+#pragma unused(unused)
     return (struct attr_iter *)g_new0(void *,1);
 }
 
@@ -497,7 +499,7 @@ static void vehicle_log_nmea(struct vehicle *this_, struct log *log) {
         return;
     if (!this_->meth.position_attr_get(this_->priv, attr_position_nmea, &pos_attr))
         return;
-    log_write(log, pos_attr.u.str, strlen(pos_attr.u.str), 0);
+    log_write(log, pos_attr.u.str, (int)strlen(pos_attr.u.str), 0);
 }
 
 /**
@@ -521,13 +523,13 @@ void vehicle_log_gpx_add_tag(char *tag, char **logstr) {
         char *str=strstr(*logstr, ext_start);
         int len;
         if (str) {
-            len=str-*logstr+strlen(ext_start);
+            len=(int)(str-*logstr+strlen(ext_start));
             start=g_strdup(*logstr);
             start[len]='\0';
             end=g_strdup(str+strlen(ext_start));
         } else {
             str=strstr(*logstr, trkpt_end);
-            len=str-*logstr;
+            len=(int)(str-*logstr);
             end=g_strdup_printf("%s%s",ext_end,str);
             str=g_strdup(*logstr);
             str[len]='\0';
@@ -619,7 +621,7 @@ static void vehicle_log_gpx(struct vehicle *this_, struct log *log) {
     }
     logstr=g_strconcat_printf(logstr,"</trkpt>\n");
     callback_list_call_attr_1(this_->cbl, attr_log_gpx, &logstr);
-    log_write(log, logstr, strlen(logstr), 0);
+    log_write(log, logstr, (int)strlen(logstr), 0);
     g_free(logstr);
 }
 
@@ -642,7 +644,7 @@ static void vehicle_log_textfile(struct vehicle *this_, struct log *log) {
         return;
     logstr=g_strdup_printf("%f %f type=trackpoint\n", pos_attr.u.coord_geo->lng, pos_attr.u.coord_geo->lat);
     callback_list_call_attr_1(this_->cbl, attr_log_textfile, &logstr);
-    log_write(log, logstr, strlen(logstr), 0);
+    log_write(log, logstr, (int)strlen(logstr), 0);
 }
 
 /**
@@ -729,12 +731,12 @@ static int vehicle_add_log(struct vehicle *this_, struct log *log) {
                        "<trk>\n"
                        "<trkseg>\n";
         char *trailer = "</trkseg>\n</trk>\n</gpx>\n";
-        log_set_header(log, header, strlen(header));
-        log_set_trailer(log, trailer, strlen(trailer));
+        log_set_header(log, header, (int)strlen(header));
+        log_set_trailer(log, trailer, (int)strlen(trailer));
         cb=callback_new_attr_2(callback_cast(vehicle_log_gpx), attr_position_coord_geo, this_, log);
     } else if (!strcmp(type_attr.u.str, "textfile")) {
         char *header = "type=track\n";
-        log_set_header(log, header, strlen(header));
+        log_set_header(log, header, (int)strlen(header));
         cb=callback_new_attr_2(callback_cast(vehicle_log_textfile), attr_position_coord_geo, this_, log);
     } else if (!strcmp(type_attr.u.str, "binfile")) {
         cb=callback_new_attr_2(callback_cast(vehicle_log_binfile), attr_position_coord_geo, this_, log);
