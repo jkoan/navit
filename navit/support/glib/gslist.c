@@ -119,7 +119,10 @@
  *                   to the <link linkend="glib-Memory-Slices">slice
  *                   allocator</link>
  **/
-void g_slist_push_allocator (gpointer dummy) { /* present for binary compat only */ }
+void g_slist_push_allocator (gpointer dummy) {
+#pragma unused(dummy)
+    /* present for binary compat only */
+}
 
 /**
  * g_slist_pop_allocator:
