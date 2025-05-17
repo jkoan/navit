@@ -22,6 +22,7 @@
 #include "coord.h"
 #include "debug.h"
 #include "projection.h"
+#include "ctype.h"
 
 struct projection_name {
     enum projection projection;
@@ -37,6 +38,7 @@ struct projection_name projection_names[]= {
 };
 
 static int utmref_letter(char l) {
+    l=tolower(l);
     if (l < 'a' || l == 'i' || l == 'o')
         return -1;
     if (l < 'i')
@@ -56,28 +58,37 @@ static int utmref_letter(char l) {
  * @returns projection, or projection_none if no projection could be determined
  */
 enum projection projection_from_name(const char *name, struct coord *utm_offset) {
-    int i;
+    unsigned long i;
     int zone,baserow;
     char ns,zone_field,square_x,square_y;
+    char* p = (char*)name;
+
+    for ( ; *p; ++p) *p = tolower(*p);
 
     for (i=0 ; i < sizeof(projection_names)/sizeof(struct projection_name) ; i++) {
         if (! strcmp(projection_names[i].name, name))
             return projection_names[i].projection;
     }
     if (utm_offset) {
-        if (sscanf(name,"utm%d%c",&zone,&ns) == 2 && zone > 0 && zone <= 60 && (ns == 'n' || ns == 's')) {
+        sscanf(name,"utm%d%c",&zone,&ns);
+        ns = tolower(ns);
+        if (sscanf(name,"utm%d%c",&zone,&ns) == 2 && zone > 0 && zone <= 60 && (ns == 'n' || ns == 's' )) {
             utm_offset->x=zone*1000000;
             utm_offset->y=(ns == 's' ? -10000000:0);
             return projection_utm;
         }
         if (sscanf(name,"utmref%d%c%c%c",&zone,&zone_field,&square_x,&square_y)) {
+            zone=tolower(zone);
+            zone_field=tolower(zone_field);
+            square_x=tolower(square_x);
+            square_y=tolower(square_y);
             i=utmref_letter(zone_field);
             if (i < 2 || i > 21) {
                 dbg(lvl_error,"invalid zone field '%c' in '%s'",zone_field,name);
                 return projection_none;
             }
             i-=12;
-            dbg(lvl_debug,"zone_field %d",i);
+            dbg(lvl_debug,"zone_field %lu",i);
             baserow=i*887.6/100;
             utm_offset->x=zone*1000000;
             i=utmref_letter(square_x);
@@ -86,9 +97,9 @@ enum projection projection_from_name(const char *name, struct coord *utm_offset)
             dbg(lvl_debug,"baserow %d",baserow);
             if (!(zone % 2))
                 i-=5;
-            dbg(lvl_debug,"i=%d",i);
+            dbg(lvl_debug,"i=%lu",i);
             i=(i-baserow+100)%20+baserow;
-            utm_offset->y=i*100000;
+            utm_offset->y=(int)i*100000;
             return projection_utm;
         }
     }
@@ -96,7 +107,7 @@ enum projection projection_from_name(const char *name, struct coord *utm_offset)
 }
 
 char *projection_to_name(enum projection proj) {
-    int i;
+    unsigned long i;
 
     for (i=0 ; i < sizeof(projection_names)/sizeof(struct projection_name) ; i++) {
         if (projection_names[i].projection == proj)
