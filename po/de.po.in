@@ -3186,5 +3186,30 @@ msgstr "Französisch-Guayana"
 #~ msgid "Set next visit to %ld, %ld \n"
 #~ msgstr "Setze nächsten Besuch auf %ld, %ld \n"
 
-msgid "Tunnel detected"
-msgstr "Tunnel erkannt"
+#, c-format
+#~ msgid "Tunnel detected"
+#~ msgstr "Tunnel erkannt"
+
+#, c-format
+#~ msgid "Google Glass connected"
+#~ msgstr "Google Gless verbunden"
+
+#, c-format
+#~ msgid "Google Glass disconnected"
+#~ msgstr "Google Gless wurde getrennt"
+
+#, c-format
+#~ msgid "OBD Interface connected"
+#~ msgstr "OBD Interface verbunden"
+
+#, c-format
+#~ msgid "OBD Interface disconnected"
+#~ msgstr "OBD Interface wurde getrennt"
+
+#, c-format
+#~ msgid "Bluetooth Headup connected"
+#~ msgstr "Bluetooth Häddapp verbunden"
+
+#, c-format
+#~ msgid "Bluetooth Headup disconnected"
+#~ msgstr "Bluetooth Häddapp wurde getrennt"
