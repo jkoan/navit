@@ -17,7 +17,7 @@
 <!ATTLIST log flush_size CDATA #IMPLIED>
 <!ATTLIST log flush_time CDATA #IMPLIED>
 <!ATTLIST log attr_types CDATA #IMPLIED>
-<!ELEMENT navit (graphics,gui+,log*,osd*,traffic*,vehicle*,tracking?,vehicleprofile*,route,navigation,speech,mapset+,layer+,xi:include+,layout+) >
+<!ELEMENT navit (graphics,gui+,log*,osd*,traffic*,vehicle*,tracking?,vehicleprofile*,route,navigation,speech,mapset+,layer+,xi:include+,layout+,headup*) >
 <!ATTLIST navit center CDATA #REQUIRED>
 <!ATTLIST navit zoom CDATA #REQUIRED>
 <!ATTLIST navit tracking CDATA #REQUIRED>
@@ -48,6 +48,10 @@
 <!ATTLIST vehicle update CDATA #IMPLIED>
 <!ATTLIST vehicle gpsd_query CDATA #IMPLIED>
 <!ATTLIST vehicle profilename CDATA #IMPLIED>
+<!ELEMENT headup ANY>
+<!ATTLIST headup enabled CDATA #IMPLIED>
+<!ATTLIST headup type CDATA #REQUIRED>
+<!ATTLIST headup deviceaddress CDATA #IMPLIED>
 <!ELEMENT vehicleprofile (roadprofile+)>
 <!ATTLIST vehicleprofile name CDATA #REQUIRED>
 <!ATTLIST vehicleprofile flags CDATA #REQUIRED>
