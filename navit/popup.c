@@ -345,12 +345,12 @@ static void popup_show_item(struct navit *nav, void *popup, struct displayitem *
         popup_printf_cb(menu_dist, menu_type_menu, callback_new_1(callback_cast(popup_traffic_distortion_blocked), diitem),
                         "Blocked");
         menu_item=popup_printf(menu_dist, menu_type_submenu,"Max speed");
-        for (i = 0 ; i < sizeof(speeds)/sizeof(int); i++) {
+        for (i = 0 ; i < (int)(sizeof(speeds)/sizeof(int)); i++) {
             popup_printf_cb(menu_item, menu_type_menu, callback_new_2(callback_cast(popup_traffic_distortion_speed), diitem,
                             speeds[i]), "%d km/h",speeds[i]);
         }
         menu_item=popup_printf(menu_dist, menu_type_submenu,"Delay");
-        for (i = 0 ; i < sizeof(delays)/sizeof(int); i++) {
+        for (i = 0 ; i < (int)(sizeof(delays)/sizeof(int)); i++) {
             popup_printf_cb(menu_item, menu_type_menu, callback_new_2(callback_cast(popup_traffic_distortion_delay), diitem,
                             delays[i]*600), "%d min",delays[i]);
         }
@@ -375,6 +375,7 @@ static void popup_display(struct navit *nav, void *popup, struct point *p) {
 static struct pcoord c;
 
 void popup(struct navit *nav, int button, struct point *p) {
+#pragma unused(button)
     void *popup,*men;
     char buffer[1024];
     struct coord_geo g;
