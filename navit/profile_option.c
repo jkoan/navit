@@ -27,6 +27,7 @@ struct profile_option {
 };
 
 static struct profile_option *profile_option_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct profile_option *po=g_new0(struct profile_option, 1);
     po->func=&profile_option_func;
     navit_object_ref((struct navit_object *)po);
