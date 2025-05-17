@@ -763,7 +763,7 @@ int navigation_set_attr(struct navigation *this_, struct attr *attr) {
         this_->speech=attr->u.speech;
         break;
     case attr_nav_status:
-        this_->nav_status = attr->u.num;
+        this_->nav_status = (int)attr->u.num;
         break;
     default:
         break;
@@ -787,20 +787,20 @@ navigation_new(struct attr *parent, struct attr **attrs) {
     ret->tell_street_name=1;
     ret->route_mr = NULL;
 
-    for (j = 0 ; j <= route_item_last-route_item_first ; j++) {
+    for (j = 0 ; j <= (int)(route_item_last-route_item_first) ; j++) {
         for (i = 0 ; i < 3 ; i++) {
             ret->announce[j][i]=-1;
         }
     }
 
     if ((attr=attr_search(attrs, attr_tell_street_name))) {
-        ret->tell_street_name = attr->u.num;
+        ret->tell_street_name = (int)attr->u.num;
     }
     if ((attr=attr_search(attrs, attr_delay))) {
-        ret->delay = attr->u.num;
+        ret->delay = (int)attr->u.num;
     }
     if ((attr=attr_search(attrs, attr_flags))) {
-        ret->flags = attr->u.num;
+        ret->flags = (int)attr->u.num;
     }
     return ret;
 }
@@ -948,7 +948,7 @@ static int round_distance_reduced( int dist ) {
     }
 
     int i=0,d=0,m=0;
-    while (i < SIZE_OF_ARRAY_DISTANCES) {
+    while (i < (int)SIZE_OF_ARRAY_DISTANCES) {
         if (!i || abs(distances[i]-dist) <= d) {
             d=abs(distances[i]-dist);
             m=i;
@@ -980,9 +980,9 @@ static char *get_distance_str(struct navigation *nav, int dist_meters, enum attr
     /* Get configuration */
     struct attr attr;
     if (navit_get_attr(nav->navit, attr_imperial, &attr, NULL))
-        imperial=attr.u.num;
+        imperial=(int)attr.u.num;
     if (nav->speech && speech_get_attr(nav->speech, attr_vocabulary_distances, &attr, NULL))
-        vocabulary=attr.u.num;
+        vocabulary=(int)attr.u.num;
     /****************************/
 
     if (imperial) {
@@ -1081,6 +1081,7 @@ static void navigation_way_init(struct navigation_way *w) {
     struct coord c;
     struct map_rect *mr;
     struct attr attr;
+    char *escstr;
 
     w->angle2 = invalid_angle;
     mr = map_rect_new(w->item.map, NULL);
@@ -1089,7 +1090,7 @@ static void navigation_way_init(struct navigation_way *w) {
 
     realitem = map_rect_get_item_byid(mr, w->item.id_hi, w->item.id_lo);
     if (!realitem) {
-        dbg(lvl_warning,"Item from segment not found on map!");
+        dbg(lvl_error,"Item from segment not found on map!");
         map_rect_destroy(mr);
         return;
     }
@@ -1099,21 +1100,23 @@ static void navigation_way_init(struct navigation_way *w) {
         return;
     }
     if (item_attr_get(realitem, attr_flags, &attr))
-        w->flags=attr.u.num;
+        w->flags=(int)attr.u.num;
     else
         w->flags=0;
-    if (item_attr_get(realitem, attr_street_name, &attr))
-        w->name=map_convert_string(realitem->map,attr.u.str);
-    else
+    if (item_attr_get(realitem, attr_street_name, &attr)) {
+        escstr=g_strdup_printf("@@%s@@",attr.u.str);
+        w->name=map_convert_string(realitem->map,escstr);
+    } else
         w->name=NULL;
-    if (item_attr_get(realitem, attr_street_name_systematic, &attr))
-        w->name_systematic=map_convert_string(realitem->map,attr.u.str);
-    else
+    if (item_attr_get(realitem, attr_street_name_systematic, &attr)) {
+        escstr=g_strdup_printf("@@%s@@",attr.u.str);
+        w->name_systematic=map_convert_string(realitem->map,escstr);
+    } else
         w->name_systematic=NULL;
 
     if (w->dir < 0) {
         if (item_coord_get(realitem, cbuf, 2) != 2) {
-            dbg(lvl_warning,"Using calculate_angle() with a less-than-two-coords-item?");
+            dbg(lvl_error,"Using calculate_angle() with a less-than-two-coords-item?");
             map_rect_destroy(mr);
             return;
         }
@@ -1125,7 +1128,7 @@ static void navigation_way_init(struct navigation_way *w) {
 
     } else {
         if (item_coord_get(realitem, cbuf, 2) != 2) {
-            dbg(lvl_warning,"Using calculate_angle() with a less-than-two-coords-item?");
+            dbg(lvl_error,"Using calculate_angle() with a less-than-two-coords-item?");
             map_rect_destroy(mr);
             return;
         }
@@ -1186,7 +1189,7 @@ static int navigation_way_get_max_delta(struct navigation_way *w, enum projectio
 
     realitem = map_rect_get_item_byid(mr, w->item.id_hi, w->item.id_lo);
     if (!realitem) {
-        dbg(lvl_warning,"Item from segment not found on map!");
+        dbg(lvl_error,"Item from segment not found on map!");
         map_rect_destroy(mr);
         return ret;
     }
@@ -1197,7 +1200,7 @@ static int navigation_way_get_max_delta(struct navigation_way *w, enum projectio
     }
 
     if (item_coord_get(realitem, &cbuf[1], 1) != 1) {
-        dbg(lvl_warning,"item has no coords");
+        dbg(lvl_error,"item has no coords");
         map_rect_destroy(mr);
         return ret;
     }
@@ -1222,7 +1225,7 @@ static int navigation_way_get_max_delta(struct navigation_way *w, enum projectio
         item_coord_rewind(realitem);
 
         if (item_coord_get(realitem, &cbuf[1], 1) != 1) {
-            dbg(lvl_warning,"item has no more coords after rewind");
+            dbg(lvl_error,"item has no more coords after rewind");
             map_rect_destroy(mr);
             return ret;
         }
@@ -1423,9 +1426,9 @@ static void navigation_itm_update(struct navigation_itm *itm, struct item *ritem
     }
 
     dbg(lvl_debug,"length=%ld time=%ld speed=%ld", length.u.num, time.u.num, speed.u.num);
-    itm->length=length.u.num;
-    itm->time=time.u.num;
-    itm->speed=speed.u.num;
+    itm->length=(int)length.u.num;
+    itm->time=(int)time.u.num;
+    itm->speed=(int)speed.u.num;
 }
 
 /**
@@ -1454,11 +1457,12 @@ static struct navigation_itm *navigation_itm_new(struct navigation *this_, struc
     struct attr attr;
     struct coord c[5];
     struct coord exitcoord;
+    char* escstr;
 
     if (routeitem) {
         ret->streetname_told=0;
         if (! item_attr_get(routeitem, attr_street_item, &street_item)) {
-            dbg(lvl_warning, "no street item");
+            dbg(lvl_error, "no street item");
             g_free(ret);
             ret = NULL;
             return ret;
@@ -1483,13 +1487,17 @@ static struct navigation_itm *navigation_itm_new(struct navigation *this_, struc
         }
 
         if (item_attr_get(streetitem, attr_flags, &attr))
-            ret->way.flags=attr.u.num;
+            ret->way.flags=(int)attr.u.num;
 
-        if (item_attr_get(streetitem, attr_street_name, &attr))
-            ret->way.name=map_convert_string(streetitem->map,attr.u.str);
+        if (item_attr_get(streetitem, attr_street_name, &attr)) {
+            escstr=g_strdup_printf("@@%s@@",attr.u.str);
+            ret->way.name=map_convert_string(streetitem->map,escstr);
+        }
 
-        if (item_attr_get(streetitem, attr_street_name_systematic, &attr))
-            ret->way.name_systematic=map_convert_string(streetitem->map,attr.u.str);
+        if (item_attr_get(streetitem, attr_street_name_systematic, &attr)) {
+            escstr=g_strdup_printf("@@%s@@",attr.u.str);
+            ret->way.name_systematic=map_convert_string(streetitem->map,escstr);
+        }
 
         if (ret->way.flags && (ret->way.flags & AF_ONEWAY)) {
             if (item_attr_get(streetitem, attr_street_destination, &attr)) {
@@ -2781,6 +2789,7 @@ static struct navigation_command *command_new(struct navigation *this_, struct n
  * @param route Not used
  */
 static void make_maneuvers(struct navigation *this_, struct route *route) {
+#pragma unused(route)
     struct navigation_itm *itm, *last=NULL, *last_itm=NULL;
     struct navigation_maneuver *maneuver;
     itm=this_->first;
@@ -2812,7 +2821,7 @@ static int contains_suffix(char *name, char *suffix) {
 
 
 static char *replace_suffix(char *name, char *search, char *replace) {
-    int len=strlen(name)-strlen(search);
+    int len=(int)strlen(name)-(int)strlen(search);
     char *ret=g_malloc(len+strlen(replace)+1);
     strncpy(ret, name, len);
     strcpy(ret+len, replace);
@@ -2838,6 +2847,7 @@ static char *replace_suffix(char *name, char *search, char *replace) {
 static char *navigation_item_destination(struct navigation *nav, struct navigation_command *cmd,
         struct navigation_itm *next,
         char *prefix) {
+#pragma unused(next)
     char *ret  = NULL, *name1 = NULL, *sep = "", *name2 = "";
     char *name = NULL, *name_systematic=NULL;
     int i, gender = unknown;
@@ -2852,9 +2862,9 @@ static char *navigation_item_destination(struct navigation *nav, struct navigati
         prefix="";
     /* check the configuration of navit.xml */
     if (nav->speech && speech_get_attr(nav->speech, attr_vocabulary_name, &attr, NULL))
-        vocabulary1=attr.u.num; /* shall the street name be announced? */
+        vocabulary1=(int)attr.u.num; /* shall the street name be announced? */
     if (nav->speech && speech_get_attr(nav->speech, attr_vocabulary_name_systematic, &attr, NULL))
-        vocabulary2=attr.u.num; /* shall the systematic name be announced? */
+        vocabulary2=(int)attr.u.num; /* shall the systematic name be announced? */
 
     /* On motorway links don't announce the name of the ramp as this is done by name_systematic and the street_destination. */
     if (vocabulary1 && (itm->way.item.type != type_ramp))
@@ -2865,7 +2875,7 @@ static char *navigation_item_destination(struct navigation *nav, struct navigati
 
     if (name) {
         name1 = g_strdup(name);
-        for (i = 0; i < sizeof(suffixes)/sizeof(suffixes[0]); i++) {
+        for (i = 0; i < (int)(sizeof(suffixes)/sizeof(suffixes[0])); i++) {
             if (contains_suffix(name, suffixes[i].fullname)) {
                 gender = suffixes[i].gender;
                 g_free(name1);
@@ -4143,6 +4153,11 @@ static struct item_methods navigation_map_item_methods = {
     navigation_map_item_coord_get,
     navigation_map_item_attr_rewind,
     navigation_map_item_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 
@@ -4156,6 +4171,7 @@ static void navigation_map_rect_init(struct map_rect_priv *priv) {
 }
 
 static struct map_rect_priv *navigation_map_rect_new(struct map_priv *priv, struct map_selection *sel) {
+#pragma unused(sel)
     struct navigation *nav=priv->navigation;
     struct map_rect_priv *ret=g_new0(struct map_rect_priv, 1);
     ret->nav=nav;
@@ -4219,24 +4235,24 @@ static struct item *navigation_map_get_item(struct map_rect_priv *priv) {
             /* if maneuver type or merge_or_exit is set, use these values */
             /* FIXME: make decision to use merge_or_exit context-dependent */
             switch (priv->cmd->maneuver->merge_or_exit) {
-            case mex_merge_left:
-                ret->type=type_nav_merge_left;
+        case mex_merge_left:
+                    ret->type=type_nav_merge_left;
                 break;
-            case mex_merge_right:
-                ret->type=type_nav_merge_right;
+        case mex_merge_right:
+                    ret->type=type_nav_merge_right;
                 break;
-            case mex_exit_left:
-                ret->type=type_nav_exit_left;
+        case mex_exit_left:
+                    ret->type=type_nav_exit_left;
                 break;
-            case mex_exit_right:
-                ret->type=type_nav_exit_right;
+        case mex_exit_right:
+                    ret->type=type_nav_exit_right;
                 break;
-            default:
-                /* exit or merge without a direction should never happen,
-                 * mex_intersection results in a regular instruction,
-                 * thus all these are handled by the default case,
-                 * which is to return the type field */
-                ret->type = priv->cmd->maneuver->type;
+        default:
+                    /* exit or merge without a direction should never happen,
+                     * mex_intersection results in a regular instruction,
+                     * thus all these are handled by the default case,
+                     * which is to return the type field */
+                    ret->type = priv->cmd->maneuver->type;
             }
         } /* else if priv->cmd->maneuver ... */
     } /* if priv->cmd->itm == priv->itm */
@@ -4288,9 +4304,13 @@ static struct map_methods navigation_map_meth = {
     NULL,
     NULL,
     NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static struct map_priv *navigation_map_new(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *ret;
     struct attr *navigation_attr;
 
