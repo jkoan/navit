@@ -331,7 +331,7 @@ static void log_timer(struct log *this_) {
     struct timeval tv;
     int delta;
     gettimeofday(&tv, NULL);
-    delta=(tv.tv_sec-this_->last_flush.tv_sec)*1000+(tv.tv_usec-this_->last_flush.tv_usec)/1000;
+    delta=(int)((tv.tv_sec-this_->last_flush.tv_sec)*1000+(tv.tv_usec-this_->last_flush.tv_usec)/1000);
     dbg(lvl_debug,"delta=%d flush_time=%d", delta, this_->flush_time);
     if (this_->flush_time && delta >= this_->flush_time*1000)
         log_flush(this_,0);
@@ -361,6 +361,7 @@ int log_get_attr(struct log *this_, enum attr_type type, struct attr *attr, stru
  */
 struct log *
 log_new(struct attr * parent,struct attr **attrs) {
+#pragma unused(parent)
     struct log *ret=g_new0(struct log, 1);
     struct attr *data,*overwrite,*lazy,*mkdir,*flush_size,*flush_time;
     struct file_wordexp *wexp;
@@ -384,19 +385,19 @@ log_new(struct attr * parent,struct attr **attrs) {
         file_wordexp_destroy(wexp);
     overwrite=attr_search(attrs, attr_overwrite);
     if (overwrite)
-        ret->overwrite=overwrite->u.num;
+        ret->overwrite=(int)overwrite->u.num;
     lazy=attr_search(attrs, attr_lazy);
     if (lazy)
-        ret->lazy=lazy->u.num;
+        ret->lazy=(int)lazy->u.num;
     mkdir=attr_search(attrs, attr_mkdir);
     if (mkdir)
-        ret->mkdir=mkdir->u.num;
+        ret->mkdir=(int)mkdir->u.num;
     flush_size=attr_search(attrs, attr_flush_size);
     if (flush_size)
-        ret->flush_size=flush_size->u.num;
+        ret->flush_size=(int)flush_size->u.num;
     flush_time=attr_search(attrs, attr_flush_time);
     if (flush_time)
-        ret->flush_time=flush_time->u.num;
+        ret->flush_time=(int)flush_time->u.num;
     if (ret->flush_time) {
         dbg(lvl_debug,"interval %d", ret->flush_time*1000);
         ret->timer_callback=callback_new_1(callback_cast(log_timer), ret);
