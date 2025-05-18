@@ -1,5 +1,5 @@
 
-[a relative link](docs/development/ios_development.rst)
+[ Click here to view iOS build instructions](docs/development/ios_development.rst)
 
 
 [![Build Status](https://img.shields.io/circleci/project/github/navit-gps/navit/trunk.svg)](https://circleci.com/gh/navit-gps/navit)
