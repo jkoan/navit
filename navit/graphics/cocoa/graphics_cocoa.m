@@ -15,9 +15,9 @@
 #include "command.h"
 
 #ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
-#define USE_UIKIT 1
+#define USE_UIKIT 1 // iOS
 #else
-#define USE_UIKIT 0
+#define USE_UIKIT 0 // macos
 #endif
 
 #include "graphics_cocoa.h"
@@ -33,7 +33,7 @@ CGContextRef current_context(void) {
     return UIGraphicsGetCurrentContext();
 }
 
-#else
+#else // macos
 #define UIView NSView
 #define UIViewController NSViewController
 #define UIApplicationDelegate NSApplicationDelegate
@@ -51,8 +51,9 @@ CGContextRef current_context(void) {
     return [[NSGraphicsContext currentContext] CGContext];
 }
 
-#endif
+#endif //USE_UIKIT
 
+#pragma mark UIView
 
 @interface NavitView : UIView {
 @public
@@ -69,7 +70,7 @@ static struct graphics_priv {
     CGContextRef layer_context;
     struct callback_list *cbl;
     struct point p, pclean;
-    int w, h, wraparound, overlay_disabled, cleanup, x, y;
+    int w, h, wraparound, overlay_disabled, cleanup, x, y, gr_ready;
     struct graphics_priv *parent, *next, *overlays;
 } *global_graphics_cocoa;
 
@@ -157,7 +158,9 @@ float startScale = 1;
 }
 
 
-@end
+@end // NavitView
+
+#pragma mark UIViewController
 
 @interface NavitViewController : UIViewController {
     NSRect frame;
@@ -264,38 +267,23 @@ float startScale = 1;
 
 - (void)rotated:(NSNotification *)notification {
 
-    NSLog(@"rotated enter");
+}
 
-    int width = myView.frame.size.width;
-    int height = myView.frame.size.height;
-
-    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
-    int lt_ten=1;
-
-    NSLog(@"System Version: %f",[[[UIDevice currentDevice] systemVersion] floatValue]);
-
-    if([[[UIDevice currentDevice] systemVersion] floatValue] >=10) {
-        lt_ten=0;
-    }
-
-    if(lt_ten &&  (orientation==UIDeviceOrientationFaceDown
-                   || orientation == UIDeviceOrientationFaceUp)) {
-        return;
-    }
-
-    if (!UIDeviceOrientationIsValidInterfaceOrientation(orientation)) {
-        return;
-    }
-
-    global_graphics_cocoa->w=width;
-    global_graphics_cocoa->h=height;
-    callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)width, (int)height);
-    NSLog(@"Rotated 10 %i %i %i %ld", lt_ten, width, height, (long)orientation);
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    NSLog(@"willAnimateRotationToInterfaceOrientation");
+        
+        
 
 }
 
+
+
 - (BOOL)prefersStatusBarHidden {
-    return NO;
+    if (@available(iOS 11, *)) {
+        return NO;
+    } else {
+        return YES;
+    }
 }
 
 #endif
@@ -315,48 +303,33 @@ void free_graphics(struct graphics_priv *gr) {
 }
 
 static void setup_graphics(struct graphics_priv *gr) {
-    CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
-    gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
-    gr->layer_context=CGLayerGetContext(gr->layer);
+        CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
+        gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
+        gr->layer_context=CGLayerGetContext(gr->layer);
+    if(gr->layer_context==0)
+        NSLog(@"layer_context is NULL");
+    else {
 #if REVERSE_Y
-    CGContextScaleCTM(gr->layer_context, 1, -1);
-    CGContextTranslateCTM(gr->layer_context, 0, -gr->h);
+        CGContextScaleCTM(gr->layer_context, 1, -1);
+        CGContextTranslateCTM(gr->layer_context, 0, -gr->h);
 #endif
-    CGContextSetRGBFillColor(gr->layer_context, 0, 0, 0, 0);
-    CGContextSetRGBStrokeColor(gr->layer_context, 0, 0, 0, 0);
-    CGContextClearRect(gr->layer_context, lr);
+        CGContextSetRGBFillColor(gr->layer_context, 0, 0, 0, 0);
+        CGContextSetRGBStrokeColor(gr->layer_context, 0, 0, 0, 0);
+        CGContextClearRect(gr->layer_context, lr);
+    }
 }
 
 - (void)loadView {
     NSLog(@"loadView");
-    //NavitView* myV = [NavitView alloc];
-    UIView *myV = [[UIView alloc] initWithFrame: CGRectMake ( 0, 0, 200, 150)];
-#if USE_UIKIT
-    myV.tag = 100;
-#endif
-
-//    if (global_graphics_cocoa) {
-//        global_graphics_cocoa->view=myV;
-//        myV->graphics=global_graphics_cocoa;
-//
-//        global_graphics_cocoa->w=frame.size.width;
-//        global_graphics_cocoa->h=frame.size.height;
-//
-//        setup_graphics(global_graphics_cocoa);
-//    }
-
-    [myV initWithFrame: frame];
-
-    [self setView: myV];
-
-    [myV release];
+    [super loadView];
 }
 
 - (void)viewDidLoad {
+    [super viewDidLoad];
     NSLog(@"View loaded!");
 #if USE_UIKIT
     myView = [NavitView alloc];
-    [myView initWithFrame: CGRectMake ( 0, 0, 200, 150)];
+    [myView initWithFrame: CGRectMake ( 0, 0, self.view.frame.size.width, self.frame.size.height)];
     myView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview: myView];
     
@@ -366,66 +339,81 @@ static void setup_graphics(struct graphics_priv *gr) {
         [myView.trailingAnchor constraintEqualToAnchor:guide.trailingAnchor].active = YES;
         [myView.topAnchor constraintEqualToAnchor:guide.topAnchor].active = YES;
         [myView.bottomAnchor constraintEqualToAnchor:guide.bottomAnchor].active = YES;
-        // if we have a
+       
         if(self.view.safeAreaInsets.top != 0) {
-            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
+            [self prefersStatusBarHidden];
         }
     } else {
-        UILayoutGuide *margins = self.view.layoutMarginsGuide;
-        [myView.leadingAnchor constraintEqualToAnchor:margins.leadingAnchor].active = YES;
-        [myView.trailingAnchor constraintEqualToAnchor:margins.trailingAnchor].active = YES;
-        [myView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.topAnchor].active = YES;
-        [myView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
-        if(self.view.safeAreaInsets.top != 0) {
-            [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
-        }
+        [myView initWithFrame: CGRectMake ( 0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+        [myView.leftAnchor constraintEqualToAnchor:myView.superview.leftAnchor constant:0].active = YES;
+        [myView.rightAnchor constraintEqualToAnchor:myView.superview.rightAnchor constant:0].active = YES;
+        [myView.topAnchor constraintEqualToAnchor:self.topLayoutGuide.bottomAnchor].active = YES;
+        [myView.bottomAnchor constraintEqualToAnchor:myView.superview.bottomAnchor constant:0].active = YES;
     }
     
     if (global_graphics_cocoa) {
         global_graphics_cocoa->view=myView;
         myView->graphics=global_graphics_cocoa;
+        global_graphics_cocoa->w=myView.bounds.size.width;
+        global_graphics_cocoa->h=myView.bounds.size.height;
     }
-    
+
     [myView layoutIfNeeded];
-    
-//    frame.size.width=myView.bounds.size.width;
-//    frame.size.height=myView.bounds.size.height;
     
     NSNotificationCenter *notficationcenter = NSNotificationCenter.defaultCenter;
     [notficationcenter addObserver:self selector:@selector(appMovedToBackground:) name:
                        UIApplicationWillResignActiveNotification object: nil];
     [notficationcenter addObserver:self selector:@selector(appMovedToForeground:) name:
                        UIApplicationDidBecomeActiveNotification object: nil];
+    
+    [notficationcenter addObserver:self selector:@selector(handleScreenDidConnectNotification:)
+
+            name:UIScreenDidConnectNotification object:nil];
+
+    [notficationcenter addObserver:self selector:@selector(handleScreenDidDisconnectNotification:)
+
+            name:UIScreenDidDisconnectNotification object:nil];
 #endif
 }
 
 - (void)viewDidLayoutSubviews{
-    
-    if (global_graphics_cocoa && global_graphics_cocoa->w>0) {
-        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)myView.bounds.size.width-self.view.safeAreaInsets.left-self.view.safeAreaInsets.right, (int)myView.bounds.size.height-self.view.safeAreaInsets.top-self.view.safeAreaInsets.bottom);
+    NSLog(@"viewDidLayoutSubviews\n");
 
-    }
-    
     if (global_graphics_cocoa) {
+        setup_graphics(global_graphics_cocoa);
         global_graphics_cocoa->x=myView.frame.origin.x;
         global_graphics_cocoa->y=myView.frame.origin.y;
-        global_graphics_cocoa->w=myView.bounds.size.width-self.view.safeAreaInsets.left-self.view.safeAreaInsets.right;
-        global_graphics_cocoa->h=myView.bounds.size.height-self.view.safeAreaInsets.top-self.view.safeAreaInsets.bottom;
-        NSLog(@"Height %f", myView.bounds.size.height);
-        NSLog(@"Top %f", self.view.safeAreaInsets.top);
-        NSLog(@"Bottom %f", self.view.safeAreaInsets.bottom);
-        setup_graphics(global_graphics_cocoa);
+
+        if (@available(iOS 11, *)) {
+            global_graphics_cocoa->w=myView.bounds.size.width;
+            global_graphics_cocoa->h=myView.bounds.size.height;
+            NSLog(@"Height %f", myView.bounds.size.height);
+            NSLog(@"Top %f", self.view.safeAreaInsets.top);
+            NSLog(@"Bottom %f", self.view.safeAreaInsets.bottom);
+        } else {
+            global_graphics_cocoa->w=myView.bounds.size.width;
+            global_graphics_cocoa->h=myView.bounds.size.height;
+        }
+    }
+       
+    if(global_graphics_cocoa->gr_ready) {
+        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize,
+                                  (int)myView.bounds.size.width,
+                                  (int)myView.bounds.size.height);
     }
 }
 
 - (void)viewDidAppear:(BOOL)animated {
-    dbg(lvl_debug,"view appeared");
+    NSLog(@"view appeared");
 #if USE_UIKIT
-    self.modalPresentationCapturesStatusBarAppearance = false;
+    self.modalPresentationCapturesStatusBarAppearance = NO;
+    callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, global_graphics_cocoa->w, global_graphics_cocoa->h);
+    //self.navigationController.navigationBar.barStyle = UIBarStyleDefault;
 #endif
 
     has_appeared = 1;
 #if USE_UIKIT
+    //callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, myView.frame.size.width, myView.frame.size.width);
     callback_list_call_attr_0(global_graphics_cocoa->cbl, attr_vehicle_request_location_authorization);
 
     UIPinchGestureRecognizer* pinch = [[UIPinchGestureRecognizer alloc]initWithTarget:self action:@selector(handlePinch:)];
@@ -453,7 +441,10 @@ static void setup_graphics(struct graphics_priv *gr) {
     NSLog(@"App moved to background!");
     //TODO: add a callback to deactivate speech instance. Otherwise an active announcement will keep the radio muted in HFP mode
     navit_store_center(global_graphics_cocoa->navit);
-    // To save power when in background we display the main menu CPU load decreases from 50%->0-1%
+    // To save power when in background we display the main menu
+    
+    [[UIApplication sharedApplication] setIdleTimerDisabled: NO];
+    
     struct attr navit;
     navit.type=attr_navit;
     navit.u.navit=global_graphics_cocoa->navit;
@@ -463,7 +454,8 @@ static void setup_graphics(struct graphics_priv *gr) {
 #if USE_UIKIT
 - (void) appMovedToForeground:(NSNotification*)note {
     NSLog(@"App moved to foreground!");
-    [self rotated: (NULL)];
+//    [self rotated: (NULL)];
+    [[UIApplication sharedApplication] setIdleTimerDisabled: YES];
     // back to map
     struct attr navit;
     navit.type=attr_navit;
@@ -475,12 +467,6 @@ static void setup_graphics(struct graphics_priv *gr) {
 - (void)didReceiveMemoryWarning {
     dbg(1,"didReceiveMemoryWarning enter");
 }
-#if USE_UIKIT
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    NSLog(@"didRotateFromInterfaceOrientation enter");
-    [self rotated: (NULL)];
-}
-#endif
 
 - (void)dealloc {
     NSLog(@"Dealloc enter");
@@ -488,9 +474,11 @@ static void setup_graphics(struct graphics_priv *gr) {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
-@end
+@end // ViewController
 
 @class NavitViewController;
+
+#pragma mark <UIApplicationDelegate>
 
 @interface NavitAppDelegate : NSObject <UIApplicationDelegate> {
     UIWindow *window;
@@ -498,6 +486,7 @@ static void setup_graphics(struct graphics_priv *gr) {
 }
 
 @property (nonatomic, retain) /*IBOutlet*/ UIWindow *window;
+@property (nonatomic, retain) /*IBOutlet*/ UIWindow *secondWindow;
 @property (nonatomic, retain) /*IBOutlet*/ NavitViewController *viewController;
 
 void onUncaughtException(NSException* exception);
@@ -537,16 +526,14 @@ void onUncaughtException(NSException* exception) {
 
     NSSetUncaughtExceptionHandler(&onUncaughtException);
 #if USE_UIKIT
-    NSRect appFrame = [UIScreen mainScreen].bounds;
+    NSRect appFrame;
+    appFrame = [UIScreen mainScreen].bounds;
 #else
     NSRect appFrame = [NSScreen mainScreen].frame;
 #endif
 
     self.viewController = [[[NavitViewController alloc] init_withFrame : appFrame] autorelease];
 
-#if USE_UIKIT
-    self.viewController.modalPresentationStyle = UIModalPresentationFullScreen;
-#endif
     NSRect windowRect = NSMakeRect(0, 0, appFrame.size.width, appFrame.size.height);
 
 #if USE_UIKIT
@@ -569,11 +556,6 @@ void onUncaughtException(NSException* exception) {
     [controller showWindow : nil];
 
 #endif
-
-//    if (global_graphics_cocoa) {
-//        callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize, (int)self.viewController.view.frame.size.width, (int)self.viewController.view.frame.size.height);
-//
-//    }
     
 #if USE_UIKIT
     return YES;
@@ -657,6 +639,8 @@ static void draw_text(struct graphics_priv *gr, struct graphics_gc_priv *fg, str
     strcpy(outb, inp);
 
     CGContextRef context = gr->layer_context;
+    if(!context)
+        return;
     CGContextSaveGState(context);
 
 #if !USE_UIKIT
@@ -695,7 +679,7 @@ static void draw_text(struct graphics_priv *gr, struct graphics_gc_priv *fg, str
     [NSGraphicsContext setCurrentContext:oldctx];
 #endif
 
-    CGContextRestoreGState(context);
+        CGContextRestoreGState(context);
 }
 
 static void draw_image(struct graphics_priv *gr, struct graphics_gc_priv *fg, struct point *p,
@@ -929,7 +913,7 @@ static void overlay_resize(struct graphics_priv *this, struct point *p, int w, i
 
     this->wraparound = wraparound;
 
-    if (changed) {
+    if (changed>0) {
         callback_list_call_attr_2(this->cbl, attr_resize, GINT_TO_POINTER(w), GINT_TO_POINTER(h));
     }
 }
@@ -981,6 +965,11 @@ static struct graphics_priv *overlay_new(struct graphics_priv *gr, struct graphi
     return ret;
 }
 
+static void graphics_ready(struct graphics_priv *this) {
+    NSLog(@"graphics_ready\n");
+    this->gr_ready=1;
+}
+
 static struct graphics_priv *graphics_cocoa_new(struct navit *nav, struct graphics_methods *meth, struct attr **attrs,
         struct callback_list *cbl) {
 #pragma unused (attrs)
@@ -992,7 +981,9 @@ static struct graphics_priv *graphics_cocoa_new(struct navit *nav, struct graphi
     ret=g_new0(struct graphics_priv, 1);
     ret->navit = nav;
     ret->cbl=cbl;
+    ret->gr_ready=0;
     global_graphics_cocoa=ret;
+    navit_add_callback(nav, callback_new_attr_1(callback_cast(graphics_ready), attr_graphics_ready, ret));
     return ret;
 }
 
@@ -1008,6 +999,7 @@ static void event_cocoa_main_loop_run(void) {
 #endif
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 #if USE_UIKIT
+    // This is equivalent to main.m in an XCode template application
     dbg(1,"calling main");
     int retval = UIApplicationMain(main_argc, (char * _Nullable * _Nonnull)main_argv, nil, @"NavitAppDelegate");
     dbg(1,"retval=%d",retval);
@@ -1042,11 +1034,14 @@ static void event_cocoa_main_loop_quit(void) {
 @implementation NavitTimer
 
 - (void)onTimer:(NSTimer*)theTimer {
+//    NSLog(@"Timerintervall %@", theTimer.description);
     callback_call_0(cb);
 }
 
 
 @end
+
+#pragma mark navit plugin and event system methods
 
 struct event_idle {
     struct callback *cb;
@@ -1084,12 +1079,14 @@ static struct event_idle *event_cocoa_add_idle(int priority, struct callback *cb
     return (struct event_idle *)ret;
 }
 
+
 static void event_cocoa_remove_idle(struct event_idle *ev) {
     NavitTimer *t=(NavitTimer *)ev;
 
     [t->timer invalidate];
     [t release];
 }
+
 
 static struct event_methods event_cocoa_methods = {
     event_cocoa_main_loop_run,
