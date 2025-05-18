@@ -28,6 +28,7 @@ struct announcement {
 
 struct announcement *
 announcement_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct announcement *this_;
     struct attr *type_attr;
     if (! (type_attr=attr_search(attrs, attr_name))) {
