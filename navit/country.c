@@ -367,7 +367,7 @@ country_search_new(struct attr *search, int partial) {
     ret->search=*search;
     if (search->type != attr_country_id) {
         ret->search.u.str=linguistics_casefold(ret->search.u.str);
-        ret->len=strlen(ret->search.u.str);
+        ret->len=(int)strlen(ret->search.u.str);
     } else
         ret->len=0;
     ret->partial=partial;
@@ -398,7 +398,7 @@ static int match(struct country_search *this_, enum attr_type type, const char *
 struct item *
 country_search_get_item(struct country_search *this_) {
     for (;;) {
-        if (this_->count >= sizeof(country)/sizeof(struct country))
+        if (this_->count >= (int)(sizeof(country)/sizeof(struct country)))
             return NULL;
         this_->country=&country[this_->count++];
         if ((this_->search.type == attr_country_id && this_->search.u.num == this_->country->id) ||
