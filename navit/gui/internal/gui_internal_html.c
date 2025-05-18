@@ -60,6 +60,7 @@ void gui_internal_html_main_menu(struct gui_priv *this) {
 }
 
 static void gui_internal_html_command(struct gui_priv *this, struct widget *w, void *data) {
+#pragma unused(data)
     gui_internal_evaluate(this,w->command);
 }
 
@@ -81,6 +82,7 @@ static void gui_internal_html_submit_set(struct gui_priv *this, struct widget *w
 }
 
 static void gui_internal_html_submit(struct gui_priv *this, struct widget *w, void *data) {
+#pragma unused(data)
     struct widget *menu;
     GList *l;
 
@@ -107,6 +109,7 @@ void gui_internal_html_load_href(struct gui_priv *this, char *href, int replace)
 }
 
 void gui_internal_html_href(struct gui_priv *this, struct widget *w, void *data) {
+#pragma unused(data)
     gui_internal_html_load_href(this, w->command, 0);
 }
 
@@ -144,7 +147,7 @@ static enum flags div_flag(const char **names, const char **values, char *name) 
     const char *value=find_attr(names, values, name);
     if (!value)
         return ret;
-    for (i = 0 ; i < sizeof(div_flags_map)/sizeof(struct div_flags_map); i++) {
+    for (i = 0 ; i < (int)(sizeof(div_flags_map)/sizeof(struct div_flags_map)); i++) {
         if (!strcmp(div_flags_map[i].attr,name) && !strcmp(div_flags_map[i].val,value))
             ret|=div_flags_map[i].flags;
     }
@@ -189,6 +192,7 @@ static struct widget *html_image(struct gui_priv *this, const char **names, cons
 static void gui_internal_html_start(xml_context *dummy, const char *tag_name, const char **names, const char **values,
                                     void *data,
                                     GError **error) {
+#pragma unused(dummy, error)
     struct gui_priv *this=data;
     int i;
     enum html_tag tag=html_tag_none;
@@ -212,7 +216,7 @@ static void gui_internal_html_start(xml_context *dummy, const char *tag_name, co
             html->skip=1;
     }
 
-    for (i=0 ; i < sizeof(html_tag_map)/sizeof(struct html_tag_map); i++) {
+    for (i=0 ; i < (int)(sizeof(html_tag_map)/sizeof(struct html_tag_map)); i++) {
         if (!g_ascii_strcasecmp(html_tag_map[i].tag_name, tag_name)) {
             tag=html_tag_map[i].tag;
             break;
@@ -288,6 +292,7 @@ static void gui_internal_html_start(xml_context *dummy, const char *tag_name, co
 }
 
 static void gui_internal_html_end(xml_context *dummy, const char *tag_name, void *data, GError **error) {
+#pragma unused(dummy, error)
     struct gui_priv *this=data;
     struct html *html;
     struct html *parent=NULL;
@@ -375,6 +380,7 @@ static void gui_internal_set_refresh_callback(struct gui_priv *this, char *cond)
 }
 
 static void gui_internal_html_text(xml_context *dummy, const char *text, gsize len, void *data, GError **error) {
+#pragma unused(dummy, error)
     struct gui_priv *this=data;
     struct widget *w;
     int depth=this->html_depth-1;
