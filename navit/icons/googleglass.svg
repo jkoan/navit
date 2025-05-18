@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="48"
+   height="48"
+   viewBox="0 0 48.000001 47.999999"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="googleglass.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="5.2713444"
+     inkscape:cx="16.504329"
+     inkscape:cy="21.721214"
+     inkscape:window-width="2016"
+     inkscape:window-height="874"
+     inkscape:window-x="95"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg1" />
+  <g
+     id="g1"
+     transform="translate(-97.03566,-2.5668487)">
+    <path
+       d="m 138.86719,5.7050781 c -0.233,0 -0.46017,0.029734 -0.6836,0.087891 -0.22342,0.058156 -0.44256,0.1453439 -0.65625,0.2617188 -0.21368,0.1163749 -0.42315,0.2628439 -0.62695,0.4375 -0.2038,0.1746561 -0.40195,0.3783284 -0.5957,0.6113281 l -35.64844,40.076171 v 0.464844 c 0,0.0785 0.018,0.137157 0.0566,0.175781 0.0386,0.03862 0.0973,0.05859 0.17578,0.05859 h 2.5625 c 0.153,0 0.3098,-0.07738 0.4668,-0.234375 L 138.40234,8.734375 h 0.23243 c 0.0765,0 0.1347,0.039438 0.17382,0.1171875 0.0391,0.07775 0.0586,0.1946095 0.0586,0.3496094 l -0.23242,0.2324219 V 47.179687 c 0.0765,0.233 0.17256,0.408891 0.28906,0.525391 0.1165,0.1165 0.25365,0.173828 0.41015,0.173828 h 1.39844 0.46485 c 0.0765,-0.076 0.1347,-0.172437 0.17382,-0.289062 0.0391,-0.116625 0.0605,-0.253657 0.0605,-0.410157 V 9.4335938 c 0,-0.5827495 -0.0533,-1.0963911 -0.16016,-1.5429688 -0.10684,-0.4465777 -0.26879,-0.8261566 -0.48242,-1.1367188 -0.10681,-0.155281 -0.22588,-0.2927559 -0.35937,-0.4140625 -0.1335,-0.1213065 -0.28124,-0.2251485 -0.44141,-0.3125 -0.16017,-0.087351 -0.33269,-0.1594746 -0.51953,-0.2128906 -0.18684,-0.053416 -0.38806,-0.089875 -0.60156,-0.109375 z"
+       style="fill:#ffffff"
+       id="path5"
+       sodipodi:insensitive="true" />
+  </g>
+</svg>
