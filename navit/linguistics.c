@@ -286,7 +286,7 @@ static GHashTable *casefold_hash, *special_hash;
  * @return String prepared for case insensitive search. Result shoud be g_free()d after use.
  */
 char* linguistics_casefold(const char *in) {
-    int len=strlen(in);
+    int len=(int)strlen(in);
     const char *src=in;
     char *ret=g_new(char,len+1);
     char *dest=ret;
@@ -300,7 +300,7 @@ char* linguistics_casefold(const char *in) {
             int charlen;
             char *tmp, *folded;
             tmp=g_utf8_find_next_char(src,NULL);
-            charlen=tmp-src+1;
+            charlen=(int)(tmp-src+1);
             g_strlcpy(buf,src,charlen>10?10:charlen);
             folded=g_hash_table_lookup(casefold_hash,buf);
             if(folded) {
@@ -324,7 +324,7 @@ static char** linguistics_get_special(const char *str, const char *end) {
     int len;
     if(!end)
         end=g_utf8_find_next_char(str,NULL);
-    len=end-str+1;
+    len=(int)(end-str+1);
     buf=g_alloca(len);
     g_strlcpy(buf,str,len);
     return g_hash_table_lookup(special_hash,buf);
@@ -342,7 +342,7 @@ static char** linguistics_get_special(const char *str, const char *end) {
 int linguistics_compare(const char *s1, const char *s2, enum linguistics_cmp_mode mode) {
     int ret=0;
     int i;
-    int s2len=strlen(s2);
+    int s2len=(int)strlen(s2);
     char *s1f;
     /* Calling linguistics_casefold() before linguistics_expand_special() requires that result is independent of calling order. This seems
        to be true at the time of writing this comment. */
@@ -386,7 +386,7 @@ char *linguistics_expand_special(const char *str, int mode) {
     const char *in=str;
     char *out,*ret;
     int found=0;
-    int ret_len=strlen(str);
+    int ret_len=(int)strlen(str);
     int in_rest=ret_len;
     out=ret=g_strdup(str);
     if (!mode)
@@ -397,9 +397,9 @@ char *linguistics_expand_special(const char *str, int mode) {
         int match=0;
 
         if(next)
-            len=next-in;
+            len=(int)(next-in);
         else
-            len=strlen(in);
+            len=(int)strlen(in);
 
         in_rest-=len;
 
@@ -408,7 +408,7 @@ char *linguistics_expand_special(const char *str, int mode) {
             if (spc) {
                 const char *replace=spc[mode];
                 if (replace) {
-                    int replace_len=strlen(replace);
+                    int replace_len=(int)strlen(replace);
                     if(out-ret+replace_len+in_rest>ret_len) {
                         char *new_ret;
                         ret_len+=(replace_len-len)*10;
@@ -440,7 +440,7 @@ char *linguistics_expand_special(const char *str, int mode) {
 }
 
 char *linguistics_next_word(char *str) {
-    int len=strcspn(str, LINGUISTICS_WORD_SEPARATORS_ASCII);
+    int len=(int)(strcspn(str, LINGUISTICS_WORD_SEPARATORS_ASCII));
     if (!str[len] || !str[len+1])
         return NULL;
     return str+len+1;
@@ -490,7 +490,7 @@ void linguistics_init(void) {
     }
 
     special_hash=g_hash_table_new(g_str_hash, g_str_equal);
-    for (i = 0 ; i < sizeof(special)/sizeof(special[0]); i++)
+    for (i = 0 ; i < (int)(sizeof(special)/sizeof(special[0])); i++)
         g_hash_table_insert(special_hash,(gpointer)special[i][0],special[i]);
 
 }
