@@ -1,0 +1,6 @@
+if (USE_UIKIT)
+	set(graphics_cocoa_carplay_LIBS "-framework Foundation" "-framework UIKit" "-framework CarPlay" "-framework CoreGraphics" "-liconv")
+else()
+	set(graphics_cocoa_carplay_LIBS "-framework Cocoa" "-liconv")
+endif()
+module_add_library(graphics_cocoa_carplay CarPlayViewController.m graphics_cocoa_carplay.m CarPlaySceneDelegate.m AppDelegate.m GridDemoTemplate.m ListDemoTemplate.m SearchDemoTemplate.m MapDemoTemplate.m) 
