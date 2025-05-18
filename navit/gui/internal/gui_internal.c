@@ -68,7 +68,7 @@
 #include "track.h"
 #include "country.h"
 #include "config.h"
-#include "event.h"
+#include "navit/event.h"
 #include "navit_nls.h"
 #include "navigation.h"
 #include "gui_internal.h"
@@ -227,6 +227,7 @@ static void gui_internal_button_attr_callback(struct gui_priv *this, struct widg
         gui_internal_widget_render(this, w);
 }
 static void gui_internal_button_attr_pressed(struct gui_priv *this, struct widget *w, void *data) {
+#pragma unused(data)
     if (w->is_on)
         w->set_attr(w->instance, &w->off);
     else
@@ -418,16 +419,19 @@ void gui_internal_say(struct gui_priv *this, struct widget *w, int questionmark)
 
 
 void gui_internal_back(struct gui_priv *this, struct widget *w, void *data) {
+#pragma unused(data, w)
     gui_internal_prune_menu_count(this, 1, 1);
 }
 
 void gui_internal_cmd_return(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     gui_internal_prune_menu(this, wm->data);
 }
 
 
 
 void gui_internal_cmd_main_menu(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data, wm)
     struct widget *w=this->root.children->data;
     if (w && w->menu_data && w->menu_data->href && !strcmp(w->menu_data->href,"#Main Menu"))
         gui_internal_prune_menu(this, w);
@@ -699,6 +703,7 @@ struct widget * gui_internal_keyboard_show_native(struct gui_priv *this, struct 
 
 
 static void gui_internal_cmd_delete_bookmark(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct attr mattr;
     GList *l;
     navit_get_attr(this->nav, attr_bookmarks, &mattr, NULL);
@@ -733,6 +738,7 @@ char *removecase(char *s) {
  * @param data Private data provided during callback (unused)
  */
 static void gui_internal_cmd_view_on_map(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
 
     struct widget *w;
     struct widget *wr;
@@ -772,6 +778,7 @@ static void gui_internal_cmd_view_on_map(struct gui_priv *this, struct widget *w
 
 
 static void gui_internal_cmd_view_attribute_details(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *w,*wb;
     struct map_rect *mr;
     struct item *item;
@@ -817,6 +824,7 @@ static void gui_internal_cmd_view_attribute_details(struct gui_priv *this, struc
 }
 
 static void gui_internal_cmd_view_attributes(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *w,*wb;
     struct map_rect *mr;
     struct item *item;
@@ -864,6 +872,7 @@ static void gui_internal_cmd_view_attributes(struct gui_priv *this, struct widge
 }
 
 static void gui_internal_cmd_view_in_browser(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data, this)
     struct map_rect *mr;
     struct item *item;
     struct attr attr;
@@ -963,6 +972,7 @@ static void gui_internal_prepare_search_results_map(struct gui_priv *this, struc
  *             or NULL to remove all previous results from the map).
  */
 static void gui_internal_cmd_results_to_map(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(wm)
     struct coord_rect r;
 
     gui_internal_prepare_search_results_map(this, (struct widget *)data, &r);
@@ -976,12 +986,14 @@ static void gui_internal_cmd_results_to_map(struct gui_priv *this, struct widget
  * @param data Private data (unused).
  */
 static void gui_internal_cmd_results_map_clean(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     gui_internal_cmd_results_to_map(this,wm,NULL);
     gui_internal_prune_menu(this, NULL);
     navit_draw(this->nav);
 }
 
 static void gui_internal_cmd_delete_waypoint(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     int dstcount=navit_get_destination_count(this->nav);
     int i;
     struct map_rect *mr;
@@ -1420,7 +1432,7 @@ void gui_internal_cmd_bookmarks(struct gui_priv *this, struct widget *wm, void *
             prefix=g_strdup(wm->prefix);
     }
     if ( prefix )
-        plen=strlen(prefix);
+        plen=(int)strlen(prefix);
 
     gui_internal_prune_menu_count(this, 1, 0);
     wb=gui_internal_menu(this, _("Bookmarks"));
@@ -1438,7 +1450,7 @@ void gui_internal_cmd_bookmarks(struct gui_priv *this, struct widget *wm, void *
                 g_free(prefix);
                 prefix=g_strdup(bookmarks_item_cwd(mattr.u.bookmarks));
                 if (prefix) {
-                    plen=strlen(prefix);
+                    plen=(int)strlen(prefix);
                 } else {
                     plen=0;
                 }
@@ -1589,7 +1601,7 @@ void gui_internal_keypress_do(struct gui_priv *this, char *key) {
         } else if (*key == NAVIT_KEY_BACKSPACE) {
             dbg(lvl_debug,"backspace");
             if (wi->text && wi->text[0]) {
-                len=g_utf8_prev_char(wi->text+strlen(wi->text))-wi->text;
+                len=(int)(g_utf8_prev_char(wi->text+strlen(wi->text))-wi->text);
                 wi->text[len]='\0';
                 text=g_strdup(wi->text);
             }
@@ -1630,7 +1642,7 @@ char *gui_internal_cmd_match_expand(char *pattern, struct attr **in) {
         case '*':
             *r='\0';
             a=attr_to_text(*in++,NULL,0);
-            len=strlen(ret)+strlen(a)+strlen(pattern)+1;
+            len=(int)(strlen(ret)+strlen(a)+strlen(pattern)+1);
             r=g_malloc(len);
             strcpy(r, ret);
             strcat(r, a);
@@ -1682,7 +1694,7 @@ int gui_internal_set(char *remove, char *add) {
     size_t size=0;
     if (fi != NULL) {
         while (getline(&line,&size,fi) > 0) {
-            int len=strlen(line);
+            int len=(int)strlen(line);
             if (len > 0 && line[len-1] == '\n')
                 line[len-1]='\0';
             dbg(lvl_debug,"line=%s",line);
@@ -1836,11 +1848,16 @@ void gui_internal_cmd_map_download(struct gui_priv *this, struct widget *wm, voi
 }
 
 static void gui_internal_cmd_set_active_vehicle(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct attr vehicle = {attr_vehicle,{wm->data}};
     navit_set_attr(this->nav, &vehicle);
+    // Go back to map
+    gui_internal_prune_menu(this, NULL);
+    gui_internal_check_exit(this);
 }
 
 static void gui_internal_cmd_show_satellite_status(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *w,*wb,*row;
     struct attr attr,sat_attr;
     struct vehicle *v=wm->data;
@@ -1862,7 +1879,7 @@ static void gui_internal_cmd_show_satellite_status(struct gui_priv *this, struct
     gui_internal_widget_append(w,row);
     while (vehicle_get_attr(v, attr_position_sat_item, &attr, NULL)) {
         row = gui_internal_widget_table_row_new(this,gravity_left_top);
-        for (i = 0 ; i < sizeof(types)/sizeof(enum attr_type) ; i++) {
+        for (i = 0 ; i < (int)(sizeof(types)/sizeof(enum attr_type)) ; i++) {
             if (item_attr_get(attr.u.item, types[i], &sat_attr))
                 str=g_strdup_printf("%ld", sat_attr.u.num);
             else
@@ -1877,6 +1894,7 @@ static void gui_internal_cmd_show_satellite_status(struct gui_priv *this, struct
 }
 
 static void gui_internal_cmd_show_nmea_data(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *w,*wb;
     struct attr attr;
     struct vehicle *v=wm->data;
@@ -1944,6 +1962,7 @@ static void save_vehicle_xml(struct vehicle *v) {
  */
 static void gui_internal_cmd_set_active_profile(struct gui_priv *this, struct
         widget *wm, void *data) {
+#pragma unused(wm)
     struct vehicle_and_profilename *vapn = data;
     struct vehicle *v = vapn->vehicle;
     char *profilename = vapn->profilename;
@@ -2097,6 +2116,7 @@ void gui_internal_menu_vehicle_settings(struct gui_priv *this, struct vehicle *v
 }
 
 void gui_internal_cmd_vehicle_settings(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     gui_internal_menu_vehicle_settings(this, wm->data, wm->text);
 }
 
@@ -2217,6 +2237,7 @@ static void gui_internal_cmd_log_do(struct gui_priv *this, struct widget *widget
 }
 
 void gui_internal_cmd_log_clicked(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data)
     gui_internal_cmd_log_do(this, widget->data);
 }
 
@@ -2291,13 +2312,13 @@ static int gui_internal_set_attr(struct gui_priv *this, struct attr *attr) {
                 graphics_draw_mode(this->gra, draw_mode_begin);
             }
         }
-        this->fullscreen=attr->u.num;
+        this->fullscreen=(int)(int)attr->u.num;
         return 1;
     case attr_menu_on_map_click:
-        this->menu_on_map_click=attr->u.num;
+        this->menu_on_map_click=(int)(int)attr->u.num;
         return 1;
     case attr_town_use_postal:
-        this->town_use_postal=attr->u.num;
+        this->town_use_postal=(int)(int)attr->u.num;
         return 1;
     case attr_on_map_click:
         g_free(this->on_map_click);
@@ -2431,6 +2452,7 @@ static void gui_internal_cmd_enter_coord_do(struct gui_priv *this, struct widget
 //# Authors: Martin Bruns (05/2012)
 //##############################################################################################################
 void gui_internal_cmd_enter_coord_clicked(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data)
     dbg(lvl_debug,"entered");
     gui_internal_cmd_enter_coord_do(this, widget->data);
 }
@@ -3055,7 +3077,7 @@ item_get_heightline(struct item *item) {
  * @brief Called when the route is updated.
  */
 void gui_internal_route_update(struct gui_priv * this, struct navit * navit, struct vehicle *v) {
-
+#pragma unused(v)
     if(this->route_data.route_showing) {
         gui_internal_populate_route_table(this,navit);
         graphics_draw_mode(this->gra, draw_mode_begin);
@@ -3089,6 +3111,9 @@ void gui_internal_route_screen_free(struct gui_priv * this_,struct widget * w) {
  * @param navit The navit object
  */
 void gui_internal_populate_route_table(struct gui_priv * this, struct navit * navit) {
+    
+    dbg(lvl_debug, "ENTER");
+    
     struct map * map=NULL;
     struct map_rect * mr=NULL;
     struct navigation * nav = NULL;
@@ -3189,7 +3214,7 @@ static struct gui_priv * gui_internal_new(struct navit *nav, struct gui_methods 
     this->self.u.gui=gui;
 
     if ((attr=attr_search(attrs, attr_menu_on_map_click)))
-        this->menu_on_map_click=attr->u.num;
+        this->menu_on_map_click=(int)attr->u.num;
     else
         this->menu_on_map_click=1;
 
@@ -3197,47 +3222,47 @@ static struct gui_priv * gui_internal_new(struct navit *nav, struct gui_methods 
         this->on_map_click=g_strdup(attr->u.str);
 
     if ((attr=attr_search(attrs, attr_signal_on_map_click)))
-        this->signal_on_map_click=attr->u.num;
+        this->signal_on_map_click=(int)attr->u.num;
     gui_internal_command_init(this, attrs);
 
     if( (attr=attr_search(attrs,attr_font_size))) {
-        this->config.font_size=attr->u.num;
+        this->config.font_size=(int)attr->u.num;
     } else {
         this->config.font_size=-1;
     }
     if( (attr=attr_search(attrs,attr_icon_xs))) {
-        this->config.icon_xs=attr->u.num;
+        this->config.icon_xs=(int)attr->u.num;
     } else {
         this->config.icon_xs=-1;
     }
     if( (attr=attr_search(attrs,attr_icon_l))) {
-        this->config.icon_l=attr->u.num;
+        this->config.icon_l=(int)attr->u.num;
     } else {
         this->config.icon_l=-1;
     }
     if( (attr=attr_search(attrs,attr_icon_s))) {
-        this->config.icon_s=attr->u.num;
+        this->config.icon_s=(int)attr->u.num;
     } else {
         this->config.icon_s=-1;
     }
     if( (attr=attr_search(attrs,attr_spacing))) {
-        this->config.spacing=attr->u.num;
+        this->config.spacing=(int)attr->u.num;
     } else {
         this->config.spacing=-1;
     }
     if( (attr=attr_search(attrs,attr_gui_speech))) {
-        this->speech=attr->u.num;
+        this->speech=(int)attr->u.num;
     }
     if( (attr=attr_search(attrs,attr_keyboard)))
-        this->keyboard=attr->u.num;
+        this->keyboard=(int)attr->u.num;
     else
         this->keyboard=1;
 
     if( (attr=attr_search(attrs,attr_fullscreen)))
-        this->fullscreen=attr->u.num;
+        this->fullscreen=(int)attr->u.num;
 
     if( (attr=attr_search(attrs,attr_flags)))
-        this->flags=attr->u.num;
+        this->flags=(int)attr->u.num;
     if( (attr=attr_search(attrs,attr_background_color)))
         this->background_color=*attr->u.color;
     else
@@ -3255,40 +3280,40 @@ static struct gui_priv * gui_internal_new(struct navit *nav, struct gui_methods 
     else
         this->text_background_color=color_black;
     if( (attr=attr_search(attrs,attr_columns)))
-        this->cols=attr->u.num;
+        this->cols=(int)attr->u.num;
     if( (attr=attr_search(attrs,attr_osd_configuration)))
         this->osd_configuration=*attr;
 
     if( (attr=attr_search(attrs,attr_pitch)))
-        this->pitch=attr->u.num;
+        this->pitch=(int)attr->u.num;
     else
         this->pitch=20;
     if( (attr=attr_search(attrs,attr_flags_town)))
-        this->flags_town=attr->u.num;
+        this->flags_town=(int)attr->u.num;
     else
         this->flags_town=-1;
     if( (attr=attr_search(attrs,attr_flags_street)))
-        this->flags_street=attr->u.num;
+        this->flags_street=(int)attr->u.num;
     else
         this->flags_street=-1;
     if( (attr=attr_search(attrs,attr_flags_house_number)))
-        this->flags_house_number=attr->u.num;
+        this->flags_house_number=(int)attr->u.num;
     else
         this->flags_house_number=-1;
     if( (attr=attr_search(attrs,attr_radius)))
-        this->radius=attr->u.num;
+        this->radius=(int)attr->u.num;
     else
         this->radius=10;
     if( (attr=attr_search(attrs,attr_font)))
         this->font_name=g_strdup(attr->u.str);
 
     if((attr=attr_search(attrs, attr_hide_impossible_next_keys)))
-        this->hide_keys = attr->u.num;
+        this->hide_keys = (int)attr->u.num;
     else
         this->hide_keys = 0;
 
     if((attr=attr_search(attrs, attr_town_use_postal)))
-        this->town_use_postal = attr->u.num;
+        this->town_use_postal = (int)attr->u.num;
     else
         this->town_use_postal = 1;
 
