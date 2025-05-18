@@ -233,16 +233,16 @@ static struct hash_entry *set_hash_entry(struct displaylist *dl, enum item_type 
 static int graphics_set_attr_do(struct graphics *gra, struct attr *attr) {
     switch (attr->type) {
     case attr_gamma:
-        gra->gamma=attr->u.num;
+        gra->gamma= (int) attr->u.num;
         break;
     case attr_brightness:
-        gra->brightness=attr->u.num;
+        gra->brightness= (int) attr->u.num;
         break;
     case attr_contrast:
-        gra->contrast=attr->u.num;
+        gra->contrast= (int) attr->u.num;
         break;
     case attr_font_size:
-        gra->font_size=attr->u.num;
+        gra->font_size= (int) attr->u.num;
         return 1;
     default:
         return 0;
@@ -291,6 +291,7 @@ void graphics_set_rect(struct graphics *gra, struct point_rect *pr) {
  * @return nothing
  */
 static void graphics_dpi_patch (struct callback_list *l, enum attr_type type, int pcount, void **p, void * context) {
+#pragma unused(l)
     /* this is black magic. We scaled all coordinates to the graphics backend
      * to compensate screen dpi. Since the backends communicate back via the callback
      * list, we hook this function to unscale the coordinates coming back to
@@ -872,7 +873,7 @@ static void image_new_helper(struct graphics *gra, struct graphics_image *this_,
             unsigned char *start;
             int len;
             if (file_get_contents(new_name, &start, &len)) {
-                struct graphics_image_buffer buffer= {"buffer:",graphics_image_type_unknown};
+                struct graphics_image_buffer buffer= {"buffer:",graphics_image_type_unknown,0,0};
                 buffer.start=start;
                 buffer.len=len;
                 this_->hot = graphics_dpi_scale_point(gra,&this_->hot);
@@ -947,12 +948,12 @@ struct graphics_image * graphics_image_new_scaled_rotated(struct graphics *gra, 
         char *ext;
         char *s, *name;
         char *pathi=paths[i];
-        int len=strlen(pathi);
+        int len=(int)strlen(pathi);
         int i,k;
         int newwidth=IMAGE_W_H_UNSET, newheight=IMAGE_W_H_UNSET;
 
         ext=g_utf8_strrchr(pathi,-1,'.');
-        i=pathi-ext+len;
+        i=(int)(pathi-ext+len);
 
         /* Dont allow too long or too short file name extensions*/
         if(ext && ((i>5) || (i<1)))
@@ -1039,6 +1040,7 @@ struct graphics_image * graphics_image_new(struct graphics *gra, char *path) {
  * @author Martin Schaller (04/2008)
 */
 void graphics_image_free(struct graphics *gra, struct graphics_image *img) {
+#pragma unused(gra, img)
     /* Image is cached inside gra->image_cache_hash. So it would be freed only when graphics is destroyed => Do nothing here. */
 }
 
@@ -1136,7 +1138,7 @@ static void graphics_draw_polygon(struct graphics *gra, struct graphics_gc *gc, 
     } else {
         struct point * pin_scaled;
         int a;
-        if(count_in < ALLOCA_COORD_LIMIT)
+        if(count_in <= ALLOCA_COORD_LIMIT)
             pin_scaled =  g_alloca(sizeof (struct point)*count_in);
         else
             pin_scaled =  g_malloc(sizeof (struct point)*count_in);
@@ -1528,7 +1530,7 @@ static void display_add(struct hash_entry *entry, struct item *item, int count, 
     /* check for and remember flags (for underground drawing) */
     item_attr_rewind(item);
     if(item_attr_get(item, attr_flags, &attr)) {
-        flags = attr.u.num;
+        flags = (int)attr.u.num;
     }
     /* add length for holes */
     item_attr_rewind(item);
@@ -1590,7 +1592,7 @@ static void label_line(struct graphics *gra, struct graphics_gc *fg, struct grap
         tl=(pb[2].x-pb[0].x);
         th=(pb[0].y-pb[1].y);
     } else {
-        tl=strlen(label)*4;
+        tl=(int)strlen(label)*4;
         th=8;
     }
     tlm=tl*32;
@@ -1887,6 +1889,7 @@ struct circle {
  */
 static void circle_to_points(const struct point *center, int diameter, int scale, int start, int len, struct point *res,
                              int *pos, int dir) {
+#pragma unused(scale)
     struct circle *c;
     int count=64;
     int end=start+len;
@@ -2715,7 +2718,7 @@ static void multiline_label_draw(struct graphics *gra, struct graphics_gc *fg, s
         endline++;	/* No need for g_utf8_next_char() here, as we know '\n' is a single byte UTF-8 char */
         startline=endline;	/* Start processing next line, by setting startline to its first character */
     }
-    if (label_nblines>(sizeof(label_lines)/sizeof(char
+    if (label_nblines>(int)(sizeof(label_lines)/sizeof(char
                        *))) {	/* Does label_nblines overflows the number of entries in array label_lines? */
         dbg(lvl_warning,"Too many lines (%d) in label \"%s\", truncating to %lu", label_nblines, label,
             sizeof(label_lines)/sizeof(char *));
@@ -3070,6 +3073,7 @@ static void displayitem_draw(struct displayitem *di, struct layout *l, struct di
 */
 static void xdisplay_draw_elements(struct graphics *gra, struct displaylist *display_list, struct itemgra *itm,
                                    struct layout * l) {
+#pragma unused(gra)
     struct element *e;
     GList *es,*types;
     struct display_context *dc=&display_list->dc;
@@ -3466,7 +3470,7 @@ void graphics_displaylist_draw(struct graphics *gra, struct displaylist *display
     displaylist->dc.gra=gra;
     displaylist->dc.mindist=flags&512?15:2;
     // FIXME find a better place to set the background color
-    if (l) {
+    if (gra->gc[0]) {
         graphics_gc_set_background(gra->gc[0], &l->color);
         graphics_gc_set_foreground(gra->gc[0], &l->color);
         g_free(gra->default_font);
@@ -3534,6 +3538,7 @@ void graphics_draw(struct graphics *gra, struct displaylist *displaylist, struct
 }
 
 int graphics_draw_cancel(struct graphics *gra, struct displaylist *displaylist) {
+#pragma unused(gra)
     if (!displaylist->busy)
         return 0;
     do_draw(displaylist, 1, 0);
@@ -3664,6 +3669,7 @@ char * graphics_displayitem_get_label(struct displayitem *di) {
 }
 
 int graphics_displayitem_get_displayed(struct displayitem *di) {
+#pragma unused(di)
     return 1;
 }
 
@@ -3808,6 +3814,7 @@ int graphics_displayitem_within_dist(struct displaylist *displaylist, struct dis
 
 
 static void graphics_process_selection_item(struct displaylist *dl, struct item *item) {
+#pragma unused(dl, item)
 #if 0 /* FIXME */
     struct displayitem di,*di_res;
     GHashTable *h;
@@ -3853,6 +3860,7 @@ void graphics_add_selection(struct graphics *gra, struct item *item, enum item_t
 }
 
 void graphics_remove_selection(struct graphics *gra, struct item *item, enum item_type type, struct displaylist *dl) {
+#pragma unused(dl, type)
     GList *curr;
     int found;
 
