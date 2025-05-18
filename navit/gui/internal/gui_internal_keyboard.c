@@ -73,6 +73,7 @@ void gui_internal_keyboard_to_lower_case(struct gui_priv *this) {
  * @param data Not used
  */
 static void gui_internal_cmd_keypress(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     gui_internal_keypress_do(this, (char *) wm->data);
 }
 
@@ -122,9 +123,10 @@ struct gui_internal_keyb_mode {
     /*32: VKBD_UMLAUT_LOWER  */ {"äöü", 2, VKBD_UMLAUT_UPPER,   VKBD_LATIN_LOWER},
     /*40: VKBD_CYRILLIC_UPPER*/ {"АБВ", 2, VKBD_CYRILLIC_LOWER, VKBD_LATIN_UPPER},
     /*48: VKBD_CYRILLIC_LOWER*/ {"абв", 2, VKBD_CYRILLIC_UPPER, VKBD_LATIN_LOWER},
-    /*56: VKBD_DEGREE        */ {"DEG", 2, VKBD_FLAG_2,         VKBD_FLAG_2},
+    /*56: VKBD_DEGREE        */ {"DEG", 2, VKBD_FLAG_2,         VKBD_UTM},
     /*64: VKBD_GREEK_UPPER   */ {"ABΓ", 2, VKBD_GREEK_LOWER,    VKBD_LATIN_UPPER},
-    /*72: VKBD_GREEK_LOWER   */ {"abγ", 2, VKBD_GREEK_UPPER,    VKBD_LATIN_LOWER}
+    /*72: VKBD_GREEK_LOWER   */ {"abγ", 2, VKBD_GREEK_UPPER,    VKBD_LATIN_LOWER},
+    /*80: VKBD_UTM           */ {"UTM", 2, VKBD_UTM,            VKBD_FLAG_2}
 };
 
 
@@ -143,6 +145,7 @@ struct gui_internal_keyb_mode {
 
 static void gui_internal_keyboard_topbox_resize(struct gui_priv *this, struct widget *w, void *data,
         int neww, int newh) {
+#pragma unused(data)
     struct menu_data *md=gui_internal_menu_data(this);
     struct widget *old_wkbdb = md->keyboard;
 
@@ -202,7 +205,8 @@ gui_internal_keyboard_do(struct gui_priv *this, struct widget *wkbdb, int mode) 
     if (((mode & VKBD_LAYOUT_MASK) == VKBD_CYRILLIC_UPPER)
             || ((mode & VKBD_LAYOUT_MASK) == VKBD_CYRILLIC_LOWER)
             || ((mode & VKBD_LAYOUT_MASK) == VKBD_GREEK_UPPER)
-            || ((mode & VKBD_LAYOUT_MASK) == VKBD_GREEK_LOWER)) { // Russian/Ukrainian/Belarussian/Greek layout needs more space...
+            || ((mode & VKBD_LAYOUT_MASK) == VKBD_GREEK_LOWER)
+            || ((mode & VKBD_LAYOUT_MASK) == VKBD_UTM)) { // Russian/Ukrainian/Belarussian/Greek/UTM layout needs more space...
         max_h=max_h*4/5;
         max_w=max_w*8/9;
         wkbd->cols=9;
@@ -606,14 +610,65 @@ gui_internal_keyboard_do(struct gui_priv *this, struct widget *wkbdb, int mode) 
         KEY("°");
         KEY(".");
         KEY("'");
+        KEY(","); // we allow comma seperated coordinates
         gui_internal_keyboard_key(this, wkbd, space," ",max_w,max_h);
         SPACER();
-
+        SPACER();
+        SPACER();
+        
         wk=gui_internal_keyboard_key_data(this, wkbd, hide, 0, gui_internal_keyboard_change, wkbdb, NULL,max_w,max_h);
         wk->datai = mode | VKBD_FLAG_1024;
 
-        SPACER();
+        MODE(VKBD_UTM);
+
+                gui_internal_keyboard_key(this, wkbd, backspace,"\b",max_w,max_h);
+            }
+
+            if ((mode & VKBD_LAYOUT_MASK) == VKBD_UTM) { /* special case for UTM coordinates input screen (enter_coord) https://de.wikipedia.org/wiki/UTM-Koordinatensystem#/media/Datei:UTM-Zone.svg */
+                KEY("1");
+                KEY("2");
+                KEY("3");
+                KEY("4");
+                KEY("5");
+                KEY("6");
+                KEY("7");
+                KEY("8");
+                KEY("9");
+                KEY("0");
+                SPACER();
+                KEY("C");
+                KEY("D");
+                KEY("E");
+                KEY("F");
+                KEY("G");
+                KEY("H");
+                KEY("J");
+                KEY("K");
+                KEY("L");
+                KEY("M");
+                KEY("N");
+                KEY("P");
+                KEY("Q");
+                KEY("R");
+                KEY("S");
+                KEY("T");
+                KEY("U");
+                KEY("V");
+                KEY("W");
+                KEY("X");
+                KEY("Y");
+                KEY("Z");
+                KEY(":");
+                KEY(".");
+                gui_internal_keyboard_key(this, wkbd, space," ",max_w,max_h);
+
+                wk=gui_internal_keyboard_key_data(this, wkbd, hide, 0, gui_internal_keyboard_change, wkbdb, NULL,max_w,max_h);
+                wk->datai = mode | VKBD_FLAG_1024;
+
+                MODE(VKBD_DEGREE);
+
         gui_internal_keyboard_key(this, wkbd, backspace,"\b",max_w,max_h);
+
     }
 
     if (mode & VKBD_FLAG_1024) {
@@ -680,6 +735,7 @@ gui_internal_keyboard(struct gui_priv *this, int mode) {
 }
 
 static void gui_internal_keyboard_change(struct gui_priv *this, struct widget *key, void *data) {
+#pragma unused(data)
     gui_internal_keyboard_do(this, key->data, key->datai);
 }
 
