@@ -96,7 +96,7 @@ static GHashTable *item_hash;
 void item_create_hash(void) {
     int i;
     item_hash=g_hash_table_new(g_str_hash, g_str_equal);
-    for (i=0 ; i < sizeof(item_names)/sizeof(struct item_name) ; i++) {
+    for (i=0 ; i < (int)(sizeof(item_names)/sizeof(struct item_name)) ; i++) {
         g_hash_table_insert(item_hash, item_names[i].name, GINT_TO_POINTER(item_names[i].item));
     }
 }
@@ -110,7 +110,7 @@ int *item_get_default_flags(enum item_type type) {
     if (!default_flags_hash) {
         int i;
         default_flags_hash=g_hash_table_new(NULL, NULL);
-        for (i = 0 ; i < sizeof(default_flags2)/sizeof(struct default_flags); i++) {
+        for (i = 0 ; i < (int)(sizeof(default_flags2)/sizeof(struct default_flags)); i++) {
             g_hash_table_insert(default_flags_hash, (void *)(long)default_flags2[i].type, &default_flags2[i].flags);
         }
     }
@@ -458,6 +458,7 @@ int item_type_set(struct item *it, enum item_type type) {
 }
 
 struct item * item_new(char *type, int zoom) {
+#pragma unused(type, zoom)
     struct item * it;
 
     it = g_new0(struct item, 1);
@@ -473,7 +474,7 @@ enum item_type item_from_name(const char *name) {
     if (item_hash)
         return GPOINTER_TO_INT(g_hash_table_lookup(item_hash, name));
 
-    for (i=0 ; i < sizeof(item_names)/sizeof(struct item_name) ; i++) {
+    for (i=0 ; i < (int)(sizeof(item_names)/sizeof(struct item_name)) ; i++) {
         if (! strcmp(item_names[i].name, name))
             return item_names[i].item;
     }
@@ -483,7 +484,7 @@ enum item_type item_from_name(const char *name) {
 char *item_to_name(enum item_type item) {
     int i;
 
-    for (i=0 ; i < sizeof(item_names)/sizeof(struct item_name) ; i++) {
+    for (i=0 ; i < (int)(sizeof(item_names)/sizeof(struct item_name)) ; i++) {
         if (item_names[i].item == item)
             return item_names[i].name;
     }
