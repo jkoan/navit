@@ -73,6 +73,7 @@ static void sigsegv(int sig) {
 #else
 #include <unistd.h>
 static void sigsegv(int sig) {
+#pragma unused(sig)
     char buffer[256];
     int retval;
     if (segv_level > 1)
@@ -104,6 +105,7 @@ void debug_init(const char *program_name) {
 
 
 static void debug_update_level(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(key, user_data)
     if (max_debug_level < GPOINTER_TO_INT(value))
         max_debug_level = GPOINTER_TO_INT(value);
 }
@@ -155,7 +157,7 @@ static dbg_level parse_dbg_level(struct attr *dbg_level_attr, struct attr *level
     } else if (level_attr) {
         if (level_attr->u.num>= lvl_error &&
                 level_attr->u.num<= lvl_debug)
-            return level_attr->u.num;
+            return (int)level_attr->u.num;
         dbg(lvl_error, "Invalid debug level in config: %ld", level_attr->u.num);
     }
     return lvl_unset;
@@ -163,6 +165,7 @@ static dbg_level parse_dbg_level(struct attr *dbg_level_attr, struct attr *level
 
 struct debug *
 debug_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct attr *name,*dbg_level_attr,*level_attr;
     dbg_level level;
     name=attr_search(attrs, attr_name);
@@ -451,7 +454,7 @@ void debug_set_logfile(const char *path) {
 }
 
 struct malloc_head {
-    int magic;
+    unsigned int magic;
     int size;
     char *where;
     void *return_address[8];
@@ -460,7 +463,7 @@ struct malloc_head {
 } *malloc_heads;
 
 struct malloc_tail {
-    int magic;
+    unsigned int magic;
 };
 
 int mallocs,debug_malloc_size,debug_malloc_size_m;
@@ -497,7 +500,7 @@ void *debug_malloc(const char *where, int line, const char *func, int size) {
     if (head->next)
         head->next->prev=head;
     head->where=g_strdup_printf("%s:%d %s",where,line,func);
-#if !defined (__GNUC__)
+#if !defined (__GNUC__) || defined(__APPLE__)
 #define __builtin_return_address(x) NULL
 #endif
     head->return_address[0]=__builtin_return_address(0);
@@ -536,7 +539,7 @@ char *debug_strdup(const char *where, int line, const char *func, const char *pt
 
     if (!ptr)
         return NULL;
-    size=strlen(ptr)+1;
+    size=(int)strlen(ptr)+1;
     ret=debug_malloc(where, line, func, size);
     memcpy(ret, ptr, size);
     return ret;
