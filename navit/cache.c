@@ -181,6 +181,7 @@ void *cache_entry_new(struct cache *cache, void *id, int size) {
 }
 
 void cache_entry_destroy(struct cache *cache, void *data) {
+#pragma GCC diagnostic ignored "-Wpragma-pack"
     struct cache_entry *entry=(struct cache_entry *)((char *)data-cache->entry_size);
     dbg(lvl_debug,"destroy 0x%x 0x%x 0x%x 0x%x 0x%x", entry->id[0], entry->id[1], entry->id[2], entry->id[3], entry->id[4]);
     entry->usage--;
@@ -190,7 +191,7 @@ static struct cache_entry *cache_trim(struct cache *cache, struct cache_entry *e
     struct cache_entry *new_entry;
     dbg(lvl_debug,"trim 0x%x 0x%x 0x%x 0x%x 0x%x", entry->id[0], entry->id[1], entry->id[2], entry->id[3], entry->id[4]);
     dbg(lvl_debug,"Trim %x from %d -> %d", entry->id[0], entry->size, cache->size);
-    if ( cache->entry_size < entry->size ) {
+    if ( cache->entry_size < (int)entry->size ) {
         g_hash_table_remove(cache->hash, (gpointer)(entry->id));
 
         new_entry = g_slice_alloc0(cache->entry_size);
