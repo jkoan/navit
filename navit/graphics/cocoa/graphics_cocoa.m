@@ -56,7 +56,7 @@ CGContextRef current_context(void) {
 #pragma mark UIView
 
 @interface NavitView : UIView {
-@public
+    @public
     struct graphics_priv *graphics;
 }
 
@@ -269,10 +269,11 @@ float startScale = 1;
 
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:
+(NSTimeInterval)duration {
     NSLog(@"willAnimateRotationToInterfaceOrientation");
-        
-        
+
+
 
 }
 
@@ -303,9 +304,9 @@ void free_graphics(struct graphics_priv *gr) {
 }
 
 static void setup_graphics(struct graphics_priv *gr) {
-        CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
-        gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
-        gr->layer_context=CGLayerGetContext(gr->layer);
+    CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
+    gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
+    gr->layer_context=CGLayerGetContext(gr->layer);
     if(gr->layer_context==0)
         NSLog(@"layer_context is NULL");
     else {
@@ -332,14 +333,14 @@ static void setup_graphics(struct graphics_priv *gr) {
     [myView initWithFrame: CGRectMake ( 0, 0, self.view.frame.size.width, self.frame.size.height)];
     myView.translatesAutoresizingMaskIntoConstraints = NO;
     [self.view addSubview: myView];
-    
+
     if (@available(iOS 11, *)) {
         UILayoutGuide * guide = self.view.safeAreaLayoutGuide;
         [myView.leadingAnchor constraintEqualToAnchor:guide.leadingAnchor].active = YES;
         [myView.trailingAnchor constraintEqualToAnchor:guide.trailingAnchor].active = YES;
         [myView.topAnchor constraintEqualToAnchor:guide.topAnchor].active = YES;
         [myView.bottomAnchor constraintEqualToAnchor:guide.bottomAnchor].active = YES;
-       
+
         if(self.view.safeAreaInsets.top != 0) {
             [self prefersStatusBarHidden];
         }
@@ -350,7 +351,7 @@ static void setup_graphics(struct graphics_priv *gr) {
         [myView.topAnchor constraintEqualToAnchor:self.topLayoutGuide.bottomAnchor].active = YES;
         [myView.bottomAnchor constraintEqualToAnchor:myView.superview.bottomAnchor constant:0].active = YES;
     }
-    
+
     if (global_graphics_cocoa) {
         global_graphics_cocoa->view=myView;
         myView->graphics=global_graphics_cocoa;
@@ -359,24 +360,24 @@ static void setup_graphics(struct graphics_priv *gr) {
     }
 
     [myView layoutIfNeeded];
-    
+
     NSNotificationCenter *notficationcenter = NSNotificationCenter.defaultCenter;
     [notficationcenter addObserver:self selector:@selector(appMovedToBackground:) name:
-                       UIApplicationWillResignActiveNotification object: nil];
+     UIApplicationWillResignActiveNotification object: nil];
     [notficationcenter addObserver:self selector:@selector(appMovedToForeground:) name:
-                       UIApplicationDidBecomeActiveNotification object: nil];
-    
+     UIApplicationDidBecomeActiveNotification object: nil];
+
     [notficationcenter addObserver:self selector:@selector(handleScreenDidConnectNotification:)
 
-            name:UIScreenDidConnectNotification object:nil];
+     name:UIScreenDidConnectNotification object:nil];
 
     [notficationcenter addObserver:self selector:@selector(handleScreenDidDisconnectNotification:)
 
-            name:UIScreenDidDisconnectNotification object:nil];
+     name:UIScreenDidDisconnectNotification object:nil];
 #endif
 }
 
-- (void)viewDidLayoutSubviews{
+- (void)viewDidLayoutSubviews {
     NSLog(@"viewDidLayoutSubviews\n");
 
     if (global_graphics_cocoa) {
@@ -395,7 +396,7 @@ static void setup_graphics(struct graphics_priv *gr) {
             global_graphics_cocoa->h=myView.bounds.size.height;
         }
     }
-       
+
     if(global_graphics_cocoa->gr_ready) {
         callback_list_call_attr_2(global_graphics_cocoa->cbl, attr_resize,
                                   (int)myView.bounds.size.width,
@@ -426,13 +427,13 @@ static void setup_graphics(struct graphics_priv *gr) {
     [self.view addGestureRecognizer:pan];
 
     UILongPressGestureRecognizer* longpress=[[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(
-                                                handleLongPress:)];
+            handleLongPress:)];
     [self.view addGestureRecognizer:longpress];
 
     [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rotated:) name:
-                                          UIDeviceOrientationDidChangeNotification object:nil];
+     UIDeviceOrientationDidChangeNotification object:nil];
 
 #endif
 }
@@ -442,9 +443,9 @@ static void setup_graphics(struct graphics_priv *gr) {
     //TODO: add a callback to deactivate speech instance. Otherwise an active announcement will keep the radio muted in HFP mode
     navit_store_center(global_graphics_cocoa->navit);
     // To save power when in background we display the main menu
-    
+
     [[UIApplication sharedApplication] setIdleTimerDisabled: NO];
-    
+
     struct attr navit;
     navit.type=attr_navit;
     navit.u.navit=global_graphics_cocoa->navit;
@@ -513,10 +514,10 @@ void onUncaughtException(NSException* exception) {
 }
 
 - (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 #else
 - (void)
-    applicationDidFinishLaunching:(NSNotification *)aNotification
+applicationDidFinishLaunching:(NSNotification *)aNotification
 #endif
 {
     NSLog(@"DidFinishLaunching\n");
@@ -540,7 +541,7 @@ void onUncaughtException(NSException* exception) {
     self.window = [[[UIWindow alloc] initWithFrame:windowRect] autorelease];
 #else
     self.window = [[[UIWindow alloc] initWithContentRect:windowRect styleMask:NSWindowStyleMaskBorderless backing:
-                                      NSBackingStoreBuffered defer:NO] autorelease];
+                    NSBackingStoreBuffered defer:NO] autorelease];
 #endif
     utf8_macosroman=iconv_open("MACROMAN","UTF-8");
 
@@ -556,7 +557,7 @@ void onUncaughtException(NSException* exception) {
     [controller showWindow : nil];
 
 #endif
-    
+
 #if USE_UIKIT
     return YES;
 #endif
@@ -660,14 +661,14 @@ static void draw_text(struct graphics_priv *gr, struct graphics_gc_priv *fg, str
 
     CGColorRef color = CGColorCreate(CGColorSpaceCreateDeviceRGB(), fg->rgba);
     NSDictionary *attrs = [NSDictionary dictionaryWithObjectsAndKeys:[UIFont systemFontOfSize:font->size/16.0],
-                                        NSFontAttributeName, [UIColor colorWithCGColor:(CGColorRef) color], NSForegroundColorAttributeName, nil];
+                           NSFontAttributeName, [UIColor colorWithCGColor:(CGColorRef) color], NSForegroundColorAttributeName, nil];
 
 #if USE_UIKIT
     UIGraphicsPushContext(context);
 #endif
 
     NSAttributedString *myText = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:outb] attributes
-                                                             :attrs];
+                                  :attrs];
 
 #if USE_UIKIT
     [myText drawAtPoint:CGPointMake(0, 0
@@ -679,7 +680,7 @@ static void draw_text(struct graphics_priv *gr, struct graphics_gc_priv *fg, str
     [NSGraphicsContext setCurrentContext:oldctx];
 #endif
 
-        CGContextRestoreGState(context);
+    CGContextRestoreGState(context);
 }
 
 static void draw_image(struct graphics_priv *gr, struct graphics_gc_priv *fg, struct point *p,
@@ -1023,7 +1024,7 @@ static void event_cocoa_main_loop_quit(void) {
 #endif
 
 @interface NavitTimer : NSObject {
-@public
+    @public
     struct callback *cb;
     NSTimer *timer;
 }
@@ -1052,7 +1053,7 @@ static struct event_timeout *event_cocoa_add_timeout(int timeout, int multi, str
     NavitTimer *ret=[[NavitTimer alloc]init];
     ret->cb=cb;
     ret->timer=[NSTimer scheduledTimerWithTimeInterval:(timeout/1000.0) target:ret selector:@selector(
-                            onTimer:) userInfo:nil repeats:multi?YES:NO];
+                    onTimer:) userInfo:nil repeats:multi?YES:NO];
     dbg(1,"timer=%p",ret->timer);
     return (struct event_timeout *)ret;
 }
@@ -1073,7 +1074,7 @@ static struct event_idle *event_cocoa_add_idle(int priority, struct callback *cb
     NavitTimer *ret=[[NavitTimer alloc]init];
     ret->cb=cb;
     ret->timer=[NSTimer scheduledTimerWithTimeInterval:(0.0) target:ret selector:@selector(
-                            onTimer:) userInfo:nil repeats:YES];
+                    onTimer:) userInfo:nil repeats:YES];
 
     dbg(1,"timer=%p",ret->timer);
     return (struct event_idle *)ret;
