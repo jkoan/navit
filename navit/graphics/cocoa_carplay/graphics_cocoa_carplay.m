@@ -1,0 +1,1233 @@
+#include <glib.h>
+#include "config.h"
+#include "config_.h"
+#include "debug.h"
+#include "plugin.h"
+#include "point.h"
+#include "window.h"
+#include "graphics.h"
+#include "navit/event.h"
+#include "item.h"
+#include "callback.h"
+#include "color.h"
+#include <iconv.h>
+#include "navit.h"
+#include "command.h"
+#include "graphics_cocoa_carplay.h"
+#import <Foundation/Foundation.h>
+#import <CoreText/CoreText.h>
+#define NSRect CGRect
+#define NSMakeRect CGRectMake
+#define REVERSE_Y 0
+#import <CarPlay/CarPlay.h>
+#import "AppDelegate.h"
+#import "CarPlayViewController.h"
+
+CGContextRef current_context(void) {
+    return UIGraphicsGetCurrentContext();
+}
+
+
+#pragma mark UIView
+
+@interface NavitViewCarplay : UIView {
+@public
+    struct graphics_priv *graphics;
+}
+
+@end
+
+static struct graphics_priv {
+    struct navit *navit;
+    struct window win;
+    NavitViewCarplay *view;
+    CGLayerRef layer;
+    CGContextRef layer_context;
+    struct callback_list *cbl;
+    struct point p, pclean;
+    int w, h, wraparound, cleanup, x, y, gr_ready, overlay_disabled, iscarplay;
+    struct graphics_priv *parent, *next, *overlays;
+} *global_graphics_cocoa_carplay;
+
+iconv_t utf8_macosroman;
+
+struct graphics_gc_priv {
+    CGFloat rgba[4];
+    int w;
+};
+
+struct graphics_font_priv {
+    int size;
+    char *name;
+};
+
+int has_appeared_cp = 0;
+float startScale_cp = 1;
+
+
+@implementation NavitViewCarplay
+
+- (void)drawRect:(NSRect)rect {
+    struct graphics_priv *gr=NULL;
+#if 0
+    NSLog(@"NavitView:drawRect...");
+#endif
+
+    CGContextRef X = current_context();
+
+    CGContextDrawLayerAtPoint(X, CGPointZero, graphics->layer);
+    if (!graphics->iscarplay && !graphics->overlay_disabled)
+        gr=graphics->overlays;
+    while (gr) {
+        if (!gr->iscarplay && !gr->overlay_disabled) {
+            struct CGPoint pc;
+            pc.x=gr->p.x;
+            pc.y=gr->p.y;
+            if (gr->wraparound) {
+                if (pc.x < 0)
+                    pc.x+=graphics->w;
+                if (pc.y < 0)
+                    pc.y+=graphics->h;
+            }
+#if REVERSE_Y
+            pc.y=graphics->h-pc.y-gr->h;
+#endif
+            dbg(1,"draw %dx%d at %f,%f",gr->w,gr->h,pc.x,pc.y);
+            CGContextDrawLayerAtPoint(X, pc, gr->layer);
+        }
+        gr=gr->next;
+    }
+}
+
+- (void)dealloc {
+    [super dealloc];
+}
+
+
+@end // NavitView
+
+#pragma mark UIViewController
+
+@interface NavitViewControllerCarplay : UIViewController <CPMapTemplateDelegate> {
+    NSRect frame;
+    CGLayerRef layer;
+    NavitViewCarplay* myView;
+    bool isCarplay;
+}
+
+@property (nonatomic) NSRect frame;
+
+- (id) init_withFrame : (NSRect) _frame;
+- (id) init_for_carplay;
+
+@end
+
+
+
+@implementation NavitViewControllerCarplay
+
+@synthesize frame;
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return (UIInterfaceOrientationMaskAll);
+}
+
+- (IBAction)handlePinch:(UIPinchGestureRecognizer *)sender {
+    if(sender.state == UIGestureRecognizerStateBegan) {
+        startScale_cp = sender.scale;
+    } else if(sender.state == UIGestureRecognizerStateEnded || sender.state == UIGestureRecognizerStateChanged) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+
+        if((startScale_cp / sender.scale > 2) ||  (startScale_cp / sender.scale < 0.5)) {
+            if((sender.scale > 1)) {
+                navit_zoom_in(global_graphics_cocoa_carplay->navit, 2, &p);
+                startScale_cp=sender.scale * 1.5;
+            } else {
+                navit_zoom_out(global_graphics_cocoa_carplay->navit, 2, &p);
+                startScale_cp=sender.scale * 0.75;
+            }
+        }
+    }
+}
+
+- (IBAction)handlePan:(UIPanGestureRecognizer *)sender {
+
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
+
+    }
+
+    if (sender.state == UIGestureRecognizerStateChanged) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+    }
+
+    if(sender.state == UIGestureRecognizerStateEnded) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+}
+
+- (IBAction)handleTap:(UITapGestureRecognizer *)sender {
+    if (sender.state == UIGestureRecognizerStateEnded) {
+        struct CGPoint pc=[sender locationInView: myView];
+        struct point p;
+        p.x=pc.x;
+        p.y=pc.y;
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+}
+
+- (IBAction)handleLongPress:(UIPanGestureRecognizer *)sender {
+
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
+
+    }
+
+    if (sender.state == UIGestureRecognizerStateChanged) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+    }
+
+    if(sender.state == UIGestureRecognizerStateEnded) {
+        struct point p;
+        p.x=[sender locationInView: myView].x;
+        p.y=[sender locationInView: myView].y;
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+}
+
+- (void)rotated:(NSNotification *)notification {
+
+    NSLog(@"rotated enter");
+
+    UIDeviceOrientation orientation = [[UIDevice currentDevice] orientation];
+    int lt_ten=1;
+
+    NSLog(@"System Version: %f",[[[UIDevice currentDevice] systemVersion] floatValue]);
+
+    if([[[UIDevice currentDevice] systemVersion] floatValue] >=10) {
+        lt_ten=0;
+    }
+
+    if(lt_ten &&  (orientation==UIDeviceOrientationFaceDown
+                   || orientation == UIDeviceOrientationFaceUp)) {
+        return;
+    }
+
+//    if (!UIDeviceOrientationIsValidInterfaceOrientation(orientation)) {
+//        return;
+//    }
+    
+//    if(orientation==UIDeviceOrientationPortrait)
+        //callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, global_graphics_cocoa_carplay->w, global_graphics_cocoa_carplay->h);
+//    else if(orientation==UIDeviceOrientationLandscapeLeft || orientation==UIDeviceOrientationLandscapeRight)
+//        callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, global_graphics_cocoa_carplay->h, global_graphics_cocoa_carplay->w);
+    
+    
+    
+    //callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, myView.frame.size.width, myView.frame.size.width);
+    
+    NSLog(@"Rotated, LT_THEN_10: %i W: %i H: %i Orientation: %ld %f %f", lt_ten,global_graphics_cocoa_carplay->w, global_graphics_cocoa_carplay->h, (long)orientation, myView.frame.size.width, myView.frame.size.height);
+}
+
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    NSLog(@"willAnimateRotationToInterfaceOrientation");
+        
+        
+
+}
+
+
+
+- (BOOL)prefersStatusBarHidden {
+    if (@available(iOS 11, *)) {
+        return NO;
+    } else {
+        return YES;
+    }
+}
+
+
+- (id) init_withFrame : (NSRect) _frame {
+    NSLog(@"init with frame\n");
+    frame = _frame;
+    return [self init];
+}
+
+- (id) init_for_carplay {
+    NSLog(@"init for carplay\n");
+    isCarplay = true;
+    return [self init];
+}
+
+static
+void free_graphics(struct graphics_priv *gr) {
+    if (gr->layer) {
+        CGLayerRelease(gr->layer);
+        gr->layer=NULL;
+    }
+}
+
+static void setup_graphics(struct graphics_priv *gr) {
+        CGRect lr=CGRectMake(gr->x, gr->y, gr->w, gr->h);
+        gr->layer=CGLayerCreateWithContext(current_context(), lr.size, NULL);
+        gr->layer_context=CGLayerGetContext(gr->layer);
+    if(gr->layer_context==0)
+        NSLog(@"layer_context is NULL");
+    else {
+#if REVERSE_Y
+        CGContextScaleCTM(gr->layer_context, 1, -1);
+        CGContextTranslateCTM(gr->layer_context, 0, -gr->h);
+#endif
+        CGContextSetRGBFillColor(gr->layer_context, 0, 0, 0, 0);
+        CGContextSetRGBStrokeColor(gr->layer_context, 0, 0, 0, 0);
+        CGContextClearRect(gr->layer_context, lr);
+    }
+}
+
+- (void)loadView {
+    NSLog(@"loadView");
+    [super loadView];
+}
+
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    NSLog(@"Will Transition to size!");
+    
+
+    void(^completionBlock)(id<UIViewControllerTransitionCoordinatorContext>) =
+
+        ^(id<UIViewControllerTransitionCoordinatorContext> context) {
+#pragma unused(context)
+            [UIView setAnimationsEnabled:true];
+        };
+    
+    [UIView setAnimationsEnabled:false];
+    
+    global_graphics_cocoa_carplay->h=size.width;
+    global_graphics_cocoa_carplay->w=size.height;
+    
+    [coordinator animateAlongsideTransitionInView:self.view
+                                            animation:nil completion:completionBlock];
+
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    NSLog(@"View loaded!");
+    myView = [NavitViewCarplay alloc];
+    [myView initWithFrame: CGRectMake ( 0, 0, self.view.frame.size.width, self.frame.size.height)];
+    myView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview: myView];
+    
+    if (@available(iOS 11, *)) {
+        UILayoutGuide * guide = self.view.safeAreaLayoutGuide;
+        [myView.leadingAnchor constraintEqualToAnchor:guide.leadingAnchor].active = YES;
+        [myView.trailingAnchor constraintEqualToAnchor:guide.trailingAnchor].active = YES;
+        [myView.topAnchor constraintEqualToAnchor:guide.topAnchor].active = YES;
+        [myView.bottomAnchor constraintEqualToAnchor:guide.bottomAnchor].active = YES;
+
+        if(self.view.safeAreaInsets.top != 0) {
+            [self prefersStatusBarHidden];//[[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationSlide];
+        }
+    } else {
+        [myView initWithFrame: CGRectMake ( 0, 0, self.view.frame.size.width, self.view.frame.size.height)];
+        [myView.leftAnchor constraintEqualToAnchor:myView.superview.leftAnchor constant:0].active = YES;
+        [myView.rightAnchor constraintEqualToAnchor:myView.superview.rightAnchor constant:0].active = YES;
+        [myView.topAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor].active = YES;
+        [myView.bottomAnchor constraintEqualToAnchor:myView.superview.bottomAnchor constant:0].active = YES;
+    }
+    
+    if (global_graphics_cocoa_carplay) {
+        if(isCarplay) {
+            global_graphics_cocoa_carplay->iscarplay = true;
+            NSLog(@"CarPlay: Overlay disabled");
+        }
+        global_graphics_cocoa_carplay->view=myView;
+        myView->graphics=global_graphics_cocoa_carplay;
+        global_graphics_cocoa_carplay->w=myView.bounds.size.width;
+        global_graphics_cocoa_carplay->h=myView.bounds.size.height;
+    }
+
+    [myView layoutIfNeeded];
+    
+    NSNotificationCenter *notficationcenter = NSNotificationCenter.defaultCenter;
+    [notficationcenter addObserver:self selector:@selector(appMovedToBackground:) name:
+                       UIApplicationWillResignActiveNotification object: nil];
+    [notficationcenter addObserver:self selector:@selector(appMovedToForeground:) name:
+                       UIApplicationDidBecomeActiveNotification object: nil];
+    
+}
+
+
+- (void)viewDidLayoutSubviews{
+    NSLog(@"viewDidLayoutSubviews\n");
+
+    if (global_graphics_cocoa_carplay) {
+        setup_graphics(global_graphics_cocoa_carplay);
+        global_graphics_cocoa_carplay->x=myView.frame.origin.x;
+        global_graphics_cocoa_carplay->y=myView.frame.origin.y;
+
+        if (@available(iOS 11, *)) {
+            global_graphics_cocoa_carplay->w=myView.bounds.size.width;
+            global_graphics_cocoa_carplay->h=myView.bounds.size.height;
+            NSLog(@"Height %f", myView.bounds.size.height);
+            NSLog(@"Top %f", self.view.safeAreaInsets.top);
+            NSLog(@"Bottom %f", self.view.safeAreaInsets.bottom);
+        } else {
+            global_graphics_cocoa_carplay->w=myView.bounds.size.width;
+            global_graphics_cocoa_carplay->h=myView.bounds.size.height;
+        }
+    }
+       
+    if(global_graphics_cocoa_carplay->gr_ready) {
+        if (@available(iOS 11, *)) {
+        callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize,
+                                  (int)myView.bounds.size.width,
+                                  (int)myView.bounds.size.height);
+        } else {
+    if(global_graphics_cocoa_carplay->win.priv)
+            callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, myView.frame.size.width, myView.frame.size.width);
+        }
+    }
+}
+
+
+- (void)viewDidAppear:(BOOL)animated {
+    NSLog(@"view appeared");
+
+    self.modalPresentationCapturesStatusBarAppearance = NO;
+    callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, global_graphics_cocoa_carplay->w, global_graphics_cocoa_carplay->h);
+    //self.navigationController.navigationBar.barStyle = UIBarStyleDefault;
+
+    has_appeared_cp = 1;
+
+    //callback_list_call_attr_2(global_graphics_cocoa_carplay->cbl, attr_resize, myView.frame.size.width, myView.frame.size.width);
+    callback_list_call_attr_0(global_graphics_cocoa_carplay->cbl, attr_vehicle_request_location_authorization);
+
+    UIPinchGestureRecognizer* pinch = [[UIPinchGestureRecognizer alloc]initWithTarget:self action:@selector(handlePinch:)];
+    [self.view addGestureRecognizer:pinch];
+
+    UITapGestureRecognizer* tap=[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleTap:)];
+    [self.view addGestureRecognizer:tap];
+
+    UIPanGestureRecognizer* pan=[[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(handlePan:)];
+    [self.view addGestureRecognizer:pan];
+
+    UILongPressGestureRecognizer* longpress=[[UILongPressGestureRecognizer alloc]initWithTarget:self action:@selector(
+                                                handleLongPress:)];
+    [self.view addGestureRecognizer:longpress];
+
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rotated:) name:
+                                          UIDeviceOrientationDidChangeNotification object:nil];
+
+}
+
+- (void) appMovedToBackground:(NSNotification*)note {
+    NSLog(@"App moved to background!");
+    //TODO: add a callback to deactivate speech instance. Otherwise an active announcement will keep the radio muted in HFP mode
+    navit_store_center(global_graphics_cocoa_carplay->navit);
+    // To save power when in background we display the main menu
+    
+    [[UIApplication sharedApplication] setIdleTimerDisabled: NO];
+    
+    struct attr navit;
+    navit.type=attr_navit;
+    navit.u.navit=global_graphics_cocoa_carplay->navit;
+    command_evaluate(&navit, "gui.menu();");
+}
+
+
+- (void) appMovedToForeground:(NSNotification*)note {
+    NSLog(@"App moved to foreground!");
+//    [self rotated: (NULL)];
+    [[UIApplication sharedApplication] setIdleTimerDisabled: YES];
+    // back to map
+    struct attr navit;
+    navit.type=attr_navit;
+    navit.u.navit=global_graphics_cocoa_carplay->navit;
+    command_evaluate(&navit, "gui.back_to_map();");
+}
+
+
+- (void)didReceiveMemoryWarning {
+    dbg(1,"didReceiveMemoryWarning enter");
+}
+
+
+- (void)dealloc {
+    NSLog(@"Dealloc enter");
+    [super dealloc];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+@end // ViewController
+
+@class NavitViewControllerCarplay;
+
+#pragma mark <UIApplicationDelegate>
+
+@interface NavitAppDelegateCarplay : NSObject <UIApplicationDelegate, CPMapTemplateDelegate> {
+    UIWindow *window;
+    NavitViewControllerCarplay *viewController;
+}
+
+@property (nonatomic, retain) /*IBOutlet*/ UIWindow *window;
+@property (nonatomic, retain) /*IBOutlet*/ NavitViewControllerCarplay *viewController;
+@property (strong, nonatomic) CPWindow * cpwindow;
+@property (strong, nonatomic) CPInterfaceController * interfaceController;
+@property (strong, nonatomic) CPBarButton * button;
+@property (strong, nonatomic) CPMapTemplate * carPlayMapTemplate;
+@property (strong, nonatomic) CarPlayViewController * carPlayViewController;
+
+void onUncaughtException(NSException* exception);
+
+@end
+
+
+@implementation NavitAppDelegateCarplay
+
+@synthesize window;
+@synthesize cpwindow;
+@synthesize viewController;
+
+CPNavigationSession* _cpNavigationSession;
+
+- (void)mapTemplate:(CPMapTemplate *)mapTemplate panEndedWithDirection:(CPPanDirection)direction{
+    NSLog(@"panEndedWithDirection");
+}
+
+- (void)mapTemplate:(CPMapTemplate *)mapTemplate panBeganWithDirection:(CPPanDirection)direction{
+    NSLog(@"panBeganWithDirection");
+}
+
+- (void)mapTemplate:(CPMapTemplate *)mapTemplate panWithDirection:(CPPanDirection)direction {
+    struct point p;
+    p.x=0;
+    p.y=0;
+    callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(1), GINT_TO_POINTER(1), (void *)&p);
+    
+    if(direction==CPPanDirectionUp) {
+        p.x=0;
+        p.y=10;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+    
+    if(direction==CPPanDirectionDown) {
+        p.x=0;
+        p.y=-10;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+    
+    if(direction==CPPanDirectionRight) {
+        p.x=-10;
+        p.y=0;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+    
+    if(direction==CPPanDirectionLeft) {
+        p.x=10;
+        p.y=0;
+        callback_list_call_attr_1(global_graphics_cocoa_carplay->cbl, attr_motion, (void *)&p);
+        callback_list_call_attr_3(global_graphics_cocoa_carplay->cbl, attr_button, GINT_TO_POINTER(0), GINT_TO_POINTER(1), (void *)&p);
+    }
+    
+    NSLog(@"panWithDirection");
+}
+
+-(void)application:(UIApplication *)application didConnectCarInterfaceContrnavitoller:(CPInterfaceController *)interfaceController toWindow:(CPWindow *)window
+{
+    NSLog( @"CarPlay connected %@ to %@", interfaceController, window );
+    
+    self.interfaceController = interfaceController;
+    //self.window = window;
+    self.carPlayMapTemplate = [[CPMapTemplate alloc]init];
+    
+    struct attr navit;
+    navit.type=attr_osd_configuration;
+    navit.u.num = 2; // carplay OSD config
+    navit_set_attr(global_graphics_cocoa_carplay->navit, &navit);
+    
+    CPBarButton * buttonone = [[CPBarButton alloc] initWithTitle:@"Pan" handler:^(CPBarButton * _Nonnull barButton) {
+        
+        NSLog(@"%@ clicked", barButton.title);
+        if([self.carPlayMapTemplate isPanningInterfaceVisible])
+            [self.carPlayMapTemplate dismissPanningInterfaceAnimated:true];
+        else
+            [self.carPlayMapTemplate showPanningInterfaceAnimated:true];
+        
+       
+
+    }];
+    CPBarButton * buttontwo = [[CPBarButton alloc] initWithTitle:@"Set Destination" handler:^(CPBarButton * _Nonnull barButton) {
+        [self.carPlayMapTemplate showPanningInterfaceAnimated:false];
+        NSLog(@"%@ clicked", barButton.title);
+        struct attr navit;
+        navit.type=attr_navit;
+        navit.u.navit=global_graphics_cocoa_carplay->navit;
+        command_evaluate(&navit, "set_destination(\"geo:N 48.129680747678144 E 11.56757229132354\")");
+
+    }];
+    CPBarButton * buttonthree = [[CPBarButton alloc] initWithTitle:@"Find Gas Station" handler:^(CPBarButton * _Nonnull barButton) {
+        
+        NSLog(@"%@ clicked", barButton.title);
+        struct attr navit;
+        navit.type=attr_navit;
+        navit.u.navit=global_graphics_cocoa_carplay->navit;
+        command_evaluate(&navit, "set_position(\"geo:N 48.13055079307818 E 11.562942798719101\")");
+
+    }];
+    CPBarButton * buttonfour = [[CPBarButton alloc] initWithTitle:@"Stop Navigation" handler:^(CPBarButton * _Nonnull barButton) {
+        
+        NSLog(@"%@ clicked", barButton.title);
+
+
+    }];
+    
+    CPMapButton *zoomOutButton =
+    [[CPMapButton alloc] initWithHandler:^(CPMapButton * _Nonnull mapButon) {
+                    NSLog(@"%@ clicked", mapButon.description);
+        struct attr navit;
+        navit.type=attr_navit;
+        navit.u.navit=global_graphics_cocoa_carplay->navit;
+        command_evaluate(&navit, "zoom_out()");
+    }];
+    
+    CPMapButton *zoomInButton =
+    [[CPMapButton alloc] initWithHandler:^(CPMapButton * _Nonnull mapButon) {
+                    NSLog(@"%@ clicked", mapButon.description);
+        struct attr navit;
+        navit.type=attr_navit;
+        navit.u.navit=global_graphics_cocoa_carplay->navit;
+        command_evaluate(&navit, "zoom_in()");
+    }];
+
+    [zoomOutButton setImage:[UIImage systemImageNamed:@"minus.magnifyingglass"]];
+    [zoomInButton setImage:[UIImage systemImageNamed:@"plus.magnifyingglass"]];
+   
+    self.carPlayMapTemplate.mapButtons = [NSArray arrayWithObjects: zoomInButton, zoomOutButton, nil];
+    
+    self.carPlayMapTemplate.leadingNavigationBarButtons = [NSArray arrayWithObjects: buttonone, buttontwo, nil];
+    self.carPlayMapTemplate.trailingNavigationBarButtons = [NSArray arrayWithObjects: buttonthree, buttonfour, nil];
+    self.carPlayMapTemplate.mapDelegate = self;
+    
+//    NavitViewControllerCarplay * rc =[[NavitViewControllerCarplay alloc] init_for_carplay ];
+//    
+//    window.rootViewController = rc;
+    
+    self.viewController =[[NavitViewControllerCarplay alloc] init_for_carplay ];
+   //
+       window.rootViewController = self.viewController;
+    
+    [interfaceController setRootTemplate:self.carPlayMapTemplate
+                                    animated:YES
+                              completion:NULL];
+    
+    [window makeKeyAndVisible];
+    
+}
+
+-(void)application:(nonnull UIApplication *)application didDisconnectCarInterfaceController:(nonnull CPInterfaceController *)interfaceController fromWindow:(nonnull CPWindow *)window
+{
+    NSLog( @"CarPlay disconnected %@ from %@", interfaceController, window );
+    self.window.rootViewController =[[NavitViewControllerCarplay alloc] init ];
+}
+
+-(void)application:(UIApplication *)application didSelectManeuver:(CPManeuver *)maneuver
+{
+
+}
+
+-(void)application:(UIApplication *)application didSelectNavigationAlert:(CPNavigationAlert *)navigationAlert
+{
+
+}
+
+void onUncaughtException(NSException* exception) {
+    NSLog(@"onUncaughtException: %@ %@", exception.reason, exception.debugDescription);
+}
+
+
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+    navit_destroy(global_graphics_cocoa_carplay->navit);
+}
+
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+
+{
+    NSLog(@"DidFinishLaunching\n");
+
+    NSSetUncaughtExceptionHandler(&onUncaughtException);
+    NSRect appFrame;
+    appFrame = [UIScreen mainScreen].bounds;
+    
+    self.viewController = [[[NavitViewControllerCarplay alloc] init_withFrame : appFrame] autorelease];
+
+    NSRect windowRect = NSMakeRect(0, 0, appFrame.size.width, appFrame.size.height);
+
+
+    self.window = [[[UIWindow alloc] initWithFrame:windowRect] autorelease];
+
+    utf8_macosroman=iconv_open("MACROMAN","UTF-8");
+
+    [window setRootViewController:viewController];
+    [window makeKeyAndVisible];
+
+
+
+
+    
+
+    return YES;
+
+}
+
+- (void)dealloc {
+    [viewController release];
+    [window release];
+    [super dealloc];
+}
+
+
+@end
+
+
+static void draw_mode(struct graphics_priv *gr, enum draw_mode_num mode) {
+    if (mode == draw_mode_end) {
+        dbg(1,"end %p",gr);
+        if (!gr->parent) {
+
+        [gr->view setNeedsDisplay];
+
+        }
+    }
+}
+
+static void draw_lines(struct graphics_priv *gr, struct graphics_gc_priv *gc, struct point *p, int count) {
+    CGPoint points[count];
+    int i;
+    for (i = 0 ; i < count ; i++) {
+        points[i].x=p[i].x;
+        points[i].y=p[i].y;
+    }
+    CGContextSetStrokeColor(gr->layer_context, gc->rgba);
+    CGContextSetLineWidth(gr->layer_context, gc->w);
+    CGContextSetLineCap(gr->layer_context, kCGLineCapRound);
+    CGContextBeginPath(gr->layer_context);
+    CGContextAddLines(gr->layer_context, points, count);
+    CGContextStrokePath(gr->layer_context);
+
+}
+
+static void draw_polygon(struct graphics_priv *gr, struct graphics_gc_priv *gc, struct point *p, int count) {
+    if(count<=0) {
+        dbg(lvl_debug,"Point count <= 0!");
+        return;
+    }
+    CGPoint points[count];
+    int i;
+    for (i = 0 ; i < count ; i++) {
+        points[i].x=p[i].x;
+        points[i].y=p[i].y;
+    }
+    CGContextSetFillColor(gr->layer_context, gc->rgba);
+    CGContextBeginPath(gr->layer_context);
+    CGContextAddLines(gr->layer_context, points, count);
+    CGContextFillPath(gr->layer_context);
+}
+
+static void draw_rectangle(struct graphics_priv *gr, struct graphics_gc_priv *gc, struct point *p, int w, int h) {
+    CGRect lr=CGRectMake(p->x, p->y, w, h);
+    if (p->x <= 0 && p->y <= 0 && p->x+w+1 >= gr->w && p->y+h+1 >= gr->h) {
+        dbg(lvl_debug,"clear %p %dx%d",gr,w,h);
+        free_graphics(gr);
+        setup_graphics(gr);
+    }
+    CGContextSetFillColor(gr->layer_context, gc->rgba);
+    CGContextFillRect(gr->layer_context, lr);
+}
+
+static void draw_text(struct graphics_priv *gr, struct graphics_gc_priv *fg, struct graphics_gc_priv *bg,
+                      struct graphics_font_priv *font, char *text, struct point *p, int dx, int dy) {
+#pragma unused (bg)
+    size_t outlen=strlen(text)+1;
+    char outb[outlen];
+    char *inp=text;
+
+    strcpy(outb, inp);
+
+    CGContextRef context = gr->layer_context;
+    if(!context)
+        return;
+    CGContextSaveGState(context);
+
+    CGAffineTransform xform = CGAffineTransformMake(dx/65536.0, dy/65536.0, dy/65536.0, -dx/65536.0, p->x, p->y );
+    CGContextTranslateCTM(context, 0, 0);
+    CGContextConcatCTM(context, xform);
+
+
+    CGAffineTransform flipit = CGAffineTransformMakeScale(1, -1);
+    CGContextConcatCTM(context, flipit);
+
+
+    CGColorRef color = CGColorCreate(CGColorSpaceCreateDeviceRGB(), fg->rgba);
+    NSDictionary *attrs = [NSDictionary dictionaryWithObjectsAndKeys:[UIFont systemFontOfSize:font->size/16.0],
+                                        NSFontAttributeName, [UIColor colorWithCGColor:(CGColorRef) color], NSForegroundColorAttributeName, nil];
+
+
+    UIGraphicsPushContext(context);
+
+
+    NSAttributedString *myText = [[NSAttributedString alloc] initWithString:[NSString stringWithUTF8String:outb] attributes
+                                                             :attrs];
+
+
+    [myText drawAtPoint:CGPointMake(0, 0
+                                    -font->size/16.0)];//[(id)mytext drawAtPoint:CGPointMake(p->x, p->y-font->size/16.0) withAttributes:attrs];
+    UIGraphicsPopContext();
+    CGContextRestoreGState(context);
+}
+
+static void draw_image(struct graphics_priv *gr, struct graphics_gc_priv *fg, struct point *p,
+                       struct graphics_image_priv *img) {
+#pragma unused (fg)
+    CGImageRef imgc=(CGImageRef) img;
+    int w=(int)CGImageGetWidth(imgc);
+    int h=(int)CGImageGetHeight(imgc);
+    CGRect rect=CGRectMake(0, 0, w, h);
+    CGContextSaveGState(gr->layer_context);
+    CGContextTranslateCTM(gr->layer_context, p->x, p->y+h);
+    CGContextScaleCTM(gr->layer_context, 1.0, -1.0);
+    CGContextDrawImage(gr->layer_context, rect, imgc);
+    CGContextRestoreGState(gr->layer_context);
+}
+
+static void font_destroy(struct graphics_font_priv *font) {
+    g_free(font);
+}
+
+static struct graphics_font_methods font_methods = {
+    font_destroy
+};
+
+static void draw_drag(struct graphics_priv *gr, struct point *p) {
+    if (!gr->cleanup) {
+        gr->pclean=gr->p;
+        gr->cleanup=1;
+    }
+    if (p)
+        gr->p=*p;
+    else {
+        gr->p.x=0;
+        gr->p.y=0;
+    }
+}
+
+static struct graphics_font_priv *font_new(struct graphics_priv *gr, struct graphics_font_methods *meth, char *font,
+        int size, int flags) {
+#pragma unused (font, flags, gr)
+    struct graphics_font_priv *ret=g_new0(struct graphics_font_priv, 1);
+    *meth=font_methods;
+
+    ret->size=size;
+    ret->name="Helvetica";
+    return ret;
+}
+
+static void gc_destroy(struct graphics_gc_priv *gc) {
+    g_free(gc);
+}
+
+static void gc_set_linewidth(struct graphics_gc_priv *gc, int w) {
+    gc->w=w;
+}
+
+static void gc_set_dashes(struct graphics_gc_priv *gc, int w, int offset, unsigned char *dash_list, int n) {
+#pragma unused (gc, w, offset, dash_list, n)
+}
+
+static void gc_set_foreground(struct graphics_gc_priv *gc, struct color *c) {
+    gc->rgba[0]=c->r/65535.0;
+    gc->rgba[1]=c->g/65535.0;
+    gc->rgba[2]=c->b/65535.0;
+    gc->rgba[3]=c->a/65535.0;
+}
+
+static void gc_set_background(struct graphics_gc_priv *gc, struct color *c) {
+#pragma unused (gc, c)
+}
+
+static void gc_set_texture(struct graphics_gc_priv *gc, struct graphics_image_priv *img) {
+#pragma unused (gc, img)
+}
+
+static struct graphics_gc_methods gc_methods = {
+    gc_destroy,
+    gc_set_linewidth,
+    gc_set_dashes,
+    gc_set_foreground,
+    gc_set_background,
+    gc_set_texture,
+};
+
+static struct graphics_gc_priv *gc_new(struct graphics_priv *gr, struct graphics_gc_methods *meth) {
+#pragma unused (gr, meth)
+    struct graphics_gc_priv *gc=g_new(struct graphics_gc_priv, 1);
+    gc->w=1;
+
+    *meth=gc_methods;
+    return gc;
+}
+
+
+static void background_gc(struct graphics_priv *gr, struct graphics_gc_priv *gc) {
+#pragma unused (gr, gc)
+}
+
+static struct graphics_priv *overlay_new(struct graphics_priv *gr, struct graphics_methods *meth, struct point *p,
+        int w, int h, int wraparound);
+
+
+
+
+static struct graphics_image_priv *image_new(struct graphics_priv *gra, struct graphics_image_methods *meth, char *path,
+        int *w, int *h, struct point *hot, int rotation) {
+#pragma unused (gra, meth, rotation)
+    NSString *s=[[NSString alloc]initWithCString:path encoding:NSMacOSRomanStringEncoding];
+    CGDataProviderRef imgDataProvider = CGDataProviderCreateWithCFData((CFDataRef)[NSData dataWithContentsOfFile:s]);
+    [s release];
+
+    if (!imgDataProvider)
+        return NULL;
+
+    CGImageRef image = CGImageCreateWithPNGDataProvider(imgDataProvider, NULL, true, kCGRenderingIntentDefault);
+    CGDataProviderRelease(imgDataProvider);
+    dbg(lvl_debug,"size %dx%d, name:%s",(int)CGImageGetWidth(image),(int)CGImageGetHeight(image), path);
+
+    // Resize image, check for CGImageGetWidth(image)>*w needed for iOS simulator
+    if(w && (*w>0) && (CGImageGetWidth(image)>(size_t)*w) && CGImageGetHeight(image)>0) {
+        CGColorSpaceRef colorspace = CGImageGetColorSpace(image);
+        CGContextRef context = CGBitmapContextCreate(NULL,
+                               *w,
+                               CGImageGetHeight(image) / (CGImageGetWidth(image) / *w),
+                               CGImageGetBitsPerComponent(image),
+                               CGImageGetBytesPerRow(image)/CGImageGetWidth(image)* *w,
+                               colorspace,
+                               CGImageGetAlphaInfo(image));
+
+        if(context == NULL) {
+            CGImageRelease(image);
+            return nil;
+        }
+
+        CGContextDrawImage(context, CGContextGetClipBoundingBox(context), image);
+        CGImageRef imgRef = CGBitmapContextCreateImage(context);
+
+        *w=(int)CGImageGetWidth(imgRef);
+        *h=(int)CGImageGetHeight(imgRef);
+
+        if (hot) {
+            hot->x=(int)CGImageGetWidth(imgRef)/2;
+            hot->y=(int)CGImageGetHeight(imgRef)/2;
+        }
+
+        return (struct graphics_image_priv *)imgRef;
+    }
+
+    if (w)
+        *w=(int)CGImageGetWidth(image);
+    if (h)
+        *h=(int)CGImageGetHeight(image);
+    if (hot) {
+        hot->x=(int)CGImageGetWidth(image)/2;
+        hot->y=(int)CGImageGetHeight(image)/2;
+    }
+    return (struct graphics_image_priv *)image;
+}
+
+static void *get_data(struct graphics_priv *this, const char *type) {
+    dbg(lvl_debug,"enter");
+    if (strcmp(type,"window"))
+        return NULL;
+    return &this->win;
+}
+
+static void image_free(struct graphics_priv *gr, struct graphics_image_priv *priv) {
+#pragma unused (gr)
+    CGImageRelease((CGImageRef)priv);
+}
+
+static void get_text_bbox(struct graphics_priv *gr, struct graphics_font_priv *font, char *text, int dx, int dy,
+                          struct point *ret, int estimate) {
+#pragma unused (gr, dx, dy, estimate)
+    int len = (int)g_utf8_strlen(text, -1);
+    int xMin = 0;
+    int yMin = 0;
+    int yMax = 13*font->size/256;
+    int xMax = 9*font->size*len/256;
+
+    ret[0].x = xMin;
+    ret[0].y = -yMin;
+    ret[1].x = xMin;
+    ret[1].y = -yMax;
+    ret[2].x = xMax;
+    ret[2].y = -yMax;
+    ret[3].x = xMax;
+    ret[3].y = -yMin;
+}
+
+static void overlay_disable(struct graphics_priv *gr, int disabled) {
+    gr->overlay_disabled=disabled;
+}
+
+static int set_attr(struct graphics_priv *gr, struct attr * attr) {
+    if(attr->type == attr_callback) {
+        callback_list_add(gr->cbl, attr->u.callback);
+    }
+    return 1;
+}
+
+static void overlay_resize(struct graphics_priv *this, struct point *p, int w, int h, int wraparound) {
+    //do not dereference parent for non overlay osds
+    if(!this->parent) {
+        return;
+    }
+
+    int changed = 0;
+    int w2,h2;
+
+    if (w == 0) {
+        w2 = 1;
+    } else {
+        w2 = w;
+    }
+
+    if (h == 0) {
+        h2 = 1;
+    } else {
+        h2 = h;
+    }
+
+    this->p = *p;
+    if (this->w != w2) {
+        this->w = w2;
+        changed = 1;
+    }
+
+    if (this->h != h2) {
+        this->h = h2;
+        changed = 1;
+    }
+
+    this->wraparound = wraparound;
+
+    if (changed>0) {
+        callback_list_call_attr_2(this->cbl, attr_resize, GINT_TO_POINTER(w), GINT_TO_POINTER(h));
+    }
+}
+
+static void graphics_destroy (struct graphics_priv *gr) {
+#pragma unused (gr)
+}
+
+static struct graphics_methods graphics_methods = {
+    graphics_destroy, /* graphics_destroy, */
+    draw_mode,
+    draw_lines,
+    draw_polygon,
+    draw_rectangle,
+    NULL, /* draw_circle, */
+    draw_text,
+    draw_image,
+    NULL, /* draw_image_warp, */
+    draw_drag,
+    font_new,
+    gc_new,
+    background_gc,
+    overlay_new,
+    image_new,
+    get_data,
+    image_free,
+    get_text_bbox,
+    overlay_disable,
+    overlay_resize,
+    set_attr,
+    NULL, /* show_native_keyboard, */
+    NULL, /* hide_native_keyboard, */
+    NULL, /* navit_float, */
+    NULL, /* draw_polygon_with_holes, */
+};
+
+static struct graphics_priv *overlay_new(struct graphics_priv *gr, struct graphics_methods *meth, struct point *p,
+        int w, int h, int wraparound) {
+    if(gr->iscarplay)
+        return NULL;
+    struct graphics_priv *ret=g_new0(struct graphics_priv, 1);
+    *meth=graphics_methods;
+    ret->p=*p;
+    ret->w=w;
+    ret->h=h;
+    ret->parent=gr;
+    ret->next=gr->overlays;
+    ret->wraparound=wraparound;
+    gr->overlays=ret;
+    setup_graphics(gr);
+    return ret;
+}
+
+static void graphics_ready(struct graphics_priv *this) {
+    NSLog(@"graphics_ready\n");
+    this->gr_ready=1;
+}
+
+static struct graphics_priv *graphics_cocoa_carplay_new(struct navit *nav, struct graphics_methods *meth, struct attr **attrs,
+        struct callback_list *cbl) {
+#pragma unused (attrs)
+    struct graphics_priv *ret;
+    *meth=graphics_methods;
+    dbg(lvl_debug,"enter");
+    if(!event_request_system("cocoa_carplay","graphics_cocoa_carplay"))
+        return NULL;
+    ret=g_new0(struct graphics_priv, 1);
+    ret->navit = nav;
+    ret->cbl=cbl;
+    ret->gr_ready=0;
+    global_graphics_cocoa_carplay=ret;
+    navit_add_callback(nav, callback_new_attr_1(callback_cast(graphics_ready), attr_graphics_ready, ret));
+    return ret;
+}
+
+static void event_cocoa_carplay_main_loop_run(void) {
+
+    dbg(lvl_debug,"enter");
+#if 0
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *logPath = [documentsDirectory stringByAppendingPathComponent:@"console.log"];
+    freopen("/tmp/log.txt","a+",stderr);
+    NSLog(@"Test\n");
+#endif
+    NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
+
+    // This is equivalent to main.m in an XCode template application
+    dbg(1,"calling main");
+    int retval = UIApplicationMain(main_argc, (char * _Nullable * _Nonnull)main_argv, nil, @"NavitAppDelegateCarplay");
+    dbg(1,"retval=%d",retval);
+
+    [pool release];
+}
+
+@interface NavitTimerCarplay : NSObject {
+@public
+    struct callback *cb;
+    NSTimer *timer;
+}
+- (void)onTimer:(NSTimer*)theTimer;
+
+@end
+
+@implementation NavitTimerCarplay
+
+- (void)onTimer:(NSTimer*)theTimer {
+    callback_call_0(cb);
+}
+
+
+@end
+
+#pragma mark navit plugin and event system methods
+
+struct event_idle {
+    struct callback *cb;
+    NSTimer *timer;
+};
+
+static struct event_timeout *event_cocoa_carplay_add_timeout(int timeout, int multi, struct callback *cb) {
+    NavitTimerCarplay *ret=[[NavitTimerCarplay alloc]init];
+    ret->cb=cb;
+    ret->timer=[NSTimer scheduledTimerWithTimeInterval:(timeout/1000.0) target:ret selector:@selector(
+                            onTimer:) userInfo:nil repeats:multi?YES:NO];
+    dbg(1,"timer=%p",ret->timer);
+    return (struct event_timeout *)ret;
+}
+
+
+static void event_cocoa_carplay_remove_timeout(struct event_timeout *ev) {
+    NavitTimerCarplay *t=(NavitTimerCarplay *)ev;
+
+    if(t) {
+        [t->timer invalidate];
+        [t release];
+    }
+}
+
+
+static struct event_idle *event_cocoa_carplay_add_idle(int priority, struct callback *cb) {
+#pragma unused (priority)
+    NavitTimerCarplay *ret=[[NavitTimerCarplay alloc]init];
+    ret->cb=cb;
+    ret->timer=[NSTimer scheduledTimerWithTimeInterval:(0.0) target:ret selector:@selector(
+                            onTimer:) userInfo:nil repeats:YES];
+
+    dbg(1,"timer=%p",ret->timer);
+    return (struct event_idle *)ret;
+}
+
+
+static void event_cocoa_carplay_remove_idle(struct event_idle *ev) {
+    NavitTimerCarplay *t=(NavitTimerCarplay *)ev;
+
+    [t->timer invalidate];
+    [t release];
+}
+
+
+static struct event_methods event_cocoa_carplay_methods = {
+    event_cocoa_carplay_main_loop_run,
+    NULL, /* event_cocoa_carplay_main_loop_quit */
+    NULL, /* event_cocoa_carplay_add_watch, */
+    NULL, /* event_cocoa_carplay_remove_watch, */
+    event_cocoa_carplay_add_timeout,
+    event_cocoa_carplay_remove_timeout,
+    event_cocoa_carplay_add_idle,
+    event_cocoa_carplay_remove_idle,
+    NULL, /* event_cocoa_carplay_call_callback, */
+};
+
+
+static struct event_priv *event_cocoa_carplay_new(struct event_methods *meth) {
+    dbg(1,"enter");
+    *meth=event_cocoa_carplay_methods;
+    return NULL;
+}
+
+
+void plugin_init(void) {
+    dbg(1,"enter");
+    plugin_register_category_graphics("cocoa_carplay", graphics_cocoa_carplay_new);
+    plugin_register_category_event("cocoa_carplay", event_cocoa_carplay_new);
+}
