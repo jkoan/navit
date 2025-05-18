@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg39"
+   width="3768.9927"
+   height="3560.2783"
+   viewBox="0 0 3768.9927 3560.2783"
+   sodipodi:docname="south.svg"
+   inkscape:version="1.3 (0e150ed, 2023-07-21)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs43">
+    <rect
+       x="1306.5541"
+       y="1298.2054"
+       width="939.21619"
+       height="91.834473"
+       id="rect3" />
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Invert"
+       id="filter270"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feColorMatrix
+         type="hueRotate"
+         values="180"
+         result="color1"
+         id="feColorMatrix266" />
+      <feColorMatrix
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 -0.21 -0.72 -0.07 2 0 "
+         result="color2"
+         id="feColorMatrix268" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Invert"
+       id="filter270-4"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feColorMatrix
+         type="hueRotate"
+         values="180"
+         result="color1"
+         id="feColorMatrix266-8" />
+      <feColorMatrix
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 -0.21 -0.72 -0.07 2 0 "
+         result="color2"
+         id="feColorMatrix268-3" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Invert"
+       id="filter270-4-0"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
+      <feColorMatrix
+         type="hueRotate"
+         values="180"
+         result="color1"
+         id="feColorMatrix266-8-5" />
+      <feColorMatrix
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 -0.21 -0.72 -0.07 2 0 "
+         result="color2"
+         id="feColorMatrix268-3-2" />
+    </filter>
+    <filter
+       style="color-interpolation-filters:sRGB"
+       inkscape:label="Invert"
+       id="filter2"
+       x="-0.00050190118"
+       y="-0.00053135549"
+       width="1.0010038"
+       height="1.0010627">
+      <feColorMatrix
+         type="hueRotate"
+         values="180"
+         result="color1"
+         id="feColorMatrix1" />
+      <feColorMatrix
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 -0.21 -0.72 -0.07 2 0 "
+         result="color2"
+         id="feColorMatrix2" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="namedview41"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="0.23956146"
+     inkscape:cx="1874.2581"
+     inkscape:cy="1373.3428"
+     inkscape:window-width="1920"
+     inkscape:window-height="1387"
+     inkscape:window-x="46"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g45" />
+  <g
+     inkscape:groupmode="layer"
+     inkscape:label="Image"
+     id="g45"
+     transform="translate(81.01829,-14.807411)">
+    <rect
+       style="fill:#ffffff;stroke:#000000;stroke-width:3.77953;filter:url(#filter2);fill-opacity:0.627451"
+       id="rect1"
+       width="3765.2134"
+       height="3556.4985"
+       x="-79.128525"
+       y="16.697176"
+       rx="298.33331" />
+    <text
+       xml:space="preserve"
+       style="font-size:3023.62px;line-height:1.25;font-family:sans-serif;fill:#ffffff"
+       x="758.20312"
+       y="2894.1094"
+       id="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         x="758.20312"
+         y="2894.1094"
+         style="font-size:3023.62px;fill:#ffffff">S</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="translate(-100)"
+       id="text3"
+       style="font-size:24px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect3);display:inline" />
+  </g>
+</svg>
