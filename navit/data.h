@@ -58,7 +58,7 @@ get_u24(unsigned char **p) {
 	unsigned long ret;
 	ret=get_u16(p);
 	ret|=*((*p)++) << 16;
-	return ret;
+	return (unsigned int)ret;
 }
 
 
@@ -67,7 +67,7 @@ get_u24_unal(unsigned char **p) {
 	unsigned long ret;
 	ret=get_u16_unal(p);
 	ret|=*((*p)++) << 16;
-	return ret;
+	return (unsigned int)ret;
 }
 
 
@@ -79,7 +79,7 @@ get_u32(unsigned char **p) {
 #ifdef WORDS_BIGENDIAN
 	return __bswap_32(ret);
 #else
-	return ret;
+	return (unsigned int)ret;
 #endif
 }
 
@@ -90,7 +90,7 @@ get_u32_unal(unsigned char **p) {
 	ret|=(*(*p)++) << 8;
 	ret|=(*(*p)++) << 16;
 	ret|=(*(*p)++) << 24;
-	return ret;
+	return (unsigned int)ret;
 }
 
 static inline char *
