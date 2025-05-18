@@ -2,11 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Navits BT-Headup Plugin needs access to Bluetooth</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Navits BT-Headup Plugin needs access to Bluetooth</string>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>bluetooth-peripheral</string>
 		<string>location</string>
 		<string>audio</string>
 		<string>processing</string>
+		<string>bluetooth-central</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -25,13 +31,13 @@
 	<key>LSApplicationCategoryType</key>
 	<string>Travel</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
 	<key>UIStatusBarHidden</key>
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>navit needs access to your location to be of a kind of use</string>
+	<string>Navit needs access to your location to be of a kind of use</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>navit needs access to your location to be of a kind of use</string>
+	<string>Navit needs access to your location to be of a kind of use</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -64,5 +70,7 @@
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 </dict>
 </plist>
