@@ -85,7 +85,7 @@ int gui_internal_gesture_get_vector(struct gui_priv *this, long long msec, struc
     for(i=1; (g=gui_internal_gesture_ring_get(this,i))!=NULL; i++) {
         if( msec-g->msec > 1000 )
             break;
-        dt=msec-g->msec;
+        dt=(int)(msec-g->msec);
         if(dx) *dx=x-g->p.x;
         if(dy) *dy=y-g->p.y;
         if(p0) {
