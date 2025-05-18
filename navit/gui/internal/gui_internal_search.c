@@ -9,7 +9,7 @@
 #include "debug.h"
 #include "navit.h"
 #include "navit_nls.h"
-#include "event.h"
+#include "navit/event.h"
 #include "search.h"
 #include "country.h"
 #include "track.h"
@@ -22,16 +22,19 @@
 #include "gui_internal_keyboard.h"
 #include "gui_internal_search.h"
 #include "ZoneDetect/library/zonedetect.h"
+#include "vehicle.h"
 #ifdef HAVE_API_ANDROID
 #include "util.h"
 #endif
 
 static void gui_internal_search_country(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data, widget)
     gui_internal_prune_menu_count(this, 1, 0);
     gui_internal_search(this,_("Country"),"Country",0);
 }
 
 static void gui_internal_search_town(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data, wm)
     if (this->sl)
         search_list_select(this->sl, attr_country_all, 0, 0);
     g_free(this->country_iso2);
@@ -40,11 +43,13 @@ static void gui_internal_search_town(struct gui_priv *this, struct widget *wm, v
 }
 
 static void gui_internal_search_street(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data, widget)
     search_list_select(this->sl, attr_town_or_district_name, 0, 0);
     gui_internal_search(this,_("Street"),"Street",0);
 }
 
 static void gui_internal_search_house_number(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data, widget)
     search_list_select(this->sl, attr_street_name, 0, 0);
     gui_internal_search(this,_("House number"),"House number",0);
 }
@@ -174,6 +179,7 @@ static char *town_display_label(struct search_list_result *res, int level, int f
 
 static void gui_internal_find_next_possible_key(char *search_text, char *wm_name, char *possible_keys,
         char *item_name) {
+#pragma unused(wm_name)
     gchar* trunk_name;
     if (item_name) {
 
@@ -183,10 +189,10 @@ static void gui_internal_find_next_possible_key(char *search_text, char *wm_name
         }
 
         if (trunk_name) {
-            int next_char_pos = strlen(search_text);
+            int next_char_pos = (int)strlen(search_text);
             char next_char = trunk_name[next_char_pos];
             int i;
-            int len = strlen(possible_keys);
+            int len = (int)strlen(possible_keys);
 
             for(i = 0; (i<len) && (possible_keys[i] != next_char) ; i++) ;
 
@@ -254,9 +260,10 @@ static void gui_internal_highlight_possible_keys(struct gui_priv *this, char *po
 
 static int gui_internal_get_match_quality(char *item_name, char* search_text, int is_house_number_without_street) {
     enum match_quality {
-        full_string_match, word_match, substring_match, housenum_but_no_street_match
+        full_string_match, word_match, substring_match, housenum_but_no_street_match, undefined
     }
     match_quality;
+    match_quality = undefined;
     if (is_house_number_without_street) {
         match_quality=housenum_but_no_street_match;
     } else if(item_name) {
@@ -407,6 +414,7 @@ static void gui_internal_search_idle_start(struct gui_priv *this, char *wm_name,
 }
 
 static void gui_internal_search_changed(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     GList *l;
     struct widget *search_list=gui_internal_menu_data(this)->search_list;
     void *param=(void *)3;
@@ -454,43 +462,49 @@ static void gui_internal_search_changed(struct gui_priv *this, struct widget *wm
 static char iso2[3];
 
 static void gui_internal_search_list_set_default_country(struct gui_priv *this) {
-    struct attr search_attr, country_name, country_iso2, *country_attr;
+    struct attr search_attr, country_name, country_iso2, vehicle, *country_attr;
     struct item *item;
     struct country_search *cs;
     struct tracking *tracking;
     struct search_list_result *res;
 
     country_attr=country_default();
+    
     tracking=navit_get_tracking(this->nav);
     
-    // Override default country with country of current position if available
-    if(tracking_get_attr(tracking, attr_position_coord_geo, &search_attr, NULL)) {
-        // Use Zonedb to get current country
-        // Set country_attr to this country
-        char *gui_file=g_strjoin(NULL, navit_get_user_data_directory(TRUE), "/country21.bin", NULL);
-        ZoneDetect *const cd = ZDOpenDatabase(gui_file);
-        float safezone = 0;
-        ZoneDetectResult *results = ZDLookup(cd, search_attr.u.coord_geo->lat, search_attr.u.coord_geo->lng, &safezone);
-        unsigned int index = 0;
-        while(results[index].lookupResult != ZD_LOOKUP_END) {
-            printf("%s:\n", ZDLookupResultToString(results[index].lookupResult));
-            printf("  meta: %u\n", results[index].metaId);
-            printf("  polygon: %u\n", results[index].polygonId);
-            if(results[index].data) {
-                for(unsigned int i = 0; i < results[index].numFields; i++) {
-                    if(results[index].fieldNames[i] && results[index].data[i]) {
-                        if(!strcmp(results[index].fieldNames[i], "Alpha2")) {
-                            strncpy(iso2, results[index].data[i],2);
-                            country_attr->u.str=iso2;
-                        }
-                        printf("  %s: %s\n", results[index].fieldNames[i], results[index].data[i]);
-                    }
-                }
-            }
+    if (navit_get_attr(this->nav, attr_vehicle, &vehicle, NULL) && vehicle.u.vehicle) {
+        if(vehicle_get_attr(vehicle.u.vehicle, attr_position_coord_geo, &search_attr, NULL)) {
             
-            index++;
+            // Use Zonedb to get current country
+            // Set country_attr to this country
+            char *gui_file=g_strjoin(NULL, navit_get_user_data_directory(TRUE), "/country21.bin", NULL);
+            ZoneDetect *const cd = ZDOpenDatabase(gui_file);
+            if(cd) {
+                float safezone = 0;
+                ZoneDetectResult *results = ZDLookup(cd, search_attr.u.coord_geo->lat, search_attr.u.coord_geo->lng, &safezone);
+                unsigned int index = 0;
+                while(results[index].lookupResult != ZD_LOOKUP_END) {
+                    dbg(lvl_debug, "%s:\n", ZDLookupResultToString(results[index].lookupResult));
+                    dbg(lvl_debug, "  meta: %u\n", results[index].metaId);
+                    dbg(lvl_debug, "  polygon: %u\n", results[index].polygonId);
+                    if(results[index].data) {
+                        for(unsigned int i = 0; i < results[index].numFields; i++) {
+                            if(results[index].fieldNames[i] && results[index].data[i]) {
+                                if(!strcmp(results[index].fieldNames[i], "Alpha2")) {
+                                    strncpy(iso2, results[index].data[i],2);
+                                    country_attr->u.str=iso2;
+                                }
+                                dbg(lvl_debug, "  %s: %s\n", results[index].fieldNames[i], results[index].data[i]);
+                            }
+                        }
+                    }
+                    
+                    index++;
+                }
+                ZDFreeResults(results);
+                ZDCloseDatabase(cd);
+            }
         }
-        ZDFreeResults(results);
     }
     if (tracking && tracking_get_attr(tracking, attr_country_id, &search_attr, NULL))
         country_attr=&search_attr;
@@ -503,7 +517,7 @@ static void gui_internal_search_list_set_default_country(struct gui_priv *this) 
             search_attr.u.str=country_name.u.str;
             search_list_search(this->sl, &search_attr, 0);
             while((res=search_list_get_result(this->sl)));
-            if(this->country_iso2) {
+            if(this->nav) {
                 g_free(this->country_iso2);
                 this->country_iso2=NULL;
             }
@@ -608,6 +622,7 @@ void gui_internal_search(struct gui_priv *this, const char *what, const char *ty
 }
 
 void gui_internal_search_house_number_in_street(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data)
     dbg(lvl_info,"id %d", widget->selection_id);
     search_list_select(this->sl, attr_street_name, 0, 0);
     search_list_select(this->sl, attr_street_name, widget->selection_id, 1);
@@ -615,6 +630,7 @@ void gui_internal_search_house_number_in_street(struct gui_priv *this, struct wi
 }
 
 void gui_internal_search_street_in_town(struct gui_priv *this, struct widget *widget, void *data) {
+#pragma unused(data)
     dbg(lvl_info,"id %d", widget->selection_id);
     search_list_select(this->sl, attr_town_or_district_name, 0, 0);
     search_list_select(this->sl, attr_town_or_district_name, widget->selection_id, 1);
