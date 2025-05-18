@@ -196,10 +196,12 @@ is_int(struct result *res)
 }*/
 
 static int is_double(struct result *res) {
+#pragma unused(res)
     return 0;
 }
 
 static void dump(struct result *res) {
+#pragma unused(res)
 #if 0
     char object[res->varlen+1];
     char attribute[res->attrnlen+1];
@@ -239,6 +241,7 @@ static enum attr_type command_attr_type(struct result *res) {
  */
 static int command_object_get_attr(struct context *ctx, struct attr *object, enum attr_type attr_type,
                                    struct attr *ret) {
+#pragma unused(ctx)
     int r;
     struct attr dup;
     struct object_func *func=object_func_lookup(object->type);
@@ -250,11 +253,12 @@ static int command_object_get_attr(struct context *ctx, struct attr *object, enu
     if(r)
         attr_dup_content(&dup,ret);
     else
-        dbg(lvl_warning, "%s (%p) has no attribute %s", attr_to_name(object->type), object->u.data, attr_to_name(attr_type))
-        return r;
+        dbg(lvl_error, "%s (%p) has no attribute %s", attr_to_name(object->type), object->u.data, attr_to_name(attr_type))
+    return r;
 }
 
 static int command_object_add_attr(struct context *ctx, struct attr *object, struct attr *attr) {
+#pragma unused(ctx)
     struct object_func *func=object_func_lookup(object->type);
     if (!object->u.data || !func || !func->add_attr)
         return 0;
@@ -262,6 +266,7 @@ static int command_object_add_attr(struct context *ctx, struct attr *object, str
 }
 
 static int command_object_remove_attr(struct context *ctx, struct attr *object, struct attr *attr) {
+#pragma unused(ctx)
     struct object_func *func=object_func_lookup(object->type);
     if (!object->u.data || !func || !func->remove_attr)
         return 0;
@@ -292,7 +297,7 @@ static int command_object_remove_attr(struct context *ctx, struct attr *object, 
  */
 static void command_get_attr(struct context *ctx, struct result *res) {
     int result;
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     enum attr_type attr_type=command_attr_type(res);
     enum attr_type parent_type = res->attr.type; /* for debugging only */
     if (ctx->skip)
@@ -419,7 +424,7 @@ static int get_int_bool(struct context *ctx, int is_bool, struct result *res) {
     if (res->attr.type == attr_none)
         return 0;
     if (res->attr.type >= attr_type_int_begin && res->attr.type <= attr_type_int_end) {
-        return res->attr.u.num;
+        return (int)res->attr.u.num;
     }
     if (res->attr.type >= attr_type_double_begin && res->attr.type <= attr_type_double_end) {
         return (int) (*res->attr.u.numd);
@@ -681,7 +686,7 @@ static void eval_value(struct context *ctx, struct result *res) {
             } else
                 break;
         }
-        result_set(ctx, set_type_symbol, ctx->expr, op-ctx->expr, res);
+        result_set(ctx, set_type_symbol, ctx->expr, (int)(op-ctx->expr), res);
         ctx->expr=op;
         return;
     }
@@ -698,7 +703,7 @@ static void eval_value(struct context *ctx, struct result *res) {
             }
             op++;
         }
-        result_set(ctx, dots?set_type_float:set_type_integer, ctx->expr, op-ctx->expr, res);
+        result_set(ctx, dots?set_type_float:set_type_integer, ctx->expr, (int)(op-ctx->expr), res);
         ctx->expr=op;
         return;
     }
@@ -726,10 +731,10 @@ static void eval_value(struct context *ctx, struct result *res) {
                 *s++=*op++;
             } while (op[0] != '"');
             *s++=*op++;
-            result_set(ctx, set_type_string, tmpstr, s-tmpstr, res);
+            result_set(ctx, set_type_string, tmpstr, (int)(s-tmpstr), res);
             g_free(tmpstr);
         } else
-            result_set(ctx, set_type_string, ctx->expr, op-ctx->expr, res);
+            result_set(ctx, set_type_string, ctx->expr, (int)(op-ctx->expr), res);
         ctx->expr=op;
         return;
     }
@@ -894,7 +899,7 @@ static void command_call_function(struct context *ctx, struct result *res) {
 }
 
 static void eval_postfix(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     const char *op;
 
     eval_brace(ctx, res);
@@ -971,7 +976,7 @@ static void eval_unary(struct context *ctx, struct result *res) {
 }
 
 static void eval_multiplicative(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     const char *op;
 
     eval_unary(ctx, res);
@@ -987,7 +992,7 @@ static void eval_multiplicative(struct context *ctx, struct result *res) {
 }
 
 static void eval_additive(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     const char *op;
 
     eval_multiplicative(ctx, res);
@@ -1003,7 +1008,7 @@ static void eval_additive(struct context *ctx, struct result *res) {
 }
 
 static void eval_equality(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     const char *op;
 
     eval_additive(ctx, res);
@@ -1020,7 +1025,7 @@ static void eval_equality(struct context *ctx, struct result *res) {
 
 
 static void eval_bitwise_and(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_equality(ctx, res);
     if (ctx->error) return;
@@ -1036,7 +1041,7 @@ static void eval_bitwise_and(struct context *ctx, struct result *res) {
 }
 
 static void eval_bitwise_xor(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_bitwise_and(ctx, res);
     if (ctx->error) return;
@@ -1051,7 +1056,7 @@ static void eval_bitwise_xor(struct context *ctx, struct result *res) {
 }
 
 static void eval_bitwise_or(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_bitwise_xor(ctx, res);
     if (ctx->error) return;
@@ -1067,7 +1072,7 @@ static void eval_bitwise_or(struct context *ctx, struct result *res) {
 }
 
 static void eval_logical_and(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_bitwise_or(ctx, res);
     if (ctx->error) return;
@@ -1082,7 +1087,7 @@ static void eval_logical_and(struct context *ctx, struct result *res) {
 }
 
 static void eval_logical_or(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_logical_and(ctx, res);
     if (ctx->error) return;
@@ -1097,7 +1102,7 @@ static void eval_logical_or(struct context *ctx, struct result *res) {
 }
 
 static void eval_conditional(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     int cond=0;
     int skip;
 
@@ -1141,7 +1146,7 @@ static void eval_conditional(struct context *ctx, struct result *res) {
 /* = *= /= %= += -= >>= <<= &= ^= |= */
 
 static void eval_assignment(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
     eval_conditional(ctx, res);
     if (ctx->error) return;
     if (!get_op(ctx,0,"=",NULL)) return;
@@ -1161,7 +1166,7 @@ static void eval_assignment(struct context *ctx, struct result *res) {
 
 /* , */
 static void eval_comma(struct context *ctx, struct result *res) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     eval_assignment(ctx, res);
     if (ctx->error) return;
@@ -1175,7 +1180,7 @@ static void eval_comma(struct context *ctx, struct result *res) {
 }
 
 static struct attr ** eval_list(struct context *ctx) {
-    struct result tmp= {{0,},};
+    struct result tmp= {{0,},0,0,0,0,0,0};
 
     struct attr **ret=NULL;
     for (;;) {
@@ -1223,7 +1228,8 @@ static void command_evaluate_to(struct attr *attr, const char *expr, struct cont
 }
 
 enum attr_type command_evaluate_to_attr(struct attr *attr, char *expr, int *error, struct attr *ret) {
-    struct result res= {{0,},};
+#pragma unused(error)
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
     command_evaluate_to(attr, expr, &ctx, &res);
     if (ctx.error)
@@ -1235,7 +1241,7 @@ enum attr_type command_evaluate_to_attr(struct attr *attr, char *expr, int *erro
 }
 
 void command_evaluate_to_void(struct attr *attr, char *expr, int *error) {
-    struct result res= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
     command_evaluate_to(attr, expr, &ctx, &res);
     if (!ctx.error)
@@ -1247,7 +1253,7 @@ void command_evaluate_to_void(struct attr *attr, char *expr, int *error) {
 }
 
 char *command_evaluate_to_string(struct attr *attr, char *expr, int *error) {
-    struct result res= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
     char *ret=NULL;
 
@@ -1268,7 +1274,7 @@ char *command_evaluate_to_string(struct attr *attr, char *expr, int *error) {
 }
 
 int command_evaluate_to_int(struct attr *attr, char *expr, int *error) {
-    struct result res= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
     int ret=0;
 
@@ -1289,7 +1295,7 @@ int command_evaluate_to_int(struct attr *attr, char *expr, int *error) {
 }
 
 int command_evaluate_to_boolean(struct attr *attr, const char *expr, int *error) {
-    struct result res= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
     int ret=0;
 
@@ -1317,8 +1323,9 @@ int command_evaluate_to_boolean(struct attr *attr, const char *expr, int *error)
 }
 
 int command_evaluate_to_length(const char *expr, int *error) {
+#pragma unused(error)
     struct attr attr;
-    struct result res= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0};
     struct context ctx;
 
     attr.type=attr_none;
@@ -1328,12 +1335,12 @@ int command_evaluate_to_length(const char *expr, int *error) {
     result_free(&res);
 
     if (!ctx.error)
-        return ctx.expr-expr;
+        return (int)(ctx.expr-expr);
     return 0;
 }
 
 static int command_evaluate_single(struct context *ctx) {
-    struct result res= {{0,},},tmp= {{0,},};
+    struct result res= {{0,},0,0,0,0,0,0}, tmp= {{0,},0,0,0,0,0,0};;
     const char *op,*a,*f,*end;
     enum attr_type attr_type;
     void *obj;
@@ -1678,13 +1685,13 @@ static int command_register_callbacks(struct command_saved *cs) {
     prev = cs->context_attr;
 
     while ((status = get_next_object(&cs->ctx, &cs->res)) != 0) {
-        tmpoffset = cs->res.var - cs->command;
+        tmpoffset = (int)(cs->res.var - cs->command);
         cs->ctx.attr = &prev;
         resolve(&cs->ctx, &cs->res);
 
         if (cs->ctx.error) {
             /* An error occurred while parsing the command */
-            tmpoffset = cs->ctx.expr - cs->command;
+            tmpoffset = (int)(cs->ctx.expr - cs->command);
             dbg(lvl_error, "parsing error: cs=%p, cs->ctx.error=%d", cs, cs->ctx.error);
             dbg(lvl_error, "\t%s", cs->command);
             dbg(lvl_error, "\t%*s", tmpoffset + 1, "^");
