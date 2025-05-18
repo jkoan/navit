@@ -372,8 +372,8 @@ void main_init(const char *program) {
             int l;
             int progpath_len;
             char *progpath="/bin/navit";
-            l=strlen(program);
-            progpath_len=strlen(progpath);
+            l=(int)strlen(program);
+            progpath_len=(int)strlen(progpath);
             if (l > progpath_len && !strcmp(program+l-progpath_len,progpath)) {
                 s=g_strdup(program);
                 s[l-progpath_len]='\0';
