@@ -231,7 +231,7 @@ int poly_get(struct map_rect_priv *mr, struct poly_priv *poly, struct item *item
         poly->subpoly_next=mr->b.p+L(poly->count[poly->subpoly_num])*sizeof(struct coord);
         poly->subpoly_num++;
         poly->subpoly_num_all++;
-        if (poly->subpoly_num >= poly->polys)
+        if (poly->subpoly_num >= (int)poly->polys)
             poly->subpoly_num=0;
         poly->subpoly_start=poly->p=mr->b.p;
         item->priv_data=poly;
