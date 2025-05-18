@@ -109,6 +109,11 @@ static struct item_methods town_meth = {
     town_coord_get,
     town_attr_rewind,
     town_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 static void town_get_data(struct town_priv *twn, unsigned char **p) {
@@ -146,7 +151,7 @@ int town_get(struct map_rect_priv *mr, struct town_priv *twn, struct item *item)
             switch(twn->type) {
             case 1:
                 size=twn->size;
-                if (size >= sizeof(town_item)/sizeof(enum item_type))
+                if (size >= (int)(sizeof(town_item)/sizeof(enum item_type)))
                     size=sizeof(town_item)/sizeof(enum item_type)-1;
                 item->type=town_item[size];
                 break;
@@ -156,7 +161,7 @@ int town_get(struct map_rect_priv *mr, struct town_priv *twn, struct item *item)
                     size++;
                 if (size == 5 && twn->order < 14)
                     size+=2;
-                if (size >= sizeof(district_item)/sizeof(enum item_type))
+                if (size >= (int)(sizeof(district_item)/sizeof(enum item_type)))
                     size=sizeof(district_item)/sizeof(enum item_type)-1;
                 item->type=district_item[size];
                 break;
