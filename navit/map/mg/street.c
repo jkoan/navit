@@ -68,7 +68,7 @@ static void street_name_get(struct street_name *name, unsigned char **p) {
     name->segment_count=get_u32_unal(p);
     name->segments=(struct street_name_segment *)(*p);
     (*p)+=(sizeof (struct street_name_segment))*name->segment_count;
-    name->aux_len=name->len-(*p-start);
+    name->aux_len=(int)(name->len-(*p-start));
     name->aux_data=*p;
     name->tmp_len=name->aux_len;
     name->tmp_data=name->aux_data;
@@ -93,7 +93,7 @@ static void street_name_numbers_get(struct street_name_numbers *name_numbers, un
     name_numbers->segment_count=get_u32_unal(p);
     name_numbers->segments=(struct street_name_segment *)(*p);
     (*p)+=sizeof(struct street_name_segment)*name_numbers->segment_count;
-    name_numbers->aux_len=name_numbers->len-(*p-start);
+    name_numbers->aux_len=(int)(name_numbers->len-(*p-start));
     name_numbers->aux_data=*p;
     name_numbers->tmp_len=name_numbers->aux_len;
     name_numbers->tmp_data=name_numbers->aux_data;
@@ -228,7 +228,7 @@ static int street_coord_get(void *priv_data, struct coord *c, int count) {
 
     if (! street->p && count) {
         street->p=street->coord_begin;
-        scount=street->str-street->str_start;
+        scount=(int)(street->str-street->str_start);
         for (i = 0 ; i < scount ; i++) {
             street->status=street_str_get_segid(&street->str[i+1]) >= 0 ? 0:1;
             while (street_coord_get_helper(street, c));
@@ -885,6 +885,11 @@ static struct item_methods housenumber_meth = {
     housenumber_coord_get,
     housenumber_attr_rewind,
     housenumber_attr_get,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 int housenumber_search_setup(struct map_rect_priv *mr) {
