@@ -28,6 +28,7 @@
  */
 
 int gui_internal_menu_needs_resizing(struct gui_priv *this, struct widget *w, int wdisp, int hdisp) {
+#pragma unused(this)
     if (w->w != wdisp || w->h != hdisp) {
         w->w=wdisp;
         w->h=hdisp;
@@ -323,6 +324,7 @@ void gui_internal_menu_render(struct gui_priv *this) {
  * @param h the new height of the display
  */
 void gui_internal_menu_resize(struct gui_priv *this, int w, int h) {
+#pragma unused(w,h)
     GList *l;
     struct widget *menu_topwidget;
 
@@ -344,6 +346,7 @@ void gui_internal_menu_resize(struct gui_priv *this, int w, int h) {
  * @param newh The new height of the display
  */
 static void gui_internal_top_bar_resize(struct gui_priv *this, struct widget *w, void *data, int neww, int newh) {
+#pragma unused(data, newh, neww)
     struct widget *new_top_bar;
 
     if (w->type != widget_box) {
