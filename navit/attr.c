@@ -50,7 +50,6 @@ struct attr_name {
     char *name;
 };
 
-
 /** List of attr_types with their names as strings. */
 static struct attr_name attr_names[]= {
 #define ATTR2(x,y) ATTR(y)
@@ -69,7 +68,7 @@ static struct attr_name attr_names[]= {
 static GHashTable *attr_hash;
 
 void attr_create_hash(void) {
-    int i;
+    unsigned int i;
     attr_hash=g_hash_table_new(g_str_hash, g_str_equal);
     for (i=0 ; i < sizeof(attr_names)/sizeof(struct attr_name) ; i++) {
         g_hash_table_insert(attr_hash, attr_names[i].name, GINT_TO_POINTER(attr_names[i].attr));
@@ -90,7 +89,7 @@ void attr_destroy_hash(void) {
  * @return The corresponding {@code attr_type}, or {@code attr_none} if the string specifies a nonexistent or invalid attribute type.
  */
 enum attr_type attr_from_name(const char *name) {
-    int i;
+    unsigned int i;
 
     if (attr_hash)
         return GPOINTER_TO_INT(g_hash_table_lookup(attr_hash, name));
@@ -115,7 +114,7 @@ static int attr_match(enum attr_type search, enum attr_type found);
  * string being available permanently.
  */
 char *attr_to_name(enum attr_type attr) {
-    int i;
+    unsigned int i;
 
     for (i=0 ; i < sizeof(attr_names)/sizeof(struct attr_name) ; i++) {
         if (attr_names[i].attr == attr)
@@ -187,7 +186,7 @@ attr_new_from_text(const char *name, const char *value) {
         str=type_str;
         while ((tok=strtok(str, ","))) {
             ret->u.dash=g_realloc(ret->u.dash, (count+2)*sizeof(int));
-            ret->u.dash[count++]=g_ascii_strtoull(tok,NULL,0);
+            ret->u.dash[count++]=(int)g_ascii_strtoull(tok,NULL,0);
             ret->u.dash[count]=0;
             str=NULL;
         }
@@ -394,7 +393,7 @@ char *attr_to_text_ext(struct attr *attr, char *sep, enum attr_format fmt, enum 
         return ret;
     }
     if (type == attr_flags || type == attr_through_traffic_flags)
-        return flags_to_text(attr->u.num);
+        return flags_to_text((int)attr->u.num);
     if (type == attr_destination_length) {
         if (fmt == attr_format_with_units) {
             double distance=attr->u.num;
@@ -405,7 +404,7 @@ char *attr_to_text_ext(struct attr *attr, char *sep, enum attr_format fmt, enum 
     }
     if (type == attr_destination_time) {
         if (fmt == attr_format_with_units) {
-            int seconds=(attr->u.num+5)/10;
+            int seconds=((int)attr->u.num+5)/10;
             int minutes=seconds/60;
             int hours=minutes/60;
             int days=hours/24;
@@ -467,10 +466,10 @@ char *attr_to_text_ext(struct attr *attr, char *sep, enum attr_format fmt, enum 
         return ret;
     }
     if (type >= attr_type_item_type_begin && type <= attr_type_item_type_end) {
-        return g_strdup_printf("0x%ld[%s]",attr->u.num,item_to_name(attr->u.num));
+        return g_strdup_printf("0x%ld[%s]",attr->u.num,item_to_name((enum item_type)attr->u.num));
     }
     if (type == attr_nav_status) {
-        return nav_status_to_text(attr->u.num);
+        return nav_status_to_text((int)attr->u.num);
     }
     if (type == attr_poly_hole) {
         return g_strdup_printf("count=%d", attr->u.poly_hole->coord_count);
@@ -488,6 +487,7 @@ char *attr_to_text_ext(struct attr *attr, char *sep, enum attr_format fmt, enum 
  * @param pretty Not used
  */
 char *attr_to_text(struct attr *attr, struct map *map, int pretty) {
+#pragma unused(pretty)
     return attr_to_text_ext(attr, NULL, attr_format_default, attr_format_default, map);
 }
 
@@ -748,7 +748,7 @@ int attr_data_size(struct attr *attr) {
     if (attr->type == attr_none)
         return 0;
     if (attr->type >= attr_type_string_begin && attr->type <= attr_type_string_end)
-        return attr->u.str?strlen(attr->u.str)+1:0;
+        return attr->u.str?(int)strlen(attr->u.str)+1:0;
     if (attr->type >= attr_type_int_begin && attr->type <= attr_type_int_end)
         return sizeof(attr->u.num);
     if (attr->type >= attr_type_coord_geo_begin && attr->type <= attr_type_coord_geo_end)
@@ -840,6 +840,7 @@ void attr_free(struct attr *attr) {
 }
 
 void attr_free_g(struct attr *attr, void * unused) {
+#pragma unused(unused)
     attr_free(attr);
 }
 
@@ -950,7 +951,7 @@ int attr_from_line(const char *line, const char *name, int *pos, char *val_ret, 
 
     dbg(lvl_debug,"get_tag %s from %s", name, line);
     if (name)
-        len=strlen(name);
+        len=(int)strlen(name);
     if (pos)
         p=line+*pos;
     else
@@ -984,12 +985,12 @@ int attr_from_line(const char *line, const char *name, int *pos, char *val_ret, 
         }
         if (name == NULL || (e-n == len && strncmp(n, name, len)==0)) {	/* We matched the searched attribute name */
             if (name_ret) {	/* If instructed to, store the actual name into the string pointed by name_ret */
-                len=e-n;
+                len=(int)(e-n);
                 strncpy(name_ret, n, len);
                 name_ret[len]='\0';
             }
             e++;
-            len=p-e;
+            len=(int)(p-e);
             if (e[0] == '"') {
                 e++;
                 len-=2;
@@ -1002,7 +1003,7 @@ int attr_from_line(const char *line, const char *name, int *pos, char *val_ret, 
             /* Because no NUL terminating char was copied over, we manually append it here to terminate the C-string properly, just after the copied string */
             val_ret[len-escaped]='\0';
             if (pos)
-                *pos=p-line;
+                *pos=(int)(p-line);
             return 1;
         }
     }
