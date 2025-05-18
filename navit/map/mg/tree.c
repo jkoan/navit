@@ -46,10 +46,11 @@ struct tree_hdr_h {
     	unsigned int size;*/
     unsigned char p[8];
 };
-static inline unsigned int tree_hdr_h_get_addr(struct tree_hdr_h * tree) {
-    unsigned char *p = tree->p;
-    return get_u32(&p);
-}
+// Unused function
+//static inline unsigned int tree_hdr_h_get_addr(struct tree_hdr_h * tree) {
+//    unsigned char *p = tree->p;
+//    return get_u32(&p);
+//}
 static inline unsigned int tree_hdr_h_get_size(struct tree_hdr_h * tree) {
     unsigned char *p = tree->p+4;
     return get_u32(&p);
@@ -94,10 +95,11 @@ static inline unsigned int tree_hdr_v_get_next(struct tree_hdr_v * tree) {
     unsigned char *p = tree->p+4;
     return get_u32_unal(&p);
 }
-static inline unsigned int tree_hdr_v_get_unknown(struct tree_hdr_v * tree) {
-    unsigned char *p = tree->p+8;
-    return get_u32_unal(&p);
-}
+// Unused function
+//static inline unsigned int tree_hdr_v_get_unknown(struct tree_hdr_v * tree) {
+//    unsigned char *p = tree->p+8;
+//    return get_u32_unal(&p);
+//}
 
 struct tree_leaf_v {
     unsigned char key;
@@ -128,9 +130,9 @@ static int tree_search_h(struct file *file, unsigned int search) {
             dbg(lvl_debug,"low:0x%x high:0x%x match:0x%x val:0x%x search:0x%x", tree_leaf_h_get_lower(tleaf),
                 tree_leaf_h_get_higher(tleaf), tree_leaf_h_get_match(tleaf), tree_leaf_h_get_value(tleaf), search);
             value=tree_leaf_h_get_value(tleaf);
-            if (value == search)
+            if (value == (int)search)
                 return tree_leaf_h_get_match(tleaf);
-            if (value > search) {
+            if (value > (int)search) {
                 dbg(lvl_debug,"lower");
                 lower=tree_leaf_h_get_lower(tleaf);
                 if (lower)
@@ -229,7 +231,7 @@ int tree_search_next(struct tree_search *ts, unsigned char **p, int dir) {
     dbg(lvl_debug,"low1=0x%x high1=0x%x", tsn->low, tsn->high);
     if (dir <= 0) {
         dbg(lvl_debug,"down 0x%x", tsn->low);
-        if (tsn->low != 0xffffffff) {
+        if (tsn->low != (int)0xffffffff) {
             tsn=tree_search_enter(ts, tsn->low);
             *p=tsn->p;
             tsn->high=get_u32(p);
@@ -245,9 +247,9 @@ int tree_search_next(struct tree_search *ts, unsigned char **p, int dir) {
     tsn->high=get_u32_unal(p);
     dbg(lvl_debug,"saving last3 %d %p", ts->curr_node, tsn->last);
     if (*p < tsn->end)
-        return (tsn->low == 0xffffffff ? 1 : 0);
+        return (tsn->low == (int)0xffffffff ? 1 : 0);
     dbg(lvl_debug,"end reached high=0x%x",tsn->high);
-    if (tsn->low != 0xffffffff) {
+    if (tsn->low != (int)0xffffffff) {
         dbg(lvl_debug,"low 0x%x", tsn->low);
         tsn=tree_search_enter(ts, tsn->low);
         *p=tsn->p;
@@ -272,7 +274,7 @@ int tree_search_next_lin(struct tree_search *ts, unsigned char **p) {
         high=get_u32_unal(p);
         if (*p < tsn->end) {
             ts->last_node=ts->curr_node;
-            while (high != 0xffffffff) {
+            while (high != (int)0xffffffff) {
                 tsn=tree_search_enter(ts, high);
                 dbg(lvl_debug,"reload %d",ts->curr_node);
                 high=tsn->low;
