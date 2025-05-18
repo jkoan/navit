@@ -80,6 +80,7 @@ struct map_rect {
  */
 struct map *
 map_new(struct attr *parent, struct attr **attrs) {
+#pragma unused(parent)
     struct map *m;
     struct map_priv *(*maptype_new)(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl);
     struct attr *type=attr_search(attrs, attr_type);
