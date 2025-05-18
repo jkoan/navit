@@ -55,6 +55,7 @@ void config_destroy(struct config *this_) {
 }
 
 static void config_terminate(int sig) {
+#pragma unused(sig)
     dbg(lvl_debug,"terminating");
     config_destroy(config);
 }
@@ -78,12 +79,13 @@ int config_get_attr(struct config *this_, enum attr_type type, struct attr *attr
 }
 
 static int config_set_attr_int(struct config *this_, struct attr *attr) {
+#pragma unused(this_)
     switch (attr->type) {
     case attr_language:
         setenv("LANG",attr->u.str,1);
         return 1;
     case attr_cache_size:
-        return file_set_cache_size(attr->u.num);
+        return file_set_cache_size((int)attr->u.num);
     default:
         return 0;
     }
