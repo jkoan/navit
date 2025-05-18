@@ -236,6 +236,7 @@ static void bookmarks_load_hash(struct bookmarks *this_) {
 
 struct bookmarks *
 bookmarks_new(struct attr *parent, struct attr **attrs, struct transformation *trans) {
+#pragma unused(attrs)
     struct bookmarks *this_;
 
     if (parent->type!=attr_navit) {
@@ -260,8 +261,10 @@ bookmarks_new(struct attr *parent, struct attr **attrs, struct transformation *t
         no_warn= {attr_no_warning_if_map_file_missing, {(void *)1}};
         struct attr *attrs[]= {&type, &data, &no_warn, NULL};
         this_->bookmark=map_new(this_->parent, attrs);
-        if (!this_->bookmark)
+        if (!this_->bookmark) {
+            g_free(this_);
             return NULL;
+        }
         bookmarks_load_hash(this_);
     }
 
@@ -634,11 +637,13 @@ struct former_destination {
 
 /* to adapt g_free to GFunc */
 static void g_free_helper(void * data, void*user_data) {
+#pragma unused(user_data)
     g_free(data);
 }
 
 /* unused parameter is for GFunc compatibility */
 static void free_former_destination(struct former_destination* former_destination, void * unused) {
+#pragma unused(unused)
     g_free(former_destination->description);
     g_list_foreach(former_destination->c, (GFunc)g_free_helper, NULL);
     g_list_free(former_destination->c);
