@@ -177,7 +177,7 @@ static struct poi_param *gui_internal_poi_param_clone(struct poi_param *p) {
     r->filterstr=NULL;
     if(p->filterstr) {
         char *last=g_list_last(l)->data;
-        int len=(last - p->filterstr) + strlen(last)+1;
+        int len=(int)((last - p->filterstr) + strlen(last)+1);
         r->filterstr=g_memdup(p->filterstr,len);
     }
     while(l) {
@@ -283,7 +283,7 @@ gui_internal_cmd_pois_item(struct gui_priv *this, struct coord *center, struct i
     if(c) {
         int len;
         get_compass_direction(dirbuf, transform_get_angle_delta(center, c, 0), 1);
-        len=strlen(dirbuf);
+        len=(int)strlen(dirbuf);
         dirbuf[len]=' ';
         dirbuf[len+1]=0;
         if (route) {
@@ -387,6 +387,8 @@ static int gui_internal_cmd_pois_item_selected(struct poi_param *param, struct i
         } else {
             s=g_strdup(item_to_name(item->type));
         }
+        if(s==0)
+            return 0;
         long_name=removecase(s);
         g_free(s);
 
@@ -417,6 +419,7 @@ static int gui_internal_cmd_pois_item_selected(struct poi_param *param, struct i
  * @param data event data.
  */
 static void gui_internal_cmd_pois_more(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *w=g_new0(struct widget,1);
     w->data=wm->data;
     w->c=wm->c;
@@ -468,6 +471,7 @@ static void gui_internal_cmd_pois_filter_do(struct gui_priv *this, struct widget
  */
 
 static void gui_internal_cmd_pois_filter_changed(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     if (wm->text && wm->reason==gui_internal_reason_keypress_finish) {
         gui_internal_cmd_pois_filter_do(this, wm, wm);
     }
@@ -482,6 +486,7 @@ static void gui_internal_cmd_pois_filter_changed(struct gui_priv *this, struct w
  * @param data event data.
  */
 void gui_internal_cmd_pois_filter(struct gui_priv *this, struct widget *wm, void *data) {
+#pragma unused(data)
     struct widget *wb, *w, *wr, *wk, *we;
     int keyboard_mode;
     keyboard_mode = VKBD_FLAG_2 | gui_internal_keyboard_init_mode(getenv("LANG"));
