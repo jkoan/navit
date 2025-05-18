@@ -39,7 +39,7 @@ struct file {
 	unsigned char *end;
 	unsigned char *mmap_end;
 	long long size;
-	int name_id;
+	long name_id;
 	int fd;
 #ifndef __CEGCC__
 	time_t mtime;

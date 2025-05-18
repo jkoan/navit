@@ -99,7 +99,7 @@ static void file_http_request(struct file *file, char *method, char *host, char 
     char *request=g_strdup_printf("%s %s HTTP/1.0\r\nUser-Agent: navit %s\r\nHost: %s\r\n%s%s%s\r\n",method,path,
                                   NAVIT_VERSION,
                                   host,persistent?"Connection: Keep-Alive\r\n":"",header?header:"",header?"\r\n":"");
-    int retval = write(file->fd, request, strlen(request));
+    int retval = (int)(write(file->fd, request, strlen(request)));
     dbg(lvl_debug,"%s returned %d",request, retval);
     file->requests++;
 }
@@ -130,7 +130,7 @@ static int file_request_do(struct file *file, struct attr **options, int connect
         if ((attr=attr_search(options, attr_http_header)) && attr->u.str)
             header=attr->u.str;
         if ((attr=attr_search(options, attr_persistent)))
-            persistent=attr->u.num;
+            persistent=(int)attr->u.num;
         if (path)
             host[path-name-7]='\0';
         if (port)
@@ -297,7 +297,7 @@ int file_mmap(struct file *file) {
 #if 0
     int mmap_size=file->size+1024*1024;
 #else
-    int mmap_size=file->size;
+    int mmap_size=(int)file->size;
 #endif
 #ifdef HAVE_API_WIN32_BASE
     file->begin = (unsigned char*)mmap_readonly_win32( file->name, &file->map_handle, &file->map_file );
@@ -323,7 +323,7 @@ unsigned char *file_data_read(struct file *file, long long offset, int size) {
     if (file->begin)
         return file->begin+offset;
     if (file->cache) {
-        struct file_cache_id id= {offset,size,file->name_id,0};
+        struct file_cache_id id= {offset,size,(int)file->name_id,0};
         ret=cache_lookup(file_cache,&id);
         if (ret)
             return ret;
@@ -392,7 +392,7 @@ unsigned char *file_data_read_special(struct file *file, int size, int *size_ret
         if (toread >= 4096 && !eof) {
             if (!file->requests && toread > size)
                 toread=size;
-            rd=read(file->fd, file->buffer+file->buffer_len, toread);
+            rd=(int)read(file->fd, file->buffer+file->buffer_len, toread);
             if (rd > 0) {
                 file->buffer_len+=rd;
             } else
@@ -404,7 +404,7 @@ unsigned char *file_data_read_special(struct file *file, int size, int *size_ret
                 hdr[-1]='\0';
                 dbg(lvl_debug,"found %s",file->buffer);
                 file_process_headers(file, file->buffer);
-                file_shift_buffer(file, hdr-file->buffer);
+                file_shift_buffer(file, (int)(hdr-file->buffer));
                 file->requests--;
                 if (file_http_header(file, "location"))
                     break;
@@ -425,12 +425,12 @@ unsigned char *file_data_read_special(struct file *file, int size, int *size_ret
 }
 
 unsigned char *file_data_read_all(struct file *file) {
-    return file_data_read(file, 0, file->size);
+    return file_data_read(file, 0, (int)(file->size));
 }
 
 void file_data_flush(struct file *file, long long offset, int size) {
     if (file->cache) {
-        struct file_cache_id id= {offset,size,file->name_id,0};
+        struct file_cache_id id= {offset,size,(int)(file->name_id),0};
         cache_flush(file_cache,&id);
         dbg(lvl_debug,"Flushing "LONGLONG_FMT" %d bytes",offset,size);
     }
@@ -452,7 +452,7 @@ int file_get_contents(char *name, unsigned char **buffer, int *size) {
     if (!file)
         return 0;
     file->cache=0;
-    *size=file_size(file);
+    *size=(int)file_size(file);
     *buffer=file_data_read_all(file);
     file_destroy(file);
     return 1;
@@ -493,7 +493,7 @@ unsigned char *file_data_read_compressed(struct file *file, long long offset, in
     uLongf destLen=size_uncomp;
 
     if (file->cache) {
-        struct file_cache_id id= {offset,size,file->name_id,1};
+        struct file_cache_id id= {offset,size,(int)file->name_id,1};
         ret=cache_lookup(file_cache,&id);
         if (ret)
             return ret;
@@ -698,7 +698,7 @@ file_wordexp_new(const char *pattern) {
 int file_wordexp_get_count(struct file_wordexp *wexp) {
     if (wexp->err)
         return 1;
-    return wexp->we.we_wordc;
+    return (int)wexp->we.we_wordc;
 }
 
 char ** file_wordexp_get_array(struct file_wordexp *wexp) {
