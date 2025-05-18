@@ -187,9 +187,11 @@ static void map_destroy_csv(struct map_priv *m) {
 }
 
 static void csv_coord_rewind(void *priv_data) {
+#pragma unused(priv_data)
 }
 
 static int csv_coord_get(void *priv_data, struct coord *c, int count) {
+#pragma unused(count)
     struct map_rect_priv *mr=priv_data;
     if(mr) {
         *c = mr->c;
@@ -200,6 +202,7 @@ static int csv_coord_get(void *priv_data, struct coord *c, int count) {
 }
 
 static void csv_attr_rewind(void *priv_data) {
+#pragma unused(priv_data)
     /*TODO implement if needed*/
 }
 
@@ -360,7 +363,8 @@ static struct item_methods methods_csv = {
     NULL,
     csv_attr_set,
     csv_coord_set,
-    csv_type_set
+    csv_type_set,
+    NULL,
 };
 
 
@@ -368,6 +372,7 @@ static struct item_methods methods_csv = {
  * Sets coordinate of an existing item (either on the new list or an item with coord )
  */
 static int csv_coord_set(void *priv_data, struct coord *c, int count, enum change_mode mode) {
+#pragma unused(mode)
     struct quadtree_item query_item, *insert_item, *query_res;
     struct coord_geo cg;
     struct map_rect_priv* mr;
@@ -467,6 +472,7 @@ static void quadtree_item_free_do(void *data) {
 }
 
 static void map_csv_debug_dump_hash_item(gpointer key, gpointer value, gpointer user_data) {
+#pragma unused(key, user_data)
     struct quadtree_item *qi=value;
     GList *attrs;
     dbg(lvl_debug,"%p del=%d ref=%d", qi,qi->deleted, qi->ref_count);
@@ -554,6 +560,7 @@ static struct item *map_rect_get_item_csv(struct map_rect_priv *mr) {
 }
 
 static struct item *map_rect_get_item_byid_csv(struct map_rect_priv *mr, int id_hi, int id_lo) {
+#pragma unused(id_hi)
     /*currently id_hi is ignored*/
 
     struct quadtree_item *qit = g_hash_table_lookup(mr->m->qitem_hash,&id_lo);
@@ -574,6 +581,7 @@ static struct item *map_rect_get_item_byid_csv(struct map_rect_priv *mr, int id_
 }
 
 static int csv_get_attr(struct map_priv *m, enum attr_type type, struct attr *attr) {
+#pragma unused(attr, m, type)
     return 0;
 }
 
@@ -642,9 +650,11 @@ static struct map_methods map_methods_csv = {
     NULL,
     csv_create_item,
     csv_get_attr,
+    NULL,
 };
 
 static struct map_priv *map_new_csv(struct map_methods *meth, struct attr **attrs, struct callback_list *cbl) {
+#pragma unused(cbl)
     struct map_priv *m = NULL;
     struct attr *attr_types;
     struct attr *item_type_attr;
@@ -704,7 +714,7 @@ static struct map_priv *map_new_csv(struct map_methods *meth, struct attr **attr
 
     flags=attr_search(attrs, attr_flags);
     if (flags)
-        m->flags=flags->u.num;
+        m->flags=(int)flags->u.num;
 
     *meth = map_methods_csv;
 
