@@ -116,29 +116,29 @@ struct headup_priv {
     double fltemp;
     double flpressure;
     double flbatt;
-    bool flalarm;
+    int flalarm;
     double pressure_max_thd_fl;
     double pressure_min_thd_fl;
     
     double frtemp;
     double frpressure;
     double frbatt;
-    bool fralarm;
+    int fralarm;
     double pressure_max_thd_fr;
     double pressure_min_thd_fr;
     
     double rltemp;
     double rlpressure;
     double rlbatt;
-    bool rlalarm;
-    bool alarm;
+    int rlalarm;
+    int alarm;
     double pressure_max_thd_rl;
     double pressure_min_thd_rl;
     
     double rrtemp;
     double rrpressure;
     double rrbatt;
-    bool rralarm;
+    int rralarm;
     double pressure_max_thd_rr;
     double pressure_min_thd_rr;
     
@@ -473,8 +473,8 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
     dbg(lvl_error, "Name: %s", name);
     
     double pressure, temp;
-    int batt, status;
-    bool alarm, alarm_zero_press, rotating, stop15min, startrot, decpressbelow20700, risingpress, decpressabove20700, unknown;
+    int batt, status, alarm;
+    bool alarm_zero_press, rotating, stop15min, startrot, decpressbelow20700, risingpress, decpressabove20700, unknown;
     
     if(!strcmp(type, "BR")) {
         name+=28;
