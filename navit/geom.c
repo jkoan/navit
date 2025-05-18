@@ -229,6 +229,7 @@ GList *geom_poly_segments_insert(GList *list, struct geom_poly_segment *first, s
 
 /* unused id for GFunc compatibiliy */
 void geom_poly_segment_destroy(struct geom_poly_segment *seg, void * unused) {
+#pragma unused(unused)
     g_free(seg->first);
     g_free(seg);
 }
@@ -435,5 +436,5 @@ void geom_poly_intersection(struct coord *p1, struct coord *p2, struct rect *r, 
     }
 }
 
-void geom_init() {
+void geom_init(void) {
 }
