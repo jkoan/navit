@@ -413,6 +413,10 @@ void debug_vprintf(dbg_level level, const char *module, const int mlen, const ch
         if (! fp)
             fp = stderr;
         fprintf(fp,"%s",debug_message);
+        if(fp != stderr) { // if a file is set we want a log to stderr as well
+            fp = stderr;
+            fprintf(fp,"%s",debug_message);
+        }
         fflush(fp);
 #endif
 #endif
