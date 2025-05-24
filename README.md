@@ -1,3 +1,7 @@
+
+[ Click here to view iOS build instructions](docs/development/ios_development.rst)
+
+
 [![Build Status](https://img.shields.io/circleci/project/github/navit-gps/navit/trunk.svg)](https://circleci.com/gh/navit-gps/navit)
 [![CodeFactor](https://www.codefactor.io/repository/github/navit-gps/navit/badge)](https://www.codefactor.io/repository/github/navit-gps/navit)
 
