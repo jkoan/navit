@@ -32,6 +32,7 @@
  * https://www.aliexpress.com/item/32815317757.html
  * Battery: CR1632
  * Battery can't be exchanged easily as sealed with non-flexible plastic.
+ * Bad quality.
  *
  * Info:
  * https://www.eisenzelt.de/ez/wordpress/?p=3424
@@ -88,6 +89,8 @@ static uint16_t tpmstx_handle = 0;
 GAttrib *attrib;
 #endif
 
+#define TPMS_RECV_TIMEOUT 300000
+
 struct headup_priv {
     struct callback_list *cbl;
     struct navit *nav;
@@ -103,9 +106,11 @@ struct headup_priv {
     char message[255];  // log messages for file
     char *filename;     // log filename
     FILE *fp;           // log file fp
-    struct event_timeout *idle;
     struct callback *callback;
-    struct event_timeout *cmdtimeout;
+    struct event_timeout *fltimeout;
+    struct event_timeout *frtimeout;
+    struct event_timeout *rltimeout;
+    struct event_timeout *rrtimeout;
     struct headup_methods *methods;
     
     char senddata[30];
@@ -113,32 +118,33 @@ struct headup_priv {
     
     int temp_max_thd;
     
+    uint8_t alarm;
+    
     double fltemp;
     double flpressure;
     double flbatt;
-    int flalarm;
+    uint8_t flalarm;
     double pressure_max_thd_fl;
     double pressure_min_thd_fl;
     
     double frtemp;
     double frpressure;
     double frbatt;
-    int fralarm;
+    uint8_t fralarm;
     double pressure_max_thd_fr;
     double pressure_min_thd_fr;
     
     double rltemp;
     double rlpressure;
     double rlbatt;
-    int rlalarm;
-    int alarm;
+    uint8_t rlalarm;
     double pressure_max_thd_rl;
     double pressure_min_thd_rl;
     
     double rrtemp;
     double rrpressure;
     double rrbatt;
-    int rralarm;
+    uint8_t rralarm;
     double pressure_max_thd_rr;
     double pressure_min_thd_rr;
     
@@ -152,8 +158,12 @@ struct headup_priv {
 
 void tpms_init_ble(struct headup_priv*);
 void tpms_destroy(struct headup_priv*);
+void tpms_timeout(void *this, char* address);
 void tpms_recv_cb(void*, const char*, const unsigned char*, const char*);
 static int tpms_get_attr(struct headup_priv *priv, enum attr_type type, struct attr *attr);
+static int tpms_set_attr(struct headup_priv *this, struct attr *attr);
+
+struct headup_methods tpms_methods = { tpms_destroy, tpms_set_attr, tpms_get_attr,};
 
 static int tpms_set_attr(struct headup_priv *this, struct attr *attr) {
     
@@ -161,7 +171,7 @@ static int tpms_set_attr(struct headup_priv *this, struct attr *attr) {
         dbg(lvl_error, "name %s", attr->u.str);
         this->name = g_strup(attr->u.str);
     }
-        
+    
     if(attr->type == attr_frontleftaddr) {
         dbg(lvl_error, "address %s", attr->u.str);
         this->frontleftaddr = g_strup(attr->u.str);
@@ -224,7 +234,7 @@ static int tpms_set_attr(struct headup_priv *this, struct attr *attr) {
     
     if(attr->type == attr_temp_max_thd) {
         dbg(lvl_error, "temp_max_thd %li", attr->u.num);
-        this->temp_max_thd = attr->u.num;
+        this->temp_max_thd = (int)attr->u.num;
     }
     
     return 1;
@@ -309,7 +319,7 @@ void cmd_timeout(struct headup_priv *this) {
  */
 //static void tpms_idle(struct headup_priv *this) {
 //
-//   
+//
 //}
 
 //static gboolean listen_start(gpointer user_data)
@@ -461,22 +471,59 @@ void tpms_findHostDevice(struct headup_priv *this) {
 
 #else
 
+void tpms_timeout(void *this, char* address) {
+    // Handle timeout of interval between receive of sensor values
+    // OR the alarm status of the specific sensor with 2 (will show its value as yellow in osd)
+    
+    if(this==NULL || address==NULL)
+        return;
+    
+    dbg(lvl_error, "TPMS timeout for sensor with address: %s", address);
+    struct headup_priv* _this = (struct headup_priv*) this;
+    
+    if(address == _this->frontleftaddr) {
+        _this->flalarm = _this->flalarm | 2;
+        _this->fltimeout = 0;
+    }
+    
+    if(address == _this->frontrightaddr){
+        _this->fralarm = _this->fralarm | 2;
+        _this->frtimeout = 0;
+    }
+    if(address == _this->rearleftaddr){
+        _this->rlalarm = _this->rlalarm | 2;
+        _this->rltimeout = 0;
+    }
+    
+    if(address == _this->rearrightaddr){
+        _this->rralarm = _this->rralarm | 2;
+        _this->rrtimeout = 0;
+    }
+    
+}
 
 void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, const char *type) {
     // name is the name of the sensor
-    // data is the data from a sensor
+    // bytes are the data from a sensor
+    // type is the type of tpms ("BR" or "TPMS")
     // Compare name with addrresses, decode data and store it
+    
+    if(this==NULL || name==NULL || bytes==NULL || type==NULL)
+        return;
+    
     struct headup_priv* _this = (struct headup_priv*) this;
-    
-    
     
     dbg(lvl_error, "Name: %s", name);
     
+    
+    
     double pressure, temp;
-    int batt, status, alarm;
-    bool alarm_zero_press, rotating, stop15min, startrot, decpressbelow20700, risingpress, decpressabove20700, unknown;
+    int batt, alarm;
+    uint8_t status;
+    //bool alarm_zero_press, rotating, stop15min, startrot, decpressbelow20700, risingpress, decpressabove20700, unknown;
     
     if(!strcmp(type, "BR")) {
+        alarm=0;
         name+=28;
         status = (bytes[0]);
         dbg(lvl_error, "Alarm: %u", status);
@@ -488,6 +535,7 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         dbg(lvl_error, "Reifendruck: %2.1fbar", pressure);
         
     } else {
+        status=0;
         pressure=(bytes[10]*65535+bytes[9]*256+bytes[8])/100000.0;
         dbg(lvl_error, "Reifendruck: %2.2fbar", pressure);
         dbg(lvl_error, "Reifendruck: %d", bytes[10]*65535+bytes[9]*256+bytes[8]);
@@ -509,11 +557,19 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         _this->flpressure = pressure;
         _this->fltemp = temp;
         _this->flbatt = batt;
-        _this->flalarm = alarm;
-        if(alarm || _this->flpressure < _this->pressure_min_thd_fl || _this->flpressure > _this->pressure_max_thd_fl || _this->fltemp > _this->temp_max_thd)
+        _this->flalarm = alarm || (status & 0x88) ;
+        if(_this->flalarm  || _this->flpressure < _this->pressure_min_thd_fl || _this->flpressure > _this->pressure_max_thd_fl || _this->fltemp > _this->temp_max_thd) {
             _this->alarm=1;
-        else
+            _this->flalarm |= 1;
+        } else
             _this->alarm=0;
+        
+        if(_this->fltimeout) {
+            event_remove_timeout(_this->fltimeout);
+            _this->fltimeout=0;
+        }
+        struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->frontleftaddr);
+        _this->fltimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
     }
     
     if(!strcmp(name, _this->frontrightaddr)) {
@@ -521,11 +577,19 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         _this->frpressure = pressure;
         _this->frtemp = temp;
         _this->frbatt = batt;
-        _this->fralarm = alarm;
-        if(alarm || _this->frpressure < _this->pressure_min_thd_fr || _this->frpressure > _this->pressure_max_thd_fr || _this->frtemp > _this->temp_max_thd)
+        _this->fralarm = alarm || (status & 0x88) ;
+        if(_this->fralarm  || _this->frpressure < _this->pressure_min_thd_fr || _this->frpressure > _this->pressure_max_thd_fr || _this->frtemp > _this->temp_max_thd) {
             _this->alarm=1;
-        else
+            _this->fralarm |= 1;
+        } else
             _this->alarm=0;
+        
+        if(_this->frtimeout) {
+            event_remove_timeout(_this->frtimeout);
+            _this->frtimeout=0;
+        }
+        struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->frontrightaddr);
+        _this->frtimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
     }
     
     if(!strcmp(name, _this->rearleftaddr)) {
@@ -533,11 +597,19 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         _this->rlpressure = pressure;
         _this->rltemp = temp;
         _this->rlbatt = batt;
-        _this->rlalarm = alarm;
-        if(alarm || _this->rlpressure < _this->pressure_min_thd_rl || _this->rlpressure > _this->pressure_max_thd_rl || _this->rltemp > _this->temp_max_thd)
+        _this->rlalarm = alarm || (status & 0x88) ;
+        if(_this->rlalarm  || _this->rlpressure < _this->pressure_min_thd_rl || _this->rlpressure > _this->pressure_max_thd_rl || _this->rltemp > _this->temp_max_thd) {
             _this->alarm=1;
-        else
+            _this->rlalarm |= 1;
+        } else
             _this->alarm=0;
+        
+        if(_this->rltimeout) {
+            event_remove_timeout(_this->rltimeout);
+            _this->rltimeout=0;
+        }
+        struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->rearleftaddr);
+        _this->rltimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
     }
     
     if(!strcmp(name, _this->rearrightaddr)) {
@@ -545,11 +617,19 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         _this->rrpressure = pressure;
         _this->rrtemp = temp;
         _this->rrbatt = batt;
-        _this->rralarm = alarm;
-        if(alarm || _this->rrpressure < _this->pressure_min_thd_rr || _this->rrpressure > _this->pressure_max_thd_rr || _this->rrtemp > _this->temp_max_thd)
+        _this->rralarm = alarm || (status & 0x88) ;
+        if(_this->rralarm  || _this->rrpressure < _this->pressure_min_thd_rr || _this->rrpressure > _this->pressure_max_thd_rr || _this->rrtemp > _this->temp_max_thd) {
             _this->alarm=1;
-        else
+            _this->rralarm |= 1;
+        } else
             _this->alarm=0;
+        
+        if(_this->rrtimeout) {
+            event_remove_timeout(_this->rrtimeout);
+            _this->rrtimeout=0;
+        }
+        struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->rearrightaddr);
+        _this->rrtimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
     }
     
     if(_this->connected_priv != _this->connected) {
@@ -559,30 +639,20 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
     
 }
 
-//void tpms_connected(void* _this) {
-//}
-//
-//void tpms_disconnected(void* _this) {
-//}
-
 #endif
 
 /**
- * @brief   Opens the serial port and saves state to the tpms object
- * @param[in]   tpms - the tpms struct containing the state of the plugin
+ * @brief   Initialize the tpms object
+ * @param[in]   this - the tpms struct containing the state of the plugin
  *
  * @return  nothing
  *
- * Opens the serial port and saves state to the tpms object
+ * Initializes the controller
  *
  */
 void tpms_init_ble(struct headup_priv *this) {
-    // Do nothing
-    //    this->callback = callback_new_1(callback_cast(tpms_idle), this);
-    //    this->idle = event_add_timeout(10000, 1, this->callback);
     tpmsbtcontroller_init(this, tpms_recv_cb, this->frontleftaddr, this->frontrightaddr, this->rearleftaddr, this->rearrightaddr, this->name);
     return;
-    
 }
 
 #if !defined(__APPLE__)
@@ -603,6 +673,17 @@ void tpms_destroy(struct headup_priv* ptr) {
 
 #endif
 
+/**
+ * @brief   Returns an attribute of the tpms object
+ * @param[in]   priv - the headup_priv object
+ *              type    - the attr_type
+ *              attrs   - pointer to the attributes
+ *
+ * @return  1 of attribute found else 0
+ *
+ *
+ *
+ */
 static int tpms_get_attr(struct headup_priv *priv, enum attr_type type, struct attr *attr) {
     
     if(type==attr_pressure_fl) {
@@ -716,15 +797,13 @@ static int tpms_get_attr(struct headup_priv *priv, enum attr_type type, struct a
     return 0;
 }
 
-struct headup_methods tpms_methods = { tpms_destroy, tpms_set_attr, tpms_get_attr,};
-
-
 
 /**
  * @brief   Creates the tpms plugin and set some default properties
  * @param[in]   nav - the navit object
- *              meth    - the osd_methods
- *      attrs   - pointer to the attributes
+ *              meth    - the tpms_methods
+ *              cbl     - the pounter to the call back list
+ *              attrs   - pointer to the attributes
  *
  * @return  nothing
  *
@@ -734,11 +813,15 @@ struct headup_methods tpms_methods = { tpms_destroy, tpms_set_attr, tpms_get_att
 static struct headup_priv* tpms_new(struct navit *nav, struct headup_methods *meth, struct callback_list *cbl,
                                     struct attr **attrs) {
     
-    //return NULL;
     struct headup_priv *ret;
     
     dbg(lvl_debug, "enter");
     ret = g_new0(struct headup_priv, 1);
+    // Timeout alarm as default so osdcore will display all sensors not yet received in yellow;
+    ret->flalarm = 2;
+    ret->fralarm = 2;
+    ret->rralarm = 2;
+    ret->rlalarm = 2;
     ret->nav = nav;
     ret->cbl = cbl;
     ret->log = 0;
