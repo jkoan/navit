@@ -169,6 +169,15 @@ static void log_open(struct log *this_) {
         mode="r+";
     if (this_->mkdir)
         file_mkdir(this_->filename_ex2, 2);
+#ifdef __IPHONE_OS_VERSION_MIN_REQUIRED
+    // On iOS we need to use the appdata folder to place the logfile.
+    char* path = getenv("NAVIT_IOS_DATAPATH");
+    char * newfilename = malloc(strlen(path)+strlen(this_->filename_ex2)+2);
+    strcpy(newfilename, path);
+    strcat(newfilename, "/");
+    strcat(newfilename, this_->filename_ex2);
+    this_->filename_ex2=newfilename;
+#endif
     this_->f=fopen(this_->filename_ex2, mode);
     if (! this_->f)
         this_->f=fopen(this_->filename_ex2, "w");
