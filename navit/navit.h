@@ -149,6 +149,10 @@ void navit_get_tpms_pressure_rl(struct navit *this, double *pressure);
 void navit_get_tpms_pressure_rr(struct navit *this, double *pressure);
 void navit_get_tpmsconnected(struct navit *this, int *connected);
 void navit_get_tpms_alarm(struct navit *this, long *alarm);
+void navit_get_tpms_alarm_fl(struct navit *this, long *alarm);
+void navit_get_tpms_alarm_fr(struct navit *this, long *alarm);
+void navit_get_tpms_alarm_rl(struct navit *this, long *alarm);
+void navit_get_tpms_alarm_rr(struct navit *this, long *alarm);
 char* navit_get_locallanguage(struct navit * this_);
 
 /* end of prototypes */
