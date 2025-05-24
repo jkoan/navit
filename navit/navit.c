@@ -1636,7 +1636,7 @@ void navit_get_obdspeed(struct navit *this, double *speed) {
 void navit_get_tpmsconnected(struct navit *this, int* connected) {
     struct attr connected_attr;
     if(this->tpms) {
-        headup_get_attr(this->obd, attr_tpms_connected, &connected_attr, NULL);
+        headup_get_attr(this->tpms, attr_tpms_connected, &connected_attr, NULL);
         *connected = (int)connected_attr.u.num;
     }
 }
@@ -1712,6 +1712,30 @@ void navit_get_tpms_pressure_rr(struct navit *this, double *pressure) {
 void navit_get_tpms_alarm(struct navit *this, long *alarm) {
     struct attr alarm_attr;
     headup_get_attr(this->tpms, attr_alarm, &alarm_attr, NULL);
+    *alarm = alarm_attr.u.num;
+}
+
+void navit_get_tpms_alarm_fl(struct navit *this, long *alarm) {
+    struct attr alarm_attr;
+    headup_get_attr(this->tpms, attr_alarm_fl, &alarm_attr, NULL);
+    *alarm = alarm_attr.u.num;
+}
+
+void navit_get_tpms_alarm_fr(struct navit *this, long *alarm) {
+    struct attr alarm_attr;
+    headup_get_attr(this->tpms, attr_alarm_fr, &alarm_attr, NULL);
+    *alarm = alarm_attr.u.num;
+}
+
+void navit_get_tpms_alarm_rl(struct navit *this, long *alarm) {
+    struct attr alarm_attr;
+    headup_get_attr(this->tpms, attr_alarm_rl, &alarm_attr, NULL);
+    *alarm = alarm_attr.u.num;
+}
+
+void navit_get_tpms_alarm_rr(struct navit *this, long *alarm) {
+    struct attr alarm_attr;
+    headup_get_attr(this->tpms, attr_alarm_rr, &alarm_attr, NULL);
     *alarm = alarm_attr.u.num;
 }
 
