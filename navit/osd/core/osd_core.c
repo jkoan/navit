@@ -3370,6 +3370,7 @@ static void osd_text_draw(struct osd_priv_common *opc, struct navit *navit, stru
     int imperial=0;
     struct color red= {0xffff,0x0,0x0,0xffff};
     struct color white= {0xffff,0xffff,0xffff,0xffff};
+    struct color yellow= {0xffff,0xffff,0x0000,0xffff};
 
     if (navit_get_attr(navit, attr_imperial, &imperial_attr, NULL))
         imperial=(int)imperial_attr.u.num;
@@ -3535,20 +3536,25 @@ static void osd_text_draw(struct osd_priv_common *opc, struct navit *navit, stru
                     double pressure = -1;
                     navit_get_tpms_pressure_fl(navit, &pressure);
                     value = g_strdup_printf("%.1f", pressure);
-                    navit_get_tpms_alarm(navit, &alarm);
-                    if(alarm==TRUE)
+                    navit_get_tpms_alarm_fl(navit, &alarm);
+                    if(alarm & 0x01)
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text,&red);
+                    else if(alarm &0x02)
+                        graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &yellow);
                     else
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &white);
+
                 }
 
                 if (oti->attr_typ == attr_pressure_fr) {
                     double pressure = -1;
                     navit_get_tpms_pressure_fr(navit, &pressure);
                     value = g_strdup_printf("%.1f", pressure);
-                    navit_get_tpms_alarm(navit, &alarm);
-                    if(alarm==TRUE)
+                    navit_get_tpms_alarm_fr(navit, &alarm);
+                    if(alarm & 0x01)
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text,&red);
+                    else if(alarm &0x02)
+                        graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &yellow);
                     else
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &white);
                 }
@@ -3557,9 +3563,11 @@ static void osd_text_draw(struct osd_priv_common *opc, struct navit *navit, stru
                     double pressure = -1;
                     navit_get_tpms_pressure_rl(navit, &pressure);
                     value = g_strdup_printf("%.1f", pressure);
-                    navit_get_tpms_alarm(navit, &alarm);
-                    if(alarm==TRUE)
+                    navit_get_tpms_alarm_rl(navit, &alarm);
+                    if(alarm & 0x01)
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text,&red);
+                    else if(alarm &0x02)
+                        graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &yellow);
                     else
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &white);
                 }
@@ -3568,11 +3576,14 @@ static void osd_text_draw(struct osd_priv_common *opc, struct navit *navit, stru
                     double pressure = -1;
                     navit_get_tpms_pressure_rr(navit, &pressure);
                     value = g_strdup_printf("%.1f", pressure);
-                    navit_get_tpms_alarm(navit, &alarm);
-                    if(alarm==TRUE)
+                    navit_get_tpms_alarm_rr(navit, &alarm);
+                    if(alarm & 0x01)
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text,&red);
+                    else if(alarm &0x02)
+                        graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &yellow);
                     else
                         graphics_gc_set_foreground(opc->osd_item.graphic_fg_text, &white);
+                    
                 }
 
             }
