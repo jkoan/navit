@@ -28,6 +28,7 @@ int countDiscovered=0;
 
 /** C init procedure */
 void tpmsbtcontroller_init(void* pbth_arg, RECEIVE_CB recv_cb, char *frontleftaddr, char *frontrightaddr, char *rearleftaddr, char *rearrightaddr, char* name) {
+    
     if(tpmsbtcontroller == NULL) {
         tpmsbtcontroller = [[TPMS alloc] init];
         
@@ -58,11 +59,6 @@ void tpmsbtcontroller_init(void* pbth_arg, RECEIVE_CB recv_cb, char *frontleftad
     return self;
 }
 
--(void)recv_timed_out{
-    NSLog(@"TPMS - Receive timeout");
-    tpmsbtcontroller->recv_cb(tpmsbtcontroller->pbth_arg, NULL, NULL, NULL);
-}
-
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     
     // Stop any active scan when power is off
@@ -74,7 +70,14 @@ void tpmsbtcontroller_init(void* pbth_arg, RECEIVE_CB recv_cb, char *frontleftad
     
     if (central.state == CBManagerStatePoweredOn) {
         // Scan for BT Headup device
-        [centralManager scanForPeripheralsWithServices:nil options:@{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES }];
+        if(!strcmp(name, "BR")) {
+            [centralManager scanForPeripheralsWithServices:[NSMutableArray arrayWithObjects:[CBUUID UUIDWithString: @"27A5"], nil] options:@{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES }];
+        }
+        else if(!strcmp(name, "TPMS")) {
+            [centralManager scanForPeripheralsWithServices:[NSMutableArray arrayWithObjects:[CBUUID UUIDWithString: @"FBB0"], nil] options:@{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES }];
+        } else
+            [centralManager scanForPeripheralsWithServices:nil options:@{ CBCentralManagerScanOptionAllowDuplicatesKey : @YES }];
+        
         NSLog(@"TPMS - Scanning for TPMS started");
     }
 }
@@ -108,7 +111,12 @@ void tpmsbtcontroller_init(void* pbth_arg, RECEIVE_CB recv_cb, char *frontleftad
             } else {
                 tpmsbtcontroller->recv_cb(tpmsbtcontroller->pbth_arg, peripheralName.UTF8String, bytes, name);
             }
-#if 1    
+
+            //tpmsbtcontroller->recv_timeout = [NSTimer scheduledTimerWithTimeInterval:420.0 target:tpmsbtcontroller selector:@selector(recv_timed_out) userInfo:nil repeats:NO];
+            
+        }
+        
+#if 1
             
             NSNumber *number = [advertisementData objectForKey:@"kCBAdvDataTimestamp"];
             
@@ -131,8 +139,6 @@ void tpmsbtcontroller_init(void* pbth_arg, RECEIVE_CB recv_cb, char *frontleftad
                 
             }
 #endif
-            
-        }
     }
     
 }
