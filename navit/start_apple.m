@@ -42,12 +42,20 @@ int main(int argc, char **argv) {
 
     const char *s=[appFolderPath UTF8String];
 #if IOS
+    
+    
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     char *user=(char *)[documentsDirectory cStringUsingEncoding:[NSString defaultCStringEncoding]];
     NSFileManager *fMgr = [NSFileManager defaultManager];
     NSString *mapPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.bin",
                          @"osm_bbox_11.3,47.9,11.7,48.2"]];
+    
+    NSString *logPath = [documentsDirectory stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log",
+                         @"navit"]];
+    setenv("NAVIT_LOGFILE",[logPath UTF8String],0);
+    setenv("NAVIT_IOS_DATAPATH",[documentsDirectory UTF8String],0);
+    
     NSError *error = nil;
     NSString *rsrcPath = [[NSBundle mainBundle] pathForResource:@"share/navit/osm_bbox_11.3,47.9,11.7,48.2" ofType:@"bin"];
 
