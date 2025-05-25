@@ -11,6 +11,6 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'navit'
+project = u'navit_ios'
 year = datetime.now().year
 author = u'The Navit Team'
