@@ -41,6 +41,7 @@
 #include "route.h"
 #include "speech.h"
 #include "track.h"
+#include "voice.h"
 #include "vehicle.h"
 #include "point.h"
 #include "graphics.h"

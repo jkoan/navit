@@ -54,6 +54,7 @@
 #include "navigation.h"
 #include "speech.h"
 #include "track.h"
+#include "voice.h"
 #include "vehicle.h"
 #include "layout.h"
 #include "log.h"

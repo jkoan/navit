@@ -51,6 +51,7 @@ extern "C" {
 #include "search.h"
 #include "track.h"
 #include "transform.h"
+#include "voice.h"
 #include "vehicle.h"
 #include "xmlconfig.h"
 

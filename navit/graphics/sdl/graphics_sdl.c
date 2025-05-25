@@ -38,6 +38,7 @@
 #include <math.h>
 
 #ifdef USE_WEBOS
+# include "voice.h"
 # include "vehicle.h"
 # include <PDL.h>
 # define USE_WEBOS_ACCELEROMETER

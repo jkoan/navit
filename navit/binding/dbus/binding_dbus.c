@@ -40,6 +40,7 @@
 #include "track.h"
 #include "vehicle.h"
 #include "vehicleprofile.h"
+#include "voice.h"
 #include "map.h"
 #include "mapset.h"
 #include "osd.h"
