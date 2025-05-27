@@ -67,6 +67,7 @@
 #include "map.h"
 #include "util.h"
 #include "messages.h"
+#include "voiceprofile.h"
 #include "vehicleprofile.h"
 #include "sunriset.h"
 #include "bookmarks.h"
@@ -94,6 +95,21 @@
  * - a navigation object
  * @{
  */
+
+//! The voice used for navigation.
+struct navit_voice {
+    int follow;
+    /*! Limit of the follow counter. See navit_add_vehicle */
+    int follow_curr;
+    /*! Deprecated : follow counter itself. When it reaches 'update' counts, map is recentered*/
+    struct coord coord;
+    int dir;
+    int speed;
+    struct coord last; /*< Position of the last update of this vehicle */
+    struct voice *voice;
+    struct attr callback;
+    int animate_cursor;
+};
 
 //! The vehicle used for navigation.
 struct navit_vehicle {
@@ -133,8 +149,10 @@ struct navit {
     int orientation;
     int recentdest_count;
     int osd_configuration;
+    GList *voices;
     GList *vehicles;
     GList *windows_items;
+    struct navit_voice *voice;
     struct navit_vehicle *vehicle;
     struct callback_list *attr_cbl;
     struct callback *nav_speech_cb, *roadbook_callback, *popup_callback, *route_cb, *progress_cb;
@@ -164,6 +182,8 @@ struct navit {
     int use_mousewheel;
     struct messagelist *messages;
     struct callback *resize_callback,*button_callback,*motion_callback,*predraw_callback;
+    struct voiceprofile *voiceprofile;
+    GList *voiceprofiles;
     struct vehicleprofile *vehicleprofile;
     GList *vehicleprofiles;
     int pitch;
@@ -198,6 +218,7 @@ struct attr_iter {
 
 static void navit_vehicle_update_position(struct navit *this_, struct navit_vehicle *nv);
 static void navit_vehicle_draw(struct navit *this_, struct navit_vehicle *nv, struct point *pnt);
+static int navit_add_voice(struct navit *this_, struct voice *v);
 static int navit_add_vehicle(struct navit *this_, struct vehicle *v);
 static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init);
 static int navit_get_cursor_pnt(struct navit *this_, struct point *p, int keep_orientation, int *dir);
@@ -205,7 +226,9 @@ static void navit_set_cursors(struct navit *this_);
 static int navit_cmd_zoom_to_route(struct navit *this, char *function, struct attr **in, struct attr ***out);
 static int navit_cmd_set_center_cursor(struct navit *this_, char *function, struct attr **in, struct attr ***out);
 static int navit_cmd_announcer_toggle(struct navit *this_, char *function, struct attr **in, struct attr ***out);
+static void navit_set_voice(struct navit *this_, struct navit_voice *nv);
 static void navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv);
+static int navit_set_voiceprofile(struct navit *this_, struct voiceprofile *vp);
 static int navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *vp);
 static int navit_cmd_switch_layout_day_night(struct navit *this_, char *function, struct attr **in, struct attr ***out);
 struct object_func navit_func;
@@ -2556,6 +2579,7 @@ static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init) {
     struct coord co;
     long zoom;
     GList *l;
+    struct navit_voice *nvoice;
     struct navit_vehicle *nv;
     struct layout *lay;
     struct attr active;
@@ -2707,6 +2731,34 @@ static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init) {
     case attr_use_mousewheel:
         attr_updated=(this_->use_mousewheel != !!attr->u.num);
         this_->use_mousewheel=!!attr->u.num;
+        break;
+    case attr_voice:
+        if (!attr->u.voice) {
+            if (this_->voice) {
+                voice_set_attr(this_->voice->voice, &active);
+                navit_set_voice(this_, NULL);
+                attr_updated=1;
+            }
+            break;
+        }
+        l=this_->voices;
+        while(l) { 
+            nv=l->data;
+            if (nvoice->voice == attr->u.voice) {
+                if (!this_->voice || this_->voice->voice != attr->u.voice) {
+                    if (this_->voice)
+                        voice_set_attr(this_->voice->voice, &active);
+                    active.u.num=1; 
+                    voice_set_attr(nvoice->voice, &active);
+                    attr_updated=1;
+                }
+                navit_set_voice(this_, nvoice);
+            }
+            l=g_list_next(l);
+        }
+        break;
+    case attr_voiceprofile:
+        attr_updated=navit_set_voiceprofile(this_, attr->u.voiceprofile);
         break;
     case attr_vehicle:
         if (!attr->u.vehicle) {
@@ -2949,6 +3001,38 @@ int navit_get_attr(struct navit *this_, enum attr_type type, struct attr *attr, 
     case attr_transformation:
         attr->u.transformation=this_->trans;
         break;
+    case attr_voice:
+        if(iter) {
+            if(iter->u.list) {
+                iter->u.list=g_list_next(iter->u.list);
+            } else {
+                iter->u.list=this_->voice;
+            }
+            if(!iter->u.list)
+                return 0;
+            attr->u.voice=((struct navit_voice*)iter->u.list->data)->voice;
+        } else {    
+            if(this_->voice) {
+                attr->u.voice=this_->voice->voice;
+            } else {
+                return 0;
+            }
+        }
+        break;
+    case attr_voiceprofile:
+        if (iter) {
+            if(iter->u.list) {
+                iter->u.list=g_list_next(iter->u.list);
+            } else {
+                iter->u.list=this_->voiceprofiles;
+            }
+            if(!iter->u.list)
+                return 0;
+            attr->u.voiceprofile=iter->u.list->data;
+        } else {
+            attr->u.voiceprofile=this_->voiceprofile;
+        }
+        break;
     case attr_vehicle:
         if(iter) {
             if(iter->u.list) {
@@ -3144,6 +3228,12 @@ int navit_add_attr(struct navit *this_, struct attr *attr) {
     case attr_trackingo:
         this_->tracking=attr->u.tracking;
         break;
+    case attr_voice:
+        ret=navit_add_voice(this_, attr->u.voice);
+        break;
+    case attr_voiceprofile:
+        this_->voiceprofiles=g_list_append(this_->voiceprofiles, attr->u.voiceprofile);
+        break;
     case attr_vehicle:
         ret=navit_add_vehicle(this_, attr->u.vehicle);
         break;
@@ -3176,6 +3266,7 @@ int navit_remove_attr(struct navit *this_, struct attr *attr) {
         navit_remove_callback(this_, attr->u.callback);
         break;
     case attr_vehicle:
+    case attr_voice:
     case attr_osd:
         this_->attrs=attr_generic_remove_attr(this_->attrs, attr);
         return 1;
@@ -3400,6 +3491,13 @@ void navit_set_position(struct navit *this_, struct pcoord *c) {
         navit_draw(this_);
 }
 
+static int navit_set_voiceprofile(struct navit *this_, struct voiceprofile *vp) {
+    if (this_->voiceprofile == vp)
+        return 0;
+    this_->voiceprofile=vp;
+    return 1;
+}
+
 static int navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *vp) {
     if (this_->vehicleprofile == vp)
         return 0;
@@ -3407,6 +3505,22 @@ static int navit_set_vehicleprofile(struct navit *this_, struct vehicleprofile *
     if (this_->route)
         route_set_profile(this_->route, this_->vehicleprofile);
     return 1;
+}
+
+int navit_set_voiceprofile_name(struct navit *this_, char *name) {
+    struct attr attr;
+    GList *l;
+    l=this_->voiceprofiles;
+    while (l) {
+        if (voiceprofile_get_attr(l->data, attr_name, &attr, NULL)) {
+            if (!strcmp(attr.u.str, name)) {
+                navit_set_voiceprofile(this_, l->data);
+                return 1;
+            }
+        }
+        l=g_list_next(l);
+    }
+    return 0;
 }
 
 int navit_set_vehicleprofile_name(struct navit *this_, char *name) {
@@ -3423,6 +3537,26 @@ int navit_set_vehicleprofile_name(struct navit *this_, char *name) {
         l=g_list_next(l);
     }
     return 0;
+}
+
+static void navit_set_voice(struct navit *this_, struct navit_voice *nv) {
+    struct attr attr;
+    this_->voice=nv;
+    if (nv && voice_get_attr(nv->voice, attr_profilename, &attr, NULL)) {
+        if (navit_set_voiceprofile_name(this_, attr.u.str))
+            return;
+    }
+    if (!this_->voiceprofile) { // When deactivating voice, keep the last profile if any
+        if (!navit_set_voiceprofile_name(this_,"voice")) {
+            /* We do not have a fallback "voice" profile
+            * so lets set any profile */
+            GList *l;
+            l=this_->voiceprofiles;
+            if (l) {
+                this_->voiceprofile=l->data;
+            }
+        }
+    }
 }
 
 static void navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv) {
@@ -3448,6 +3582,34 @@ static void navit_set_vehicle(struct navit *this_, struct navit_vehicle *nv) {
         if (this_->route)
             route_set_profile(this_->route, this_->vehicleprofile);
     }
+}
+
+/**
+ * @brief Registers a new voice.
+ *
+ * @param this_ The navit instance
+ * @param v The voice to register
+ * @return True for success
+ */
+static int navit_add_voice(struct navit *this_, struct voice *v) {
+    struct navit_voice *nvoice=g_new0(struct navit_voice, 1);
+    struct attr follow, active, animate;
+    nvoice->voice=v;
+    nvoice->follow=0;
+    nvoice->last.x = 0;
+    nvoice->last.y = 0;
+    nvoice->animate_cursor=0;
+    if ((voice_get_attr(v, attr_follow, &follow, NULL)))
+        nvoice->follow=follow.u.num;
+    nvoice->follow_curr=nvoice->follow;
+    this_->voices=g_list_append(this_->voices, nvoice);
+    if ((voice_get_attr(v, attr_active, &active, NULL)) && active.u.num)
+        navit_set_voice(this_, nvoice);
+    if ((voice_get_attr(v, attr_animate, &animate, NULL)))
+        nvoice->animate_cursor=animate.u.num;
+    nvoice->callback.type=attr_callback;
+    voice_set_attr(nvoice->voice, &this_->self);
+    return 1;
 }
 
 /**
@@ -3489,8 +3651,6 @@ static int navit_add_vehicle(struct navit *this_, struct vehicle *v) {
     vehicle_set_attr(nv->vehicle, &this_->self);
     return 1;
 }
-
-
 
 
 struct gui *
@@ -3710,6 +3870,28 @@ int navit_cmd_switch_layout_day_night(struct navit *this_, char *function, struc
     }
 
     dbg(lvl_debug,"auto = %i",this_->auto_switch);
+    return 0;
+}
+
+int navit_set_voice_by_name(struct navit *n,const char *name) {
+    struct voice *v;
+    struct attr_iter *iter;
+    struct attr voice_attr, name_attr;
+ 
+    iter=navit_attr_iter_new(NULL); 
+ 
+    while (navit_get_attr(n,attr_voice,&voice_attr,iter)) {
+        v=voice_attr.u.voice;
+        vehicle_get_attr(v,attr_name,&name_attr,NULL);
+        if (name_attr.type==attr_name) {
+            if (!strcmp(name,name_attr.u.str)) {
+                navit_set_attr(n,&voice_attr);
+                navit_attr_iter_destroy(iter);
+                return 1;
+            }
+        }
+    }
+    navit_attr_iter_destroy(iter);
     return 0;
 }
 

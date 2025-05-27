@@ -38,9 +38,10 @@
 #include "callback.h"
 #include "graphics.h"
 #include "track.h"
+#include "voice.h"
+#include "voiceprofile.h"
 #include "vehicle.h"
 #include "vehicleprofile.h"
-#include "voice.h"
 #include "map.h"
 #include "mapset.h"
 #include "osd.h"
@@ -117,6 +118,8 @@ static void *resolve_object(const char *opath, char *type) {
     char *def_navit="/default_navit";
     char *def_gui="/default_gui";
     char *def_graphics="/default_graphics";
+    char *def_voice="/default_voice";
+    char *def_voiceprofile="/default_voiceprofile";
     char *def_vehicle="/default_vehicle";
     char *def_vehicleprofile="/default_vehicleprofile";
     char *def_mapset="/default_mapset";
@@ -159,9 +162,21 @@ static void *resolve_object(const char *opath, char *type) {
             }
             return NULL;
         }
+        if (!strncmp(oprefix,def_voiceprofile,strlen(def_voiceprofile))) {
+            if (navit_get_attr(navit.u.navit, attr_voiceprofile, &attr, NULL)) {
+                return attr.u.voiceprofile;
+            }
+            return NULL;
+        }
         if (!strncmp(oprefix,def_vehicleprofile,strlen(def_vehicleprofile))) {
             if (navit_get_attr(navit.u.navit, attr_vehicleprofile, &attr, NULL)) {
                 return attr.u.vehicleprofile;
+            }
+            return NULL;
+        }
+        if (!strncmp(oprefix,def_voice,strlen(def_voice))) {
+            if (navit_get_attr(navit.u.navit, attr_voice, &attr, NULL)) {
+                return attr.u.voice;
             }
             return NULL;
         }
@@ -1921,6 +1936,46 @@ static DBusHandlerResult request_tracking_get_attr(DBusConnection *connection, D
                             struct attr_iter *))tracking_get_attr);
 }
 
+/* voice */
+
+static DBusHandlerResult request_voice_set_attr(DBusConnection *connection, DBusMessage *message) {
+    struct voice *voice;
+    struct attr attr;
+    int ret;
+
+    voice = object_get_from_message(message, "voice");
+    if (! voice)
+        return dbus_error_invalid_object_path(connection, message);
+    if (decode_attr(message, &attr)) {
+        ret=voice_set_attr(voice, &attr);
+        destroy_attr(&attr);
+        if (ret)
+            return empty_reply(connection, message);
+    }
+    return dbus_error_invalid_parameter(connection, message);
+}
+
+/* voiceprofile */
+
+static DBusHandlerResult request_voiceprofile_get_attr(DBusConnection *connection, DBusMessage *message) {
+    return request_get_attr(connection, message, "voiceprofile", NULL, (int (*)(void *, enum attr_type, struct attr *,
+                            struct attr_iter *))voiceprofile_get_attr);
+}
+
+static DBusHandlerResult request_voiceprofile_set_attr(DBusConnection *connection, DBusMessage *message) {
+    return request_set_add_remove_attr(connection, message, "voiceprofile", NULL, (int (*)(void *,
+                                       struct attr *))voiceprofile_set_attr);
+}
+
+static DBusHandlerResult request_voiceprofile_attr_iter(DBusConnection *connection, DBusMessage *message) {
+    return request_attr_iter(connection, message, "voiceprofile",
+                             (struct attr_iter * (*)(void*))voiceprofile_attr_iter_new);
+}
+
+static DBusHandlerResult request_voiceprofile_attr_iter_destroy(DBusConnection *connection, DBusMessage *message) {
+    return request_attr_iter_destroy(connection, message, "voiceprofile",
+                                     (void (*)(struct attr_iter *))voiceprofile_attr_iter_destroy);
+}
 
 
 /* vehicle */

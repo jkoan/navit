@@ -51,6 +51,7 @@
 #include "command.h"
 #include "navit_nls.h"
 #include "messages.h"
+#include "voiceprofile.h"
 #include "vehicleprofile.h"
 #include "roadprofile.h"
 #include "osd.h"
