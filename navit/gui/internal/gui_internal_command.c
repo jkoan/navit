@@ -201,9 +201,9 @@ static int gui_internal_cmd2_setting_voice(struct gui_priv *this, char *function
     struct widget *w,*wb,*wl;
     struct attr_iter *iter;
     struct attr active_voice;
-    
+
     iter=navit_attr_iter_new(NULL);
-    if (navit_get_attr(this->nav, attr_voice, &attr, iter) && !navit_get_attr(this->nav, attr_voice, &attr2, iter)) {
+    if (navit_get_attr(this->nav, attr_speech, &attr, iter) && !navit_get_attr(this->nav, attr_speech, &attr2, iter)) {
         voice_get_attr(attr.u.voice, attr_name, &vattr, NULL); 
         navit_attr_iter_destroy(iter);
         gui_internal_menu_voice_settings(this, attr.u.voice, vattr.u.str);
@@ -248,7 +248,7 @@ static int gui_internal_cmd2_setting_vehicle(struct gui_priv *this, char *functi
     }
     navit_attr_iter_destroy(iter);
 
-    wb=gui_internal_menu(this, _("Vehicle"));
+    wb=gui_internal_menu(this, _("Vehiclex"));
     w=gui_internal_box_new(this, gravity_top_center|orientation_vertical|flags_expand|flags_fill);
     w->spy=this->spacing*3;
     gui_internal_widget_append(wb, w);
