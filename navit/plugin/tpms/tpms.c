@@ -27,14 +27,15 @@
  *
  * <headup type="tpms" name="BR" frontleftaddr="71BB1555" frontrightaddr="F654D555" rearleftaddr="E0F2C555" rearrightaddr="CD05F555" pressure_max_thd_fl="500"  pressure_max_thd_fr="3500"  pressure_max_thd_rl="3500"  pressure_max_thd_rr="3500" pressure_min_thd_fl="2300" pressure_min_thd_fr="2300" pressure_min_thd_rl="2300" pressure_min_thd_rr="2300" temp_max_thd="50" />
  *
- * To get the address of the sensors use SYTPMS app on iOS or Android mount only one sensor and drive to find out which one has which address.
+ * To get the address of the sensors use SYTPMS app on iOS or Android and mount only one sensor at a time and drive to find out which one has which address.
  *
- * https://www.aliexpress.com/item/32815317757.html
- * Battery: CR1632
+ * https://www.aliexpress.com/item/32815317757.html internal, Good Quality.
+ * Battery: CR2050HR soldered
  * Battery can't be exchanged easily as sealed with non-flexible plastic.
- * Bad quality.
+ *
  *
  * Info:
+ * https://de.aliexpress.com/item/1005006713968177.html?spm=a2g0o.order_list.order_list_main.5.1ab05c5fa8OIsA&gatewayAdapt=glo2deu   external, Good Quality, MAXELL battery, up to 13bar
  * https://www.eisenzelt.de/ez/wordpress/?p=3424
  *
  * Config sample for navit.xml:
@@ -567,6 +568,7 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         if(_this->fltimeout) {
             event_remove_timeout(_this->fltimeout);
             _this->fltimeout=0;
+            _this->flalarm &~ 2;
         }
         struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->frontleftaddr);
         _this->fltimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
@@ -587,6 +589,7 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         if(_this->frtimeout) {
             event_remove_timeout(_this->frtimeout);
             _this->frtimeout=0;
+            _this->fralarm &~ 2;
         }
         struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->frontrightaddr);
         _this->frtimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
@@ -607,6 +610,7 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         if(_this->rltimeout) {
             event_remove_timeout(_this->rltimeout);
             _this->rltimeout=0;
+            _this->rlalarm &~ 2;
         }
         struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->rearleftaddr);
         _this->rltimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
@@ -627,6 +631,7 @@ void tpms_recv_cb(void *this, const char *name, const unsigned char *bytes, cons
         if(_this->rrtimeout) {
             event_remove_timeout(_this->rrtimeout);
             _this->rrtimeout=0;
+            _this->rralarm &~ 2;
         }
         struct callback *cb = callback_new_2(callback_cast(tpms_timeout), _this, _this->rearrightaddr);
         _this->rrtimeout = event_add_timeout(TPMS_RECV_TIMEOUT, 0, cb);
