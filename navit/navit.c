@@ -67,7 +67,6 @@
 #include "map.h"
 #include "util.h"
 #include "messages.h"
-#include "voiceprofile.h"
 #include "vehicleprofile.h"
 #include "sunriset.h"
 #include "bookmarks.h"
@@ -165,7 +164,7 @@ struct navit {
     int use_mousewheel;
     struct messagelist *messages;
     struct callback *resize_callback,*button_callback,*motion_callback,*predraw_callback;
-    struct voiceprofile *voiceprofile;
+    struct speech *voiceprofile;
     GList *voiceprofiles;
     struct vehicleprofile *vehicleprofile;
     GList *vehicleprofiles;
