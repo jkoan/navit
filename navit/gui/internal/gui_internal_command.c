@@ -1136,7 +1136,6 @@ static int gui_internal_cmd_debug(struct gui_priv * this, char *function, struct
 static int gui_internal_cmd2(struct gui_priv *this, char *function, struct attr **in, struct attr ***out) {
     int entering=0;
     int ignore=1;
-    dbg(lvl_debug,"------------------------ gui_internal_cmd2 -------------------------");
     if (in && in[0] && ATTR_IS_INT(in[0]->type)) {
         ignore=in[0]->u.num;
         in++;

@@ -174,12 +174,6 @@ static void *resolve_object(const char *opath, char *type) {
             }
             return NULL;
         }
-        if (!strncmp(oprefix,def_voice,strlen(def_voice))) {
-            if (navit_get_attr(navit.u.navit, attr_voice, &attr, NULL)) {
-                return attr.u.voice;
-            }
-            return NULL;
-        }
         if (!strncmp(oprefix,def_vehicle,strlen(def_vehicle))) {
             if (navit_get_attr(navit.u.navit, attr_vehicle, &attr, NULL)) {
                 return attr.u.vehicle;
@@ -1936,25 +1930,6 @@ static DBusHandlerResult request_tracking_get_attr(DBusConnection *connection, D
                             struct attr_iter *))tracking_get_attr);
 }
 
-/* voice */
-
-static DBusHandlerResult request_voice_set_attr(DBusConnection *connection, DBusMessage *message) {
-    struct voice *voice;
-    struct attr attr;
-    int ret;
-
-    voice = object_get_from_message(message, "voice");
-    if (! voice)
-        return dbus_error_invalid_object_path(connection, message);
-    if (decode_attr(message, &attr)) {
-        ret=voice_set_attr(voice, &attr);
-        destroy_attr(&attr);
-        if (ret)
-            return empty_reply(connection, message);
-    }
-    return dbus_error_invalid_parameter(connection, message);
-}
-
 /* voiceprofile */
 
 static DBusHandlerResult request_voiceprofile_get_attr(DBusConnection *connection, DBusMessage *message) {
@@ -1976,7 +1951,6 @@ static DBusHandlerResult request_voiceprofile_attr_iter_destroy(DBusConnection *
     return request_attr_iter_destroy(connection, message, "voiceprofile",
                                      (void (*)(struct attr_iter *))voiceprofile_attr_iter_destroy);
 }
-
 
 /* vehicle */
 
