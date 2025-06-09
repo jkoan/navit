@@ -177,7 +177,6 @@ struct attr {
         struct cursor *cursor;
         struct displaylist *displaylist;
         struct transformation *transformation;
-        struct speech *voiceprofile;
         struct vehicleprofile *vehicleprofile;
         struct roadprofile *roadprofile;
         struct bookmarks *bookmarks;

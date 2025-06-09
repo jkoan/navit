@@ -41,7 +41,6 @@
 #include "route.h"
 #include "speech.h"
 #include "track.h"
-#include "voice.h"
 #include "vehicle.h"
 #include "point.h"
 #include "graphics.h"
@@ -49,7 +48,6 @@
 #include "osd.h"
 #include "log.h"
 #include "announcement.h"
-#include "voiceprofile.h"
 #include "vehicleprofile.h"
 #include "callback.h"
 #include "config_.h"
@@ -284,10 +282,6 @@ object_func_lookup(enum attr_type type) {
         return &speech_func;
     case attr_traffic:
         return &traffic_func;
-    case attr_voice:
-        return &voice_func;
-    case attr_voiceprofile:
-        return &voiceprofile_func;
     case attr_vehicle:
         return &vehicle_func;
     case attr_vehicleprofile:
@@ -341,7 +335,7 @@ static char *element_fixmes[]= {
 };
 
 static void initStatic(void) {
-    elements=g_new0(struct element_func, 48); //47 is a number of elements + ending NULL element
+    elements=g_new0(struct element_func, 46); //45 is a number of elements + ending NULL element
 
     elements[0].name="config";
     elements[0].parent=NULL;
@@ -566,16 +560,6 @@ static void initStatic(void) {
     elements[44].parent="itemgra";
     elements[44].func=NULL;
     elements[44].type=attr_spikes;
-
-    elements[45].name="voice";
-    elements[45].parent="navit";
-    elements[45].func=NULL;
-    elements[45].type=attr_voice;
-
-    elements[46].name="voiceprofile";
-    elements[46].parent="navit";
-    elements[46].func=NULL;
-    elements[46].type=attr_voiceprofile;
 }
 
 /**

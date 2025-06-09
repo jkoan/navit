@@ -36,8 +36,6 @@
 #include "callback.h"
 #include "graphics.h"
 #include "track.h"
-#include "voice.h"
-#include "voiceprofile.h"
 #include "vehicle.h"
 #include "vehicleprofile.h"
 #include "map.h"

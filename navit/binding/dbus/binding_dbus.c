@@ -38,8 +38,6 @@
 #include "callback.h"
 #include "graphics.h"
 #include "track.h"
-#include "voice.h"
-#include "voiceprofile.h"
 #include "vehicle.h"
 #include "vehicleprofile.h"
 #include "map.h"
@@ -119,7 +117,6 @@ static void *resolve_object(const char *opath, char *type) {
     char *def_gui="/default_gui";
     char *def_graphics="/default_graphics";
     char *def_voice="/default_voice";
-    char *def_voiceprofile="/default_voiceprofile";
     char *def_vehicle="/default_vehicle";
     char *def_vehicleprofile="/default_vehicleprofile";
     char *def_mapset="/default_mapset";
@@ -159,12 +156,6 @@ static void *resolve_object(const char *opath, char *type) {
         if (!strncmp(oprefix,def_gui,strlen(def_gui))) {
             if (navit_get_attr(navit.u.navit, attr_gui, &attr, NULL)) {
                 return attr.u.gui;
-            }
-            return NULL;
-        }
-        if (!strncmp(oprefix,def_voiceprofile,strlen(def_voiceprofile))) {
-            if (navit_get_attr(navit.u.navit, attr_voiceprofile, &attr, NULL)) {
-                return attr.u.voiceprofile;
             }
             return NULL;
         }
@@ -1928,28 +1919,6 @@ static DBusHandlerResult request_search_list_select(DBusConnection *connection, 
 static DBusHandlerResult request_tracking_get_attr(DBusConnection *connection, DBusMessage *message) {
     return request_get_attr(connection, message, "tracking", NULL, (int (*)(void *, enum attr_type, struct attr *,
                             struct attr_iter *))tracking_get_attr);
-}
-
-/* voiceprofile */
-
-static DBusHandlerResult request_voiceprofile_get_attr(DBusConnection *connection, DBusMessage *message) {
-    return request_get_attr(connection, message, "voiceprofile", NULL, (int (*)(void *, enum attr_type, struct attr *,
-                            struct attr_iter *))voiceprofile_get_attr);
-}
-
-static DBusHandlerResult request_voiceprofile_set_attr(DBusConnection *connection, DBusMessage *message) {
-    return request_set_add_remove_attr(connection, message, "voiceprofile", NULL, (int (*)(void *,
-                                       struct attr *))voiceprofile_set_attr);
-}
-
-static DBusHandlerResult request_voiceprofile_attr_iter(DBusConnection *connection, DBusMessage *message) {
-    return request_attr_iter(connection, message, "voiceprofile",
-                             (struct attr_iter * (*)(void*))voiceprofile_attr_iter_new);
-}
-
-static DBusHandlerResult request_voiceprofile_attr_iter_destroy(DBusConnection *connection, DBusMessage *message) {
-    return request_attr_iter_destroy(connection, message, "voiceprofile",
-                                     (void (*)(struct attr_iter *))voiceprofile_attr_iter_destroy);
 }
 
 /* vehicle */
