@@ -1893,10 +1893,12 @@ static int gui_internal_is_active_vehicle(struct gui_priv *this, struct vehicle 
  */
 static void gui_internal_cmd_set_active_voice_profile(struct gui_priv *this, struct widget *wm, void *data) {
     struct voice_and_profilename *vapn = data;
+    struct attr speech_attr;
 
-    // TODO Voice Change the active profile
-    dbg(lvl_debug, "----------------------------------- setting speech to '%s' (%s) with navit_set_attr", vapn->profilename, vapn->speech);
-    navit_set_attr(this->nav, &vapn->speech);
+    speech_attr.type = attr_speech;
+    speech_attr.u.speech = vapn->speech;
+    navit_set_attr(this->nav, &speech_attr);
+
     dbg(lvl_debug, "Changed voice to '%s'", vapn->profilename);
 
     gui_internal_prune_menu_count(this, 1, 0);
@@ -2052,29 +2054,6 @@ static void gui_internal_add_vehicle_profile(struct gui_priv *this, struct widge
                                            gui_internal_cmd_set_active_profile, context));
 
     free(label);
-}
-
-void gui_internal_menu_voice_settings(struct gui_priv *this) {
-    struct widget *w,*wb,*row;
-    struct attr attr;
-    struct speech *profile = NULL;
-    GList *profiles;
-
-    wb = gui_internal_menu(this, _("Voice"));
-    w = gui_internal_widget_table_new(this, gravity_top_center|orientation_vertical|flags_expand|flags_fill,1);
-    gui_internal_widget_append(wb, w);
-
-    // Add all the possible voice profiles to the menu
-    profiles = navit_get_voiceprofiles(this->nav);
-    while(profiles) {
-        profile = (struct speech *)profiles->data;
-        gui_internal_widget_append(w, row=gui_internal_widget_table_row_new(this, gravity_left|orientation_horizontal|flags_fill));
-        gui_internal_add_voice_profile(this, row, profile);
-        profiles = g_list_next(profiles);
-    }
-
-    callback_list_call_attr_2(this->cbl, attr_vehicle, w, profile);
-    gui_internal_menu_render(this);
 }
 
 void gui_internal_menu_voice_settings(struct gui_priv *this) {
