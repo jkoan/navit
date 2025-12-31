@@ -91,7 +91,6 @@ void Backend::get_maps() {
     emit mapsChanged();
 }
 
-
 /**
  * @brief update the private m_vehicles list. Expected to be called from QML
  * @param none
@@ -102,6 +101,8 @@ void Backend::get_vehicles() {
     struct attr_iter *iter;
     struct attr active_vehicle;
     _vehicles.clear();
+
+dbg(lvl_debug, "---------- get_vehicles() from backend");
 
     iter=navit_attr_iter_new(NULL);
     if (navit_get_attr(this->nav, attr_vehicle, &attr, iter) && !navit_get_attr(this->nav, attr_vehicle, &attr2, iter)) {
@@ -278,7 +279,6 @@ QQmlListProperty<QObject> Backend::getBookmarks() {
 QQmlListProperty<QObject> Backend::getMaps() {
     return QQmlListProperty<QObject>(this, _maps);
 }
-
 
 /**
  * @brief get the vehicles as a QList

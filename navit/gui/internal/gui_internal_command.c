@@ -23,6 +23,7 @@
 #include "transform.h"
 #include "search.h"
 #include "route.h"
+#include "speech.h"
 #include "vehicle.h"
 #include "vehicleprofile.h"
 #include "layout.h"
@@ -194,8 +195,12 @@ static int gui_internal_cmd2_town(struct gui_priv *this, char *function, struct 
     return 0;
 }
 
-static int gui_internal_cmd2_setting_vehicle(struct gui_priv *this, char *function, struct attr **in,
-        struct attr ***out) {
+static int gui_internal_cmd2_setting_voice(struct gui_priv *this, char *function, struct attr **in, struct attr ***out) {
+    gui_internal_menu_voice_settings(this);
+    return 0;
+}
+
+static int gui_internal_cmd2_setting_vehicle(struct gui_priv *this, char *function, struct attr **in, struct attr ***out) {
     struct attr attr,attr2,vattr;
     struct widget *w,*wb,*wl;
     struct attr_iter *iter;
@@ -1165,6 +1170,8 @@ static int gui_internal_cmd2(struct gui_priv *this, char *function, struct attr 
         gui_internal_cmd2_setting_maps(this, function, in, out);
     else if(!strcmp(function, "setting_rules"))
         gui_internal_cmd2_setting_rules(this, function, in, out);
+    else if(!strcmp(function, "setting_voice"))
+        gui_internal_cmd2_setting_voice(this, function, in, out);
     else if(!strcmp(function, "setting_vehicle"))
         gui_internal_cmd2_setting_vehicle(this, function, in, out);
     else if(!strcmp(function, "town"))
@@ -1204,6 +1211,7 @@ static struct command_table commands[] = {
     {"setting_layout",command_cast(gui_internal_cmd2)},
     {"setting_maps",command_cast(gui_internal_cmd2)},
     {"setting_rules",command_cast(gui_internal_cmd2)},
+    {"setting_voice",command_cast(gui_internal_cmd2)},
     {"setting_vehicle",command_cast(gui_internal_cmd2)},
     {"town",command_cast(gui_internal_cmd2)},
     {"enter_coord",command_cast(gui_internal_cmd2)},

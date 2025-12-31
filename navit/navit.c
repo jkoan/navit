@@ -163,6 +163,7 @@ struct navit {
     int use_mousewheel;
     struct messagelist *messages;
     struct callback *resize_callback,*button_callback,*motion_callback,*predraw_callback;
+    GList *voiceprofiles;
     struct vehicleprofile *vehicleprofile;
     GList *vehicleprofiles;
     int pitch;
@@ -1582,9 +1583,8 @@ navit_get_graphics(struct navit *this_) {
     return this_->gra;
 }
 
-struct vehicleprofile *
-navit_get_vehicleprofile(struct navit *this_) {
-    return this_->vehicleprofile;
+GList *navit_get_voiceprofiles(struct navit *this_) {
+    return this_->voiceprofiles;
 }
 
 GList *navit_get_vehicleprofiles(struct navit *this_) {
@@ -2755,9 +2755,6 @@ static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init) {
             l=g_list_next(l);
         }
         break;
-    case attr_vehicleprofile:
-        attr_updated=navit_set_vehicleprofile(this_, attr->u.vehicleprofile);
-        break;
     case attr_zoom:
         zoom=transform_get_scale(this_->trans);
         attr_updated=(zoom != attr->u.num);
@@ -2813,6 +2810,7 @@ static int navit_set_attr_do(struct navit *this_, struct attr *attr, int init) {
 }
 
 int navit_set_attr(struct navit *this_, struct attr *attr) {
+    dbg(lvl_debug, "-------------------------------- calling generic setter method for attribute type %s", attr_to_name(attr->type))
     return navit_set_attr_do(this_, attr, 0);
 }
 
@@ -2989,20 +2987,6 @@ int navit_get_attr(struct navit *this_, enum attr_type type, struct attr *attr, 
             }
         }
         break;
-    case attr_vehicleprofile:
-        if (iter) {
-            if(iter->u.list) {
-                iter->u.list=g_list_next(iter->u.list);
-            } else {
-                iter->u.list=this_->vehicleprofiles;
-            }
-            if(!iter->u.list)
-                return 0;
-            attr->u.vehicleprofile=iter->u.list->data;
-        } else {
-            attr->u.vehicleprofile=this_->vehicleprofile;
-        }
-        break;
     case attr_zoom:
         attr->u.num=transform_get_scale(this_->trans);
         break;
@@ -3162,6 +3146,7 @@ int navit_add_attr(struct navit *this_, struct attr *attr) {
         break;
     case attr_speech:
         this_->speech=attr->u.speech;
+        this_->voiceprofiles=g_list_append(this_->voiceprofiles, attr->u.speech);
         break;
     case attr_trackingo:
         this_->tracking=attr->u.tracking;
@@ -3511,8 +3496,6 @@ static int navit_add_vehicle(struct navit *this_, struct vehicle *v) {
     vehicle_set_attr(nv->vehicle, &this_->self);
     return 1;
 }
-
-
 
 
 struct gui *
