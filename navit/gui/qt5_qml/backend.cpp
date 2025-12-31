@@ -281,6 +281,15 @@ QQmlListProperty<QObject> Backend::getMaps() {
 }
 
 /**
+ * @brief get the voices as a QList
+ * @param none
+ * @returns the voices QList
+ */
+QQmlListProperty<QObject> Backend::getVoies() {
+    return QQmlListProperty<QObject>(this, _voices);
+}
+
+/**
  * @brief get the vehicles as a QList
  * @param none
  * @returns the vehicles QList

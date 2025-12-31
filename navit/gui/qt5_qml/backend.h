@@ -8,7 +8,7 @@
 #include "qml_map.h"
 #include "qml_poi.h"
 #include "qml_bookmark.h"
-#include "qml_voice.h"
+//#include "qml_voice.h"
 #include "qml_vehicle.h"
 
 #include "coord.h"
@@ -47,6 +47,7 @@ public:
     QList < MapObject * > maps;
     QQmlListProperty<QObject> getMaps();
     QList < MapObject * > voices;
+    QQmlListProperty<QObject> getVoies();
     QList < MapObject * > vehicles;
     QQmlListProperty<QObject> getVehicles();
     PoiObject * activePoi();
