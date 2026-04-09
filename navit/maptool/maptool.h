@@ -190,7 +190,7 @@ void ch_assemble_map(char *map_suffix, char *suffix, struct zip_info *zip_info);
 
 /* coastline.c */
 
-void process_coastlines(FILE *in, FILE *out);
+void process_coastlines(char *in, FILE *out);
 
 /* itembin.c */
 

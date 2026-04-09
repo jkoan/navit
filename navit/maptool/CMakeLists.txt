@@ -1,6 +1,7 @@
 if(BUILD_MAPTOOL)
 
 	find_package(PROTOBUF_C REQUIRED)
+	find_package(GDAL CONFIG REQUIRED)
 	include_directories(${PROTOBUF-C_INCLUDE_DIR})
 	include_directories(${CMAKE_CURRENT_BINARY_DIR})
 	#PROTOBUF_C_GENERATE_C(PROTO_SRCS PROTO_HDRS zfs.proto)
@@ -8,9 +9,9 @@ if(BUILD_MAPTOOL)
 	add_definitions( -DMODULE=maptool ${NAVIT_COMPILE_FLAGS})
 
 	add_executable (maptool maptool.c)
-	add_library (maptool_core boundaries.c buffer.c ch.c coastline.c itembin.c
+	add_library (maptool_core boundaries.c buffer.c ch.c itembin.c
 		itembin_buffer.c itembin_slicer.c misc.c osm.c osm_o5m.c osm_psql.c
-		osm_relations.c sourcesink.c tempfile.c tile.c zip.c osm_xml.c)
+		osm_relations.c sourcesink.c tempfile.c tile.c zip.c osm_xml.c osmcoastline.c )
 
 	if(NOT MSVC)
 		PROTOBUF_C_GENERATE_C (PROTO_SRCS PROTO_HDRS osmformat.proto)
@@ -25,6 +26,7 @@ if(BUILD_MAPTOOL)
 	endif(NOT MSVC)
 
 	target_link_libraries(maptool maptool_core ${NAVIT_LIBNAME} ${NAVIT_LIBS})
+	target_link_libraries(maptool GDAL::GDAL)
 
 	install(TARGETS maptool
 		DESTINATION ${BIN_DIR}

@@ -4042,9 +4042,10 @@ int map_resolve_coords_and_split_at_intersections(FILE *in, FILE *out, FILE *out
     osmid ndref;
     struct item_bin *ib;
     struct node_item *ni;
-    long long last_id = 0;
+    unsigned long long int last_id = 0;
     processed_nodes = processed_nodes_out = processed_ways = processed_relations = processed_tiles = 0;
     sig_alrm(0);
+    unsigned long long int coastline_id_interner = 1;
     while ((ib = read_item(in))) {
         ccount = ib->clen / 2;
         if (ccount <= 1)
@@ -4074,9 +4075,24 @@ int map_resolve_coords_and_split_at_intersections(FILE *in, FILE *out, FILE *out
             }
         }
         if (ccount) {
+            unsigned long long int  start_id=coastline_id_interner;
             write_item_way_subsection(out, out_index, out_graph, ib, last, ccount - 1, &last_id);
             if (final && ib->type == type_water_line && out_coastline) {
-                write_item_way_subsection(out_coastline, NULL, NULL, ib, last, ccount - 1, NULL);
+                for (i = 0; i < ccount; i++) {
+                    struct coord_geo geo;
+                    transform_to_geo(projection_mg, &c[i], &geo);
+                    fprintf(out_coastline, "<node version=\"1\" id=\"%lld\" lat=\"%02.6f\" lon=\"%02.6f\"/>\n", coastline_id_interner, geo.lat, geo.lng);
+                    coastline_id_interner++;
+                }
+                fprintf(out_coastline, "<way id=\"%lld\" version=\"1\">\n", item_bin_get_wayid(ib));
+                fprintf(out_coastline, "<tag k=\"natural\" v=\"coastline\"/>\n");
+                while (start_id < coastline_id_interner){
+                    fprintf(out_coastline, "<nd ref=\"%lld\"/>\n", start_id);
+                    start_id++;
+                }
+                    
+                
+                fprintf(out_coastline, "</way>\n");
             }
         }
     }

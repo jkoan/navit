@@ -672,9 +672,11 @@ static void osm_resolve_coords_and_split_at_intersections(struct maptool_params 
         ways_split_index = final ? tempfile(suffix, "ways_split_index", 1) : NULL;
         graph = tempfile(suffix, "graph", 1);
         coastline = tempfile(suffix, "coastline", 1);
+        fprintf(coastline, "<?xml version='1.0' encoding='UTF-8'?><osm version=\"0.6\" generator=\"maptool\">");
         if (i)
             load_buffer(coord_tmp_path, &node_buffer, i * slice_size, slice_size);
         map_resolve_coords_and_split_at_intersections(ways, ways_split, ways_split_index, graph, coastline, final);
+        fprintf(coastline, "</osm>");
         fclose(ways_split);
         if (ways_split_index)
             fclose(ways_split_index);
@@ -708,9 +710,10 @@ static void osm_process_way2poi(struct maptool_params *p, char *suffix) {
 
 static void osm_process_coastlines(struct maptool_params *p, char *suffix) {
     FILE *coastline = tempfile(suffix, "coastline", 0);
+    char *coastline_result_path = tempfile_name(suffix, "coastline");
     if (coastline) {
         FILE *coastline_result = tempfile(suffix, "coastline_result", 1);
-        process_coastlines(coastline, coastline_result);
+        process_coastlines(coastline_result_path, coastline_result);
         fclose(coastline_result);
         fclose(coastline);
     }
@@ -856,14 +859,14 @@ static void maptool_assemble_map(struct maptool_params *p, char *suffix, char **
         tempfile_unlink(suffix, "poly2poi_resolved");
         tempfile_unlink(suffix, "line2poi_resolved");
         tempfile_unlink(suffix, "ways_split_ref");
-        tempfile_unlink(suffix, "coastline");
+        //tempfile_unlink(suffix, "coastline");
         tempfile_unlink(suffix, "turn_restrictions");
         tempfile_unlink(suffix, "multipolygons");
         tempfile_unlink(suffix, "graph");
         tempfile_unlink(suffix, "tilesdir");
         tempfile_unlink(suffix, "boundaries");
         tempfile_unlink(suffix, "way2poi_result");
-        tempfile_unlink(suffix, "coastline_result");
+        //tempfile_unlink(suffix, "coastline_result");
         tempfile_unlink(suffix, "towns_poly");
         unlink(coord_tmp_path);
     }
